@@ -22,6 +22,7 @@ from .resource_data import (
     ResourceDefinition,
     ResourceValueSnapshot,
     battery_percentage,
+    device_type_icon,
     enum_options,
 )
 
@@ -113,6 +114,8 @@ class HagleitnerSensor(SensorEntity):
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
         self._attr_name = name
         self._attr_unique_id = f"{device_id}_{resource_key}_{mode}"
+        if mode in ("counter", "enum"):
+            self._attr_icon = device_type_icon(device_type_names)
 
         if mode == "enum":
             self._attr_device_class = SensorDeviceClass.ENUM

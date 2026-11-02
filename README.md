@@ -79,6 +79,9 @@ binary sensor instead. Refill and fill status also create problem binary
 sensors that turn on only when refill is empty or the container is full.
 Connection status creates a connectivity sensor and a separate problem sensor
 that turns on only for exactly offline.
+Counter and enum/status sensor icons use built-in MDI icons inferred from the
+translated device type name; Home Assistant's battery, problem, and
+connectivity entity icons remain native.
 
 Active maintenance states also create issues in Home Assistant's Repairs UI.
 Low battery, low refill, and nearly-full container states are warnings;

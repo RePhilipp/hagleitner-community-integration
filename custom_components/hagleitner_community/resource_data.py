@@ -247,6 +247,42 @@ def enum_options(
     return list(dict.fromkeys(definition.enum_values.values()))
 
 
+def device_type_icon(device_type_names: frozenset[str]) -> str:
+    """Choose a built-in MDI icon from translated Hagleitner device names."""
+    names = " ".join(device_type_names)
+    if "gateway" in names:
+        return "mdi:router-wireless"
+    if "dishwash" in names:
+        return "mdi:dishwasher"
+    if "counter" in names or "passage" in names:
+        return "mdi:account-group"
+    if any(term in names for term in ("waste bin", "sanitary waste", "paperbox")):
+        return "mdi:trash-can"
+    if "toilet seat" in names or "toilet paper" in names or "tissue" in names:
+        return "mdi:toilet"
+    if "wet wipe" in names:
+        return "mdi:package-variant"
+    if "towel" in names or "sense towel" in names:
+        return "mdi:paper-roll"
+    if any(term in names for term in ("fragrance", "freshair")):
+        return "mdi:air-purifier"
+    if "sunscreen" in names or any(
+        term in names for term in ("skincare", "moistcare", "cream", "lotion")
+    ):
+        return "mdi:lotion"
+    if "shower gel" in names:
+        return "mdi:shower"
+    if any(term in names for term in ("disinfect", "sanitizer", "gel")):
+        return "mdi:hand-sanitizer"
+    if "foam" in names or "soap" in names:
+        return "mdi:soap"
+    if "flowmeter" in names or "level unit" in names:
+        return "mdi:gauge"
+    if any(term in names for term in ("dosing", "integral", "industrial")):
+        return "mdi:water-pump"
+    return "mdi:devices"
+
+
 def battery_percentage(
     snapshot: ResourceValueSnapshot,
 ) -> int | None:
