@@ -11,7 +11,7 @@
       },
       "confirm": {
         "title": "Novi uređaj Hagleitner",
-        "description": "Dodati {name} u Home Assistant? Uređaj i njegovi entiteti izradit će se tek nakon potvrde. Ako postojeće područje u Home Assistantu odgovara najdubljoj lokaciji uređaja, bit će predloženo u nastavku i moći ćete ga promijeniti.",
+        "description": "Dodati {name} u Home Assistant? Putanja lokacije HSM-a: {location_path}. Mjesto montaže HSM-a: {mount_point}. Crtica (—) znači da HSM nije dostavio tu vrijednost. Uređaj i njegovi entiteti izradit će se tek nakon potvrde. Ako postojeće područje u Home Assistantu odgovara najdubljoj lokaciji uređaja, bit će predloženo u nastavku i moći ćete ga promijeniti.",
         "data": {
           "area_id": "Predloženo područje"
         }
@@ -82,8 +82,8 @@
       "battery": {
         "name": "Baterija"
       },
-      "battery_charging": {
-        "name": "Punjenje baterije"
+      "mains_adapter": {
+        "name": "Mrežni adapter priključen"
       },
       "connectivity": {
         "name": "Povezivost"
@@ -98,5 +98,9 @@
         "name": "Problem s vezom"
       }
     }
+  },
+  "error": {
+    "queue_already_configured": "Ovaj je red čekanja već dodan.",
+    "queue_already_configured_disabled": "Ovaj je red čekanja već dodan, ali je onemogućen. Omogućite postojeći unos umjesto dodavanja novoga."
   }
 }

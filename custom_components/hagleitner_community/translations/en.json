@@ -11,7 +11,7 @@
       },
       "confirm": {
         "title": "New Hagleitner device",
-        "description": "Add {name} to Home Assistant? The device and its entities are created only after you confirm. If an existing Home Assistant area matches the innermost device location, it is suggested below and can be changed.",
+        "description": "Add {name} to Home Assistant? HSM location path: {location_path}. HSM mount point: {mount_point}. A dash (—) means HSM did not provide that value. The device and its entities are created only after you confirm. If an existing Home Assistant area matches the innermost device location, it is suggested below and can be changed.",
         "data": {
           "area_id": "Suggested area"
         }
@@ -82,8 +82,8 @@
       "battery": {
         "name": "Battery"
       },
-      "battery_charging": {
-        "name": "Battery charging"
+      "mains_adapter": {
+        "name": "Mains adapter connected"
       },
       "connectivity": {
         "name": "Connectivity"
@@ -98,5 +98,9 @@
         "name": "Connection problem"
       }
     }
+  },
+  "error": {
+    "queue_already_configured": "This queue is already added.",
+    "queue_already_configured_disabled": "This queue is already added but disabled. Enable the existing entry instead of adding another."
   }
 }

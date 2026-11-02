@@ -11,7 +11,7 @@
       },
       "confirm": {
         "title": "Nové zařízení Hagleitner",
-        "description": "Přidat {name} do Home Assistant? Zařízení a jeho entity se vytvoří až po potvrzení. Pokud existující oblast Home Assistant odpovídá nejvnitřnějšímu umístění zařízení, bude navržena níže a lze ji změnit.",
+        "description": "Přidat {name} do Home Assistant? Cesta umístění HSM: {location_path}. Místo montáže HSM: {mount_point}. Pomlčka (—) znamená, že HSM tuto hodnotu neposkytlo. Zařízení a jeho entity se vytvoří až po potvrzení. Pokud existující oblast Home Assistant odpovídá nejvnitřnějšímu umístění zařízení, bude navržena níže a lze ji změnit.",
         "data": {
           "area_id": "Navržená oblast"
         }
@@ -82,8 +82,8 @@
       "battery": {
         "name": "Baterie"
       },
-      "battery_charging": {
-        "name": "Nabíjení baterie"
+      "mains_adapter": {
+        "name": "Síťový adaptér připojen"
       },
       "connectivity": {
         "name": "Připojení"
@@ -98,5 +98,9 @@
         "name": "Problém s připojením"
       }
     }
+  },
+  "error": {
+    "queue_already_configured": "Tato fronta již byla přidána.",
+    "queue_already_configured_disabled": "Tato fronta již byla přidána, ale je zakázána. Místo přidání další povolte stávající položku."
   }
 }

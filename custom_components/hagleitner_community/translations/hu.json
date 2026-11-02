@@ -11,7 +11,7 @@
       },
       "confirm": {
         "title": "Új Hagleitner-eszköz",
-        "description": "Hozzáadja ezt: {name} a Home Assistanthoz? Az eszköz és az entitásai csak a megerősítés után jönnek létre. Ha egy meglévő Home Assistant-terület megfelel az eszköz legbelső helyszínének, az alább javaslatként jelenik meg, és módosítható.",
+        "description": "Hozzáadja ezt: {name} a Home Assistanthoz? HSM-helyútvonal: {location_path}. HSM-rögzítési pont: {mount_point}. A gondolatjel (—) azt jelenti, hogy a HSM nem adott meg ilyen értéket. Az eszköz és az entitásai csak a megerősítés után jönnek létre. Ha egy meglévő Home Assistant-terület megfelel az eszköz legbelső helyszínének, az alább javaslatként jelenik meg, és módosítható.",
         "data": {
           "area_id": "Javasolt terület"
         }
@@ -82,8 +82,8 @@
       "battery": {
         "name": "Elem"
       },
-      "battery_charging": {
-        "name": "Töltés"
+      "mains_adapter": {
+        "name": "Hálózati adapter csatlakoztatva"
       },
       "connectivity": {
         "name": "Kapcsolat"
@@ -98,5 +98,9 @@
         "name": "Kapcsolati probléma"
       }
     }
+  },
+  "error": {
+    "queue_already_configured": "Ez a sor már hozzá van adva.",
+    "queue_already_configured_disabled": "Ez a sor már hozzá van adva, de le van tiltva. Újabb hozzáadása helyett engedélyezze a meglévő bejegyzést."
   }
 }

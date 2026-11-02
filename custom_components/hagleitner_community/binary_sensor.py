@@ -22,6 +22,12 @@ from .resource_data import (
 
 _REFILL_STATE_EQUIVALENT_ID = "4b963ce8-14f4-4f90-03a9-08dac1664f9a"
 _FILL_STATUS_EQUIVALENT_ID = "9c336908-7a04-4adc-8bd7-08dc3d205c10"
+_LEGACY_UNIQUE_ID_SUFFIXES = {"mains_adapter": "battery_charging"}
+
+
+def _unique_id_suffix(mode: str) -> str:
+    """Keep established registry IDs when a sensor's presentation changes."""
+    return _LEGACY_UNIQUE_ID_SUFFIXES.get(mode, mode)
 
 
 async def async_setup_entry(
@@ -44,7 +50,7 @@ async def async_setup_entry(
 
         entities = []
         for mode in _binary_modes(snapshot):
-            unique_id = f"{device_id}_{snapshot.key}_{mode}"
+            unique_id = f"{device_id}_{snapshot.key}_{_unique_id_suffix(mode)}"
             if unique_id in added_ids:
                 continue
             added_ids.add(unique_id)
@@ -78,7 +84,7 @@ def _binary_modes(snapshot: ResourceValueSnapshot) -> tuple[str, ...]:
         return ("maintenance_required",)
     if definition.kind == "battery":
         if snapshot.mapped_value == "mains_adapter":
-            return ("battery_charging",)
+            return ("mains_adapter",)
         return ("battery",)
     if definition.kind == "problem":
         return ("problem",)
@@ -114,7 +120,7 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
         if mode in {
             "battery",
-            "battery_charging",
+            "mains_adapter",
             "connectivity",
             "refill_problem",
             "fill_problem",
@@ -123,13 +129,15 @@ class HagleitnerBinarySensor(BinarySensorEntity):
             self._attr_translation_key = mode
         else:
             self._attr_name = definition.name
-        self._attr_unique_id = f"{device_id}_{resource_key}_{mode}"
+        self._attr_unique_id = (
+            f"{device_id}_{resource_key}_{_unique_id_suffix(mode)}"
+        )
         if mode == "refill_inserted":
             self._attr_icon = "mdi:package-check"
         else:
             self._attr_device_class = {
                 "battery": BinarySensorDeviceClass.BATTERY,
-                "battery_charging": BinarySensorDeviceClass.BATTERY_CHARGING,
+                "mains_adapter": BinarySensorDeviceClass.PLUG,
                 "problem": BinarySensorDeviceClass.PROBLEM,
                 "connectivity": BinarySensorDeviceClass.CONNECTIVITY,
                 "refill_problem": BinarySensorDeviceClass.PROBLEM,
@@ -147,8 +155,10 @@ class HagleitnerBinarySensor(BinarySensorEntity):
             return None
 
         if self._mode == "refill_inserted":
-            if isinstance(snapshot.raw_value, bool):
-                return snapshot.raw_value
+            if snapshot.mapped_value == "inserted":
+                return True
+            if snapshot.mapped_value == "removed":
+                return False
             return None
         if self._mode == "maintenance_required":
             if snapshot.mapped_value == "change_required":
@@ -168,7 +178,7 @@ class HagleitnerBinarySensor(BinarySensorEntity):
             if snapshot.mapped_value in ("ok", "mains_adapter"):
                 return False
             return None
-        if self._mode == "battery_charging":
+        if self._mode == "mains_adapter":
             if snapshot.mapped_value == "mains_adapter":
                 return True
             if snapshot.mapped_value in ("ok", "low", "empty"):

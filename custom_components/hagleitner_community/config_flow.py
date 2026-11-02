@@ -23,11 +23,34 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Ask for the queue connection details."""
+        errors = {}
         if user_input is not None:
-            return self.async_create_entry(
-                title=f"Hagleitner Community ({user_input['queue_name']})",
-                data={"entry_type": "hub", **user_input},
-            )
+            queue_name = user_input["queue_name"].strip()
+            normalized_queue_name = queue_name.casefold()
+            matching_entries = [
+                entry
+                for entry in self.hass.config_entries.async_entries(DOMAIN)
+                if entry.data.get("entry_type") != "device"
+                and isinstance(entry.data.get("queue_name"), str)
+                and entry.data["queue_name"].strip().casefold()
+                == normalized_queue_name
+            ]
+            if matching_entries:
+                error = (
+                    "queue_already_configured"
+                    if any(entry.disabled_by is None for entry in matching_entries)
+                    else "queue_already_configured_disabled"
+                )
+                errors["base"] = error
+            else:
+                return self.async_create_entry(
+                    title=f"Hagleitner Community ({queue_name})",
+                    data={
+                        "entry_type": "hub",
+                        **user_input,
+                        "queue_name": queue_name,
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -41,6 +64,7 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required("queue_name"): str,
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_integration_discovery(
@@ -66,7 +90,12 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device_data = {
                 key: value
                 for key, value in self._discovery_info.items()
-                if key != "suggested_area_id"
+                if key
+                not in {
+                    "suggested_area_id",
+                    "hsm_location_path",
+                    "hsm_mount_point",
+                }
             }
             if area_id := user_input.get("area_id"):
                 device_data["area_id"] = area_id
@@ -98,6 +127,10 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="confirm",
             data_schema=vol.Schema(schema_fields),
             description_placeholders={
-                "name": self._discovery_info["device_name"]
+                "name": self._discovery_info["device_name"],
+                "location_path": self._discovery_info.get(
+                    "hsm_location_path", "—"
+                ),
+                "mount_point": self._discovery_info.get("hsm_mount_point", "—"),
             },
         )

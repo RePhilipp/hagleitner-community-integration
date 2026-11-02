@@ -11,7 +11,7 @@
       },
       "confirm": {
         "title": "Nova naprava Hagleitner",
-        "description": "Želiš dodati {name} v Home Assistant? Naprava in njene entitete bodo ustvarjene šele po potrditvi. Če se obstoječe območje Home Assistant ujema z najbolj notranjo lokacijo naprave, bo predlagano spodaj in ga lahko spremeniš.",
+        "description": "Želiš dodati {name} v Home Assistant? Pot lokacije HSM: {location_path}. Mesto namestitve HSM: {mount_point}. Pomišljaj (—) pomeni, da HSM te vrednosti ni posredoval. Naprava in njene entitete bodo ustvarjene šele po potrditvi. Če se obstoječe območje Home Assistant ujema z najbolj notranjo lokacijo naprave, bo predlagano spodaj in ga lahko spremeniš.",
         "data": {
           "area_id": "Predlagano območje"
         }
@@ -82,8 +82,8 @@
       "battery": {
         "name": "Baterija"
       },
-      "battery_charging": {
-        "name": "Polnjenje baterije"
+      "mains_adapter": {
+        "name": "Omrežni napajalnik priključen"
       },
       "connectivity": {
         "name": "Povezljivost"
@@ -98,5 +98,9 @@
         "name": "Težava s povezavo"
       }
     }
+  },
+  "error": {
+    "queue_already_configured": "Ta čakalna vrsta je že dodana.",
+    "queue_already_configured_disabled": "Ta čakalna vrsta je že dodana, vendar je onemogočena. Namesto dodajanja nove omogoči obstoječi vnos."
   }
 }

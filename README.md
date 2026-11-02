@@ -18,6 +18,10 @@ option or rule is unavailable, ask Hagleitner support or sales whether it can
 be enabled. Pricing is unknown and may apply, so confirm any costs with
 Hagleitner.
 
+You can use multiple forwarding rules. Add each rule's queue as a separate
+integration entry; devices included by more than one rule remain a single
+Home Assistant device.
+
 ## Set up Home Assistant
 
 After installing the integration through HACS, restart Home Assistant if

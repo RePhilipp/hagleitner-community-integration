@@ -266,9 +266,12 @@ class HagleitnerHub:
             "device_type_id": device_type_id,
             "device_name": device_display_name(message),
         }
+        metadata = self.metadata_for_device(device_id)
+        discovery_data["hsm_location_path"] = metadata.location or "—"
+        discovery_data["hsm_mount_point"] = metadata.mount_point or "—"
         suggested_area_id = _suggest_existing_area_id(
             self.hass,
-            self.metadata_for_device(device_id).innermost_location,
+            metadata.innermost_location,
         )
         if suggested_area_id is not None:
             discovery_data["suggested_area_id"] = suggested_area_id

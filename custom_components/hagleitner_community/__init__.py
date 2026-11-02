@@ -85,6 +85,7 @@ def _async_rebind_orphaned_devices(
         configured_entry
         for configured_entry in entries
         if configured_entry.data.get("entry_type") != "device"
+        and configured_entry.disabled_by is None
     ]
     for configured_entry in entries:
         if configured_entry.data.get("entry_type") != "device":
@@ -119,13 +120,27 @@ def _async_rebind_orphaned_devices(
             selected_hub = available_hubs[0]
         else:
             known_queue = configured_entry.data.get("hub_queue_name")
+            normalized_known_queue = (
+                known_queue.strip().casefold()
+                if isinstance(known_queue, str)
+                else None
+            )
             matching_hubs = [
                 candidate
                 for candidate in hubs
-                if candidate.data.get("queue_name") == known_queue
+                if isinstance(candidate.data.get("queue_name"), str)
+                and candidate.data["queue_name"].strip().casefold()
+                == normalized_known_queue
             ]
-            if known_queue is not None and matching_hubs:
-                selected_hub = matching_hubs[0]
+            if normalized_known_queue is not None and matching_hubs:
+                selected_hub = (
+                    hub_entry
+                    if any(
+                        candidate.entry_id == hub_entry.entry_id
+                        for candidate in matching_hubs
+                    )
+                    else matching_hubs[0]
+                )
             elif known_queue is None and len(hubs) == 1:
                 selected_hub = hubs[0]
             else:

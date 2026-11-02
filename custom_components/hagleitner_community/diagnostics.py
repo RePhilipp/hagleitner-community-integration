@@ -108,7 +108,12 @@ def _safe_resource_value(snapshot: Any, definition: Any) -> Any:
         return None
 
     if definition.kind == "presence":
-        return snapshot.raw_value if isinstance(snapshot.raw_value, bool) else None
+        value = snapshot.mapped_value
+        return (
+            value
+            if isinstance(value, str) and value in definition.enum_values.values()
+            else None
+        )
 
     allowed_values = set(definition.enum_values.values())
     for values in definition.device_type_enum_values.values():
