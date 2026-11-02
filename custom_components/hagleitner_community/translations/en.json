@@ -1,0 +1,14 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect Hagleitner Community",
+        "description": "Enter the Azure Service Bus queue details.",
+        "data": {
+          "connection_string": "Queue connection string",
+          "queue_name": "Queue name"
+        }
+      }
+    }
+  }
+}
