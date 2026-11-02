@@ -15,5 +15,39 @@
         "data": {}
       }
     }
+  },
+  "issues": {
+    "battery_low": {
+      "title": "{device_name}: battery low",
+      "description": "{resource_name} reports low energy supply. Replace or recharge it soon."
+    },
+    "battery_empty": {
+      "title": "{device_name}: battery empty",
+      "description": "{resource_name} reports an empty energy supply. Replace or recharge it."
+    },
+    "refill_low": {
+      "title": "{device_name}: refill running low",
+      "description": "{resource_name} reports that usable supply is low. Refill the device soon."
+    },
+    "refill_empty": {
+      "title": "{device_name}: refill empty",
+      "description": "{resource_name} reports that no usable supply remains. Refill the device."
+    },
+    "fill_nearly_full": {
+      "title": "{device_name}: container nearly full",
+      "description": "{resource_name} reports that the container is nearly full. Empty it soon."
+    },
+    "fill_full": {
+      "title": "{device_name}: container full",
+      "description": "{resource_name} reports that the container is full. Empty it."
+    },
+    "error_active": {
+      "title": "{device_name}: error active",
+      "description": "{resource_name} reports an active error (resource type {resource_type_id}). Check the device for details."
+    },
+    "connection_offline": {
+      "title": "{device_name}: offline",
+      "description": "{resource_name} reports that the device is offline."
+    }
   }
 }

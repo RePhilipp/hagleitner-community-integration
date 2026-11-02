@@ -74,6 +74,12 @@ battery-powered state is received. Mains-powered state (`3`) alone creates no
 battery entities. Error and connection values create Home Assistant problem
 and connectivity binary sensors, respectively.
 
+Active maintenance states also create issues in Home Assistant's Repairs UI.
+Low battery, low refill, and nearly-full container states are warnings;
+empty battery/refill, full containers, active errors, and exactly-offline
+devices are errors. Issues clear when a later message reports a normal state.
+Temporary-offline and not-connected states do not create connection issues.
+
 ## Project status
 
 This repository is private, so it cannot be installed from the Home Assistant

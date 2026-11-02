@@ -4,14 +4,15 @@ from __future__ import annotations
 
 import logging
 import time
+from asyncio import Task
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
-from asyncio import Task
 
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.core import callback
 
 from .const import DOMAIN
+from .repairs import async_update_maintenance_issue
 from .resource_data import (
     ResourceValueSnapshot,
     device_display_name,
@@ -40,6 +41,8 @@ class HagleitnerHub:
         self.entry = entry
         self.logger = logger
         self.adopted_device_ids: set[str] = set()
+        self.device_entry_ids: dict[str, str] = {}
+        self.device_names: dict[str, str] = {}
         self.latest_values: dict[str, dict[str, ResourceValueSnapshot]] = {}
         self._pending_discoveries: dict[str, float] = {}
         self._state_listeners: dict[str, set[Callable[[], None]]] = {}
@@ -51,6 +54,8 @@ class HagleitnerHub:
     async def async_handle_message(self, message: dict[str, Any]) -> None:
         """Cache a message, prompt for unadopted devices, and update entities."""
         device_id, device_type_id = device_identity(message)
+        device_name = device_display_name(message)
+        self.device_names[device_id] = device_name
         log_resource_values(message, self.logger)
 
         device_values = self.latest_values.setdefault(device_id, {})
@@ -69,22 +74,51 @@ class HagleitnerHub:
             return
 
         for snapshot in resource_updates.values():
+            self._async_update_maintenance_issue(device_id, snapshot)
             for listener in tuple(self._resource_listeners.get(device_id, ())):
                 listener(snapshot)
 
         for listener in tuple(self._state_listeners.get(device_id, ())):
             listener()
 
-    def adopt_device(self, device_id: str) -> None:
+    def adopt_device(
+        self,
+        device_id: str,
+        device_entry_id: str,
+        device_name: str,
+    ) -> None:
         """Enable the device after the user confirms the discovery flow."""
         self.adopted_device_ids.add(device_id)
+        self.device_entry_ids[device_id] = device_entry_id
+        self.device_names[device_id] = device_name
         self._pending_discoveries.pop(device_id, None)
+        for snapshot in self.resources_for_device(device_id):
+            self._async_update_maintenance_issue(device_id, snapshot)
 
     def unadopt_device(self, device_id: str) -> None:
         """Stop publishing values after a device config entry is removed."""
         self.adopted_device_ids.discard(device_id)
+        self.device_entry_ids.pop(device_id, None)
+        self.device_names.pop(device_id, None)
         self._state_listeners.pop(device_id, None)
         self._resource_listeners.pop(device_id, None)
+
+    def _async_update_maintenance_issue(
+        self,
+        device_id: str,
+        snapshot: ResourceValueSnapshot,
+    ) -> None:
+        """Synchronize one resource's active Home Assistant repair issues."""
+        device_entry_id = self.device_entry_ids.get(device_id)
+        if device_entry_id is None:
+            return
+        async_update_maintenance_issue(
+            self.hass,
+            device_id,
+            device_entry_id,
+            self.device_names.get(device_id, f"Hagleitner {device_id[:8]}"),
+            snapshot,
+        )
 
     def resources_for_device(
         self, device_id: str

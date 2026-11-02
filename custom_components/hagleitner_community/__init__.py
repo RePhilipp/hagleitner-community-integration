@@ -10,6 +10,7 @@ from homeassistant.const import Platform
 
 from .const import DOMAIN
 from .coordinator import HagleitnerHub
+from .repairs import async_clear_maintenance_issues
 from .service_bus import run_receiver
 
 if TYPE_CHECKING:
@@ -38,7 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             configured_entry.data.get("entry_type") == "device"
             and configured_entry.data.get("hub_entry_id") == entry.entry_id
         ):
-            hub.adopt_device(configured_entry.data["device_id"])
+            hub.adopt_device(
+                configured_entry.data["device_id"],
+                configured_entry.entry_id,
+                configured_entry.title,
+            )
 
     hub.receiver_task = hass.async_create_task(
         run_receiver(
@@ -69,7 +74,7 @@ async def _async_setup_device(
         raise ConfigEntryNotReady("Waiting for the Hagleitner queue connection")
 
     device_id = entry.data["device_id"]
-    hub.adopt_device(device_id)
+    hub.adopt_device(device_id, entry.entry_id, entry.title)
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, device_id)},
@@ -101,3 +106,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except asyncio.CancelledError:
             pass
     return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove repair issues when an adopted device entry is deleted."""
+    if entry.data.get("entry_type") == "device":
+        async_clear_maintenance_issues(hass, entry.entry_id)
