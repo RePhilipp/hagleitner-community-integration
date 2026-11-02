@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect Hagleitner Community",
-        "description": "Enter the Azure Service Bus queue details.",
+        "description": "Enter the Azure Service Bus queue details. The connection string is stored in Home Assistant's configuration, so protect your backups.",
         "data": {
           "connection_string": "Queue connection string",
           "queue_name": "Queue name"

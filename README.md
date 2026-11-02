@@ -39,6 +39,9 @@ For a manual installation, place `custom_components/hagleitner_community` in
 your Home Assistant configuration's `custom_components` directory, restart
 Home Assistant, then add **Hagleitner Community** from **Settings → Devices &
 services → Add integration**. Enter the queue connection string and queue name.
+The connection string is entered in a password-masked field, but Home Assistant
+stores it as config-entry data; protect your Home Assistant configuration and
+backups accordingly.
 
 When Home Assistant first receives a message for an unknown device, it offers
 the device for adoption. No device-registry entry or entities are created
@@ -71,8 +74,11 @@ translations. Numeric counts are total-increasing sensors, refill and status
 values are enum sensors, and energy supply status adds a battery percentage
 sensor (`0=100%`, `1=20%`, `2=0%`) and low-battery binary sensor only after a
 battery-powered state is received. Mains-powered state (`3`) alone creates no
-battery entities. Error and connection values create Home Assistant problem
-and connectivity binary sensors, respectively.
+battery percentage or low-battery entities; it creates a battery-charging
+binary sensor instead. Refill and fill status also create problem binary
+sensors that turn on only when refill is empty or the container is full.
+Connection status creates a connectivity sensor and a separate problem sensor
+that turns on only for exactly offline.
 
 Active maintenance states also create issues in Home Assistant's Repairs UI.
 Low battery, low refill, and nearly-full container states are warnings;
