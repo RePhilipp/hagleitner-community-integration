@@ -17,6 +17,7 @@ from .coordinator import HagleitnerHub
 from .resource_data import (
     ResourceDefinition,
     ResourceValueSnapshot,
+    source_timestamp,
 )
 
 _REFILL_STATE_EQUIVALENT_ID = "4b963ce8-14f4-4f90-03a9-08dac1664f9a"
@@ -69,6 +70,12 @@ def _binary_modes(snapshot: ResourceValueSnapshot) -> tuple[str, ...]:
     definition = snapshot.definition
     if definition is None:
         return ()
+    if definition.kind == "opening":
+        return ("opening",)
+    if definition.kind == "presence":
+        return ("refill_inserted",)
+    if definition.kind == "maintenance":
+        return ("maintenance_required",)
     if definition.kind == "battery":
         if snapshot.mapped_value == "mains_adapter":
             return ("battery_charging",)
@@ -105,25 +112,32 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         self._definition = definition
         self._mode = mode
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
-        self._attr_name = {
-            "battery": "Battery",
-            "battery_charging": "Battery charging",
-            "problem": definition.name,
-            "connectivity": "Connectivity",
-            "refill_problem": "Refill problem",
-            "fill_problem": "Fill status problem",
-            "connection_problem": "Connection problem",
-        }[mode]
+        if mode in {
+            "battery",
+            "battery_charging",
+            "connectivity",
+            "refill_problem",
+            "fill_problem",
+            "connection_problem",
+        }:
+            self._attr_translation_key = mode
+        else:
+            self._attr_name = definition.name
         self._attr_unique_id = f"{device_id}_{resource_key}_{mode}"
-        self._attr_device_class = {
-            "battery": BinarySensorDeviceClass.BATTERY,
-            "battery_charging": BinarySensorDeviceClass.BATTERY_CHARGING,
-            "problem": BinarySensorDeviceClass.PROBLEM,
-            "connectivity": BinarySensorDeviceClass.CONNECTIVITY,
-            "refill_problem": BinarySensorDeviceClass.PROBLEM,
-            "fill_problem": BinarySensorDeviceClass.PROBLEM,
-            "connection_problem": BinarySensorDeviceClass.PROBLEM,
-        }[mode]
+        if mode == "refill_inserted":
+            self._attr_icon = "mdi:package-check"
+        else:
+            self._attr_device_class = {
+                "battery": BinarySensorDeviceClass.BATTERY,
+                "battery_charging": BinarySensorDeviceClass.BATTERY_CHARGING,
+                "problem": BinarySensorDeviceClass.PROBLEM,
+                "connectivity": BinarySensorDeviceClass.CONNECTIVITY,
+                "refill_problem": BinarySensorDeviceClass.PROBLEM,
+                "fill_problem": BinarySensorDeviceClass.PROBLEM,
+                "connection_problem": BinarySensorDeviceClass.PROBLEM,
+                "opening": BinarySensorDeviceClass.OPENING,
+                "maintenance_required": BinarySensorDeviceClass.PROBLEM,
+            }[mode]
 
     @property
     def is_on(self) -> bool | None:
@@ -132,6 +146,22 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         if snapshot is None:
             return None
 
+        if self._mode == "refill_inserted":
+            if isinstance(snapshot.raw_value, bool):
+                return snapshot.raw_value
+            return None
+        if self._mode == "maintenance_required":
+            if snapshot.mapped_value == "change_required":
+                return True
+            if snapshot.mapped_value == "no_change_required":
+                return False
+            return None
+        if self._mode == "opening":
+            if snapshot.mapped_value == "opened":
+                return True
+            if snapshot.mapped_value == "closed":
+                return False
+            return None
         if self._mode == "battery":
             if snapshot.mapped_value in ("low", "empty"):
                 return True
@@ -185,6 +215,15 @@ class HagleitnerBinarySensor(BinarySensorEntity):
                 return False
             return None
         return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Expose the timestamp supplied with the resource reading."""
+        snapshot = self._hub.value_for_resource(self._device_id, self._resource_key)
+        if snapshot is None:
+            return None
+        timestamp = source_timestamp(snapshot.logged_at)
+        return {"last_reading_at": timestamp} if timestamp is not None else None
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to resource updates."""

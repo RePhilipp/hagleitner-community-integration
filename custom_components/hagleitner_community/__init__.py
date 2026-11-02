@@ -43,11 +43,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             and configured_entry.data.get("hub_entry_id") == entry.entry_id
         ):
             _async_set_device_hub_queue(hass, configured_entry, entry)
+            hub.device_sources.setdefault(
+                configured_entry.data["device_id"], set()
+            ).add(entry.entry_id)
             hub.adopt_device(
                 configured_entry.data["device_id"],
                 configured_entry.entry_id,
                 configured_entry.title,
             )
+            hub._async_record_device_source(configured_entry.data["device_id"])
 
     hub.receiver_task = hass.async_create_task(
         run_receiver(
@@ -82,32 +86,57 @@ def _async_rebind_orphaned_devices(
         for configured_entry in entries
         if configured_entry.data.get("entry_type") != "device"
     ]
-    queue_name = hub_entry.data.get("queue_name")
     for configured_entry in entries:
         if configured_entry.data.get("entry_type") != "device":
             continue
         previous_hub_id = configured_entry.data.get("hub_entry_id")
         if previous_hub_id == hub_entry.entry_id:
             continue
-        if (
-            previous_hub_id is not None
-            and hass.config_entries.async_get_entry(previous_hub_id) is not None
-        ):
+        previous_hub = (
+            hass.config_entries.async_get_entry(previous_hub_id)
+            if previous_hub_id is not None
+            else None
+        )
+        if previous_hub is not None and previous_hub.disabled_by is None:
             continue
 
-        known_queue = configured_entry.data.get("hub_queue_name")
-        if known_queue is not None:
-            if known_queue != queue_name:
+        associated_hubs = [
+            hass.config_entries.async_get_entry(hub_id)
+            for hub_id in configured_entry.data.get("hub_entry_ids", ())
+        ]
+        available_hubs = [
+            associated_hub
+            for associated_hub in associated_hubs
+            if associated_hub is not None
+            and associated_hub.data.get("entry_type") != "device"
+            and associated_hub.disabled_by is None
+        ]
+        if hub_entry.entry_id in {
+            associated_hub.entry_id for associated_hub in available_hubs
+        }:
+            selected_hub = hub_entry
+        elif available_hubs:
+            selected_hub = available_hubs[0]
+        else:
+            known_queue = configured_entry.data.get("hub_queue_name")
+            matching_hubs = [
+                candidate
+                for candidate in hubs
+                if candidate.data.get("queue_name") == known_queue
+            ]
+            if known_queue is not None and matching_hubs:
+                selected_hub = matching_hubs[0]
+            elif known_queue is None and len(hubs) == 1:
+                selected_hub = hubs[0]
+            else:
                 continue
-        elif len(hubs) != 1:
-            continue
 
         hass.config_entries.async_update_entry(
             configured_entry,
             data={
                 **configured_entry.data,
-                "hub_entry_id": hub_entry.entry_id,
-                "hub_queue_name": queue_name,
+                "hub_entry_id": selected_hub.entry_id,
+                "hub_queue_name": selected_hub.data.get("queue_name"),
             },
         )
 
@@ -160,8 +189,8 @@ async def _async_setup_device(
     entry: ConfigEntry,
 ) -> bool:
     """Register an adopted device and load its entity platforms."""
-    from homeassistant.helpers import device_registry as dr
     from homeassistant.exceptions import ConfigEntryNotReady
+    from homeassistant.helpers import area_registry as ar, device_registry as dr
 
     hub_entry_id = entry.data["hub_entry_id"]
     hub: HagleitnerHub | None = hass.data[DOMAIN].get(hub_entry_id)
@@ -174,13 +203,28 @@ async def _async_setup_device(
 
     device_id = entry.data["device_id"]
     hub.adopt_device(device_id, entry.entry_id, entry.title)
-    dr.async_get(hass).async_get_or_create(
+    hub._async_record_device_source(device_id)
+    identifiers = {(DOMAIN, device_id)}
+    device_registry = dr.async_get(hass)
+    existing_device = device_registry.async_get_device(identifiers=identifiers)
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, device_id)},
+        identifiers=identifiers,
         manufacturer="Hagleitner",
         model=entry.data.get("device_type_id") or None,
         name=entry.data["device_name"],
     )
+    area_id = entry.data.get("area_id")
+    if existing_device is None and isinstance(area_id, str):
+        if ar.async_get(hass).async_get_area(area_id) is not None:
+            device_registry.async_update_device(device.id, area_id=area_id)
+        else:
+            _LOGGER.info(
+                "The suggested Home Assistant area %s no longer exists; "
+                "leaving device %s unassigned",
+                area_id,
+                device_id,
+            )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -210,8 +254,44 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             and configured_entry.data.get("hub_entry_id") == entry.entry_id
         )
     ]
+    hub = hass.data[DOMAIN].get(entry.entry_id)
+    retained_entries: set[str] = set()
+    if hub is not None:
+        for device_entry in device_entries:
+            device_id = device_entry.data["device_id"]
+            alternate_hub = next(
+                (
+                    candidate_id
+                    for candidate_id in device_entry.data.get("hub_entry_ids", ())
+                    if candidate_id != entry.entry_id
+                    and (
+                        candidate := hass.config_entries.async_get_entry(
+                            candidate_id
+                        )
+                    )
+                    is not None
+                    and candidate.state == ConfigEntryState.LOADED
+                ),
+                None,
+            )
+            if alternate_hub is None:
+                continue
+            alternate_entry = hass.config_entries.async_get_entry(alternate_hub)
+            assert alternate_entry is not None
+            hass.config_entries.async_update_entry(
+                device_entry,
+                data={
+                    **device_entry.data,
+                    "hub_entry_id": alternate_entry.entry_id,
+                    "hub_queue_name": alternate_entry.data.get("queue_name"),
+                },
+            )
+            retained_entries.add(device_entry.entry_id)
+
     unloaded_entries: list[ConfigEntry] = []
     for device_entry in device_entries:
+        if device_entry.entry_id in retained_entries:
+            continue
         if device_entry.state != ConfigEntryState.LOADED:
             continue
         if not await hass.config_entries.async_unload(device_entry.entry_id):
@@ -221,9 +301,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         unloaded_entries.append(device_entry)
 
     for device_entry in device_entries:
+        if device_entry.entry_id in retained_entries:
+            continue
         _async_set_device_hub_queue(hass, device_entry, entry)
 
-    hub = hass.data[DOMAIN].pop(entry.entry_id, None)
+    if hub is not None:
+        for sources in hub.device_sources.values():
+            sources.discard(entry.entry_id)
+
+    hass.data[DOMAIN].pop(entry.entry_id, None)
     if hub is not None and hub.receiver_task is not None:
         hub.receiver_task.cancel()
         try:

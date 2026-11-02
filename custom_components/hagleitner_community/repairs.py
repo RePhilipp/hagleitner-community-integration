@@ -12,6 +12,7 @@ from .resource_data import ResourceValueSnapshot
 
 _REFILL_STATE_EQUIVALENT_ID = "4b963ce8-14f4-4f90-03a9-08dac1664f9a"
 _FILL_STATUS_EQUIVALENT_ID = "9c336908-7a04-4adc-8bd7-08dc3d205c10"
+_REPLACEMENT_RESOURCE_TYPE_ID = 12307
 
 
 class _IssueState(Enum):
@@ -31,6 +32,8 @@ _ISSUE_SEVERITIES = {
     "fill_full": ir.IssueSeverity.ERROR,
     "error_active": ir.IssueSeverity.ERROR,
     "connection_offline": ir.IssueSeverity.ERROR,
+    "flowmeter_replacement": ir.IssueSeverity.WARNING,
+    "pump_replacement": ir.IssueSeverity.WARNING,
 }
 
 
@@ -41,12 +44,13 @@ def async_update_maintenance_issue(
     device_entry_id: str,
     device_name: str,
     snapshot: ResourceValueSnapshot,
+    device_snapshots: tuple[ResourceValueSnapshot, ...] = (),
 ) -> None:
     """Create the active issue for a resource and clear its resolved issues."""
     definition = snapshot.definition
     if definition is None:
         return
-    issue_states = _issue_states(snapshot)
+    issue_states = _issue_states(snapshot, device_snapshots)
     if not issue_states:
         return
 
@@ -93,7 +97,10 @@ def async_clear_maintenance_issues(
             ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
-def _issue_states(snapshot: ResourceValueSnapshot) -> dict[str, _IssueState]:
+def _issue_states(
+    snapshot: ResourceValueSnapshot,
+    device_snapshots: tuple[ResourceValueSnapshot, ...] = (),
+) -> dict[str, _IssueState]:
     """Return each issue's active, recognized-healthy, or unknown state."""
     definition = snapshot.definition
     if definition is None:
@@ -149,7 +156,45 @@ def _issue_states(snapshot: ResourceValueSnapshot) -> dict[str, _IssueState]:
             )
         }
 
+    if definition.kind == "maintenance":
+        if snapshot.resource_type_id != _REPLACEMENT_RESOURCE_TYPE_ID:
+            return {}
+        if snapshot.instance_number == 0:
+            return {
+                "flowmeter_replacement": _issue_state(
+                    snapshot.mapped_value,
+                    "change_required",
+                    ("no_change_required",),
+                )
+            }
+        if snapshot.instance_number in (1, 2):
+            return {
+                "pump_replacement": _pump_replacement_state(device_snapshots)
+            }
+
     return {}
+
+
+def _pump_replacement_state(
+    device_snapshots: tuple[ResourceValueSnapshot, ...],
+) -> _IssueState:
+    """Combine the pump's time- and volume-based replacement triggers."""
+    trigger_values = {
+        snapshot.instance_number: snapshot.mapped_value
+        for snapshot in device_snapshots
+        if (
+            snapshot.resource_type_id == _REPLACEMENT_RESOURCE_TYPE_ID
+            and snapshot.instance_number in (1, 2)
+        )
+    }
+    if "change_required" in trigger_values.values():
+        return _IssueState.ACTIVE
+    if all(
+        trigger_values.get(instance_number) == "no_change_required"
+        for instance_number in (1, 2)
+    ):
+        return _IssueState.INACTIVE
+    return _IssueState.UNKNOWN
 
 
 def _issue_state(
@@ -171,7 +216,10 @@ def _issue_id(
     issue_key: str,
 ) -> str:
     """Build a stable issue ID for one device resource condition."""
+    instance_number = (
+        "pump" if issue_key == "pump_replacement" else snapshot.instance_number
+    )
     return (
         f"{device_id}_{snapshot.resource_type_id}_"
-        f"{snapshot.instance_number}_{issue_key}"
+        f"{instance_number}_{issue_key}"
     )

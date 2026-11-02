@@ -11,8 +11,10 @@
       },
       "confirm": {
         "title": "New Hagleitner device",
-        "description": "Add {name} to Home Assistant? The device and its entities are created only after you confirm.",
-        "data": {}
+        "description": "Add {name} to Home Assistant? The device and its entities are created only after you confirm. If an existing Home Assistant area matches the innermost device location, it is suggested below and can be changed.",
+        "data": {
+          "area_id": "Suggested area"
+        }
       }
     }
   },
@@ -48,6 +50,53 @@
     "connection_offline": {
       "title": "{device_name}: offline",
       "description": "{resource_name} reports that the device is offline."
+    },
+    "flowmeter_replacement": {
+      "title": "{device_name}: replace flowmeter",
+      "description": "The flowmeter has reached its volume-based replacement threshold. Replace it and reset the flowmeter change action to clear this task."
+    },
+    "pump_replacement": {
+      "title": "{device_name}: replace pump",
+      "description": "A time- or volume-based pump replacement threshold has been reached. Replace the pump and reset its change action to clear this task."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "metadata_customer_name": {
+        "name": "Customer name"
+      },
+      "metadata_customer_id": {
+        "name": "Customer ID"
+      },
+      "metadata_location": {
+        "name": "Location"
+      },
+      "metadata_mount_point": {
+        "name": "Mount point"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      }
+    },
+    "binary_sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "battery_charging": {
+        "name": "Battery charging"
+      },
+      "connectivity": {
+        "name": "Connectivity"
+      },
+      "refill_problem": {
+        "name": "Refill problem"
+      },
+      "fill_problem": {
+        "name": "Fill status problem"
+      },
+      "connection_problem": {
+        "name": "Connection problem"
+      }
     }
   }
 }

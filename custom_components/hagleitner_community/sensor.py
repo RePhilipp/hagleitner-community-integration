@@ -9,10 +9,10 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory, PERCENTAGE, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -24,6 +24,7 @@ from .resource_data import (
     battery_percentage,
     device_type_icon,
     enum_options,
+    source_timestamp,
 )
 
 
@@ -68,21 +69,37 @@ async def async_setup_entry(
     for snapshot in hub.resources_for_device(device_id):
         add_resource(snapshot)
     entry.async_on_unload(hub.async_add_resource_listener(device_id, add_resource))
+    async_add_entities(
+        [
+            HagleitnerMetadataSensor(
+                hub,
+                device_id,
+                "customer_name",
+            ),
+            HagleitnerMetadataSensor(hub, device_id, "customer_id"),
+            HagleitnerMetadataSensor(hub, device_id, "location"),
+            HagleitnerMetadataSensor(hub, device_id, "mount_point"),
+        ]
+    )
 
 
 def _sensor_modes(
     definition: ResourceDefinition,
     snapshot: ResourceValueSnapshot,
-) -> tuple[tuple[str, str], ...]:
+) -> tuple[tuple[str, str | None], ...]:
     """Return HA sensor entities for a resource kind."""
     if definition.kind == "counter":
         return (("counter", definition.name),)
+    if definition.kind == "measurement":
+        return (("measurement", definition.name),)
+    if definition.kind == "diagnostic":
+        return (("diagnostic", definition.name),)
     if definition.kind == "enum":
         return (("enum", definition.name),)
     if definition.kind == "battery":
-        modes = [("enum", definition.name)]
+        modes: list[tuple[str, str | None]] = [("enum", definition.name)]
         if snapshot.mapped_value != "mains_adapter":
-            modes.append(("battery_level", "Battery level"))
+            modes.append(("battery_level", None))
         return tuple(modes)
     if definition.kind == "connection":
         return (("enum", definition.name),)
@@ -103,7 +120,7 @@ class HagleitnerSensor(SensorEntity):
         definition: ResourceDefinition,
         device_type_names: frozenset[str],
         mode: str,
-        name: str,
+        name: str | None,
     ) -> None:
         """Initialize a sensor for one resource instance."""
         self._hub = hub
@@ -112,16 +129,38 @@ class HagleitnerSensor(SensorEntity):
         self._definition = definition
         self._mode = mode
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
-        self._attr_name = name
+        if mode == "battery_level":
+            self._attr_translation_key = "battery_level"
+        elif name is not None:
+            self._attr_name = name
         self._attr_unique_id = f"{device_id}_{resource_key}_{mode}"
-        if mode in ("counter", "enum"):
+        if mode == "enum" or (
+            mode == "counter" and definition.device_class is None
+        ):
             self._attr_icon = device_type_icon(device_type_names)
+        elif mode == "measurement":
+            self._attr_icon = "mdi:percent"
+        elif mode == "diagnostic":
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+            self._attr_icon = "mdi:chip"
 
         if mode == "enum":
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = enum_options(definition, device_type_names)
-        elif mode == "counter":
-            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+        elif mode in ("counter", "measurement"):
+            if definition.device_class == "volume":
+                self._attr_device_class = SensorDeviceClass.VOLUME
+            if definition.unit == "milliliters":
+                self._attr_native_unit_of_measurement = UnitOfVolume.MILLILITERS
+            elif definition.unit == "liters":
+                self._attr_native_unit_of_measurement = UnitOfVolume.LITERS
+            elif definition.unit == "percentage":
+                self._attr_native_unit_of_measurement = PERCENTAGE
+            self._attr_state_class = (
+                SensorStateClass.TOTAL_INCREASING
+                if mode == "counter"
+                else SensorStateClass.MEASUREMENT
+            )
         elif mode == "battery_level":
             self._attr_device_class = SensorDeviceClass.BATTERY
             self._attr_native_unit_of_measurement = PERCENTAGE
@@ -135,13 +174,22 @@ class HagleitnerSensor(SensorEntity):
             return None
         if self._mode == "battery_level":
             return battery_percentage(snapshot)
-        if self._mode == "counter":
+        if self._mode in ("counter", "measurement", "diagnostic"):
             return snapshot.raw_value
         if self._mode == "enum":
             if snapshot.mapped_value in self._attr_options:
                 return snapshot.mapped_value
             return None
         return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Expose the timestamp supplied with the resource reading."""
+        snapshot = self._hub.value_for_resource(self._device_id, self._resource_key)
+        if snapshot is None:
+            return None
+        timestamp = source_timestamp(snapshot.logged_at)
+        return {"last_reading_at": timestamp} if timestamp is not None else None
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to resource updates."""
@@ -156,4 +204,47 @@ class HagleitnerSensor(SensorEntity):
     @callback
     def _handle_update(self) -> None:
         """Write the latest queue value to Home Assistant."""
+        self.async_write_ha_state()
+
+
+class HagleitnerMetadataSensor(SensorEntity):
+    """Expose customer or location metadata received with device messages."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        hub: HagleitnerHub,
+        device_id: str,
+        metadata_key: str,
+    ) -> None:
+        """Initialize a diagnostic sensor for one metadata field."""
+        self._hub = hub
+        self._device_id = device_id
+        self._metadata_key = metadata_key
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
+        self._attr_translation_key = f"metadata_{metadata_key}"
+        self._attr_unique_id = f"{device_id}_{metadata_key}"
+
+    @property
+    def native_value(self) -> Any:
+        """Return the latest customer or location metadata."""
+        metadata = self._hub.metadata_for_device(self._device_id)
+        return getattr(metadata, self._metadata_key)
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to metadata and state changes."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._hub.async_add_state_listener(
+                self._device_id,
+                self._handle_update,
+            )
+        )
+
+    @callback
+    def _handle_update(self) -> None:
+        """Write the latest metadata to Home Assistant."""
         self.async_write_ha_state()

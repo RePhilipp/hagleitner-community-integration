@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Any
 
 REFILL_STATE_EQUIVALENT_ID = "4b963ce8-14f4-4f90-03a9-08dac1664f9a"
@@ -12,10 +13,12 @@ REFILL_STATE_EQUIVALENT_ID = "4b963ce8-14f4-4f90-03a9-08dac1664f9a"
 
 @dataclass(frozen=True)
 class ResourceDefinition:
-    """Entity mapping for one supported resource equivalent ID."""
+    """Entity mapping for a supported resource identifier."""
 
     name: str
     kind: str
+    device_class: str | None = None
+    unit: str | None = None
     enum_values: dict[int, Any] = field(default_factory=dict)
     device_type_enum_values: dict[str, dict[int, Any]] = field(default_factory=dict)
     battery_percent_values: dict[int, int | None] = field(default_factory=dict)
@@ -35,6 +38,17 @@ class ResourceValueSnapshot:
     raw_resource: dict[str, Any]
     definition: ResourceDefinition | None
     device_type_names: frozenset[str]
+
+
+@dataclass(frozen=True)
+class DeviceMetadata:
+    """Customer and location details carried alongside resource messages."""
+
+    customer_name: str | None = None
+    customer_id: int | None = None
+    location: str | None = None
+    mount_point: str | None = None
+    innermost_location: str | None = None
 
 
 SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
@@ -109,6 +123,149 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
         kind="counter",
     ),
 }
+
+SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
+    tuple[int, int], ResourceDefinition
+] = {
+    (3, 0): ResourceDefinition(
+        name="Firmware version",
+        kind="diagnostic",
+    ),
+    (28680, 0): ResourceDefinition(
+        name="Total delivery volume",
+        kind="counter",
+        device_class="volume",
+        unit="milliliters",
+    ),
+    (28682, 0): ResourceDefinition(
+        name="Total dispensed water volume",
+        kind="counter",
+        device_class="volume",
+        unit="liters",
+    ),
+    (45058, 0): ResourceDefinition(
+        name="Online ratio",
+        kind="measurement",
+        unit="percentage",
+    ),
+    (12289, 0): ResourceDefinition(
+        name="Cover state",
+        kind="opening",
+        enum_values={
+            0: "opened",
+            1: "closed",
+        },
+    ),
+    (20486, 0): ResourceDefinition(
+        name="Number of openings",
+        kind="counter",
+    ),
+    (12294, 0): ResourceDefinition(
+        name="Refill inserted",
+        kind="presence",
+    ),
+    (20485, 0): ResourceDefinition(
+        name="Passage count",
+        kind="counter",
+    ),
+    (20485, 1): ResourceDefinition(
+        name="People count",
+        kind="counter",
+    ),
+    (12307, 0): ResourceDefinition(
+        name="Flowmeter change required (volume-based)",
+        kind="maintenance",
+        enum_values={
+            0: "no_change_required",
+            1: "change_required",
+        },
+    ),
+    (12307, 1): ResourceDefinition(
+        name="Pump change required (time-based)",
+        kind="maintenance",
+        enum_values={
+            0: "no_change_required",
+            1: "change_required",
+        },
+    ),
+    (12307, 2): ResourceDefinition(
+        name="Pump change required (volume-based)",
+        kind="maintenance",
+        enum_values={
+            0: "no_change_required",
+            1: "change_required",
+        },
+    ),
+}
+
+
+def parse_device_metadata(message: dict[str, Any]) -> DeviceMetadata:
+    """Extract customer and location details from a resource-data message."""
+    customer_info = (
+        _field(message, "customerInfo", "CustomerInfo", default={}) or {}
+    )
+    if not isinstance(customer_info, dict):
+        customer_info = {}
+    name_parts = []
+    for field in ("name1", "name2", "name3", "name4"):
+        value = _field(customer_info, field, field.title())
+        if isinstance(value, str) and value.strip():
+            name_parts.append(value.strip())
+
+    customer_id = _field(customer_info, "customerId", "CustomerId")
+    if not isinstance(customer_id, int) or isinstance(customer_id, bool):
+        customer_id = None
+
+    location_info = (
+        _field(message, "locationInfo", "LocationInfo", default={}) or {}
+    )
+    if not isinstance(location_info, dict):
+        location_info = {}
+    locations = _field(location_info, "locations", "Locations", default=[]) or []
+    if not isinstance(locations, list):
+        locations = []
+    location_names = []
+    for location in locations:
+        if not isinstance(location, dict):
+            continue
+        name = _field(location, "name", "Name")
+        if isinstance(name, str) and name.strip():
+            location_names.append(name.strip())
+
+    mount_point = _field(location_info, "mountPoint", "MountPoint")
+    if not isinstance(mount_point, str) or not mount_point.strip():
+        mount_point = None
+    else:
+        mount_point = mount_point.strip()
+
+    return DeviceMetadata(
+        customer_name=" ".join(name_parts) or None,
+        customer_id=customer_id,
+        location=" / ".join(location_names) or None,
+        mount_point=mount_point,
+        innermost_location=location_names[-1] if location_names else None,
+    )
+
+
+def merge_device_metadata(
+    current: DeviceMetadata,
+    incoming: DeviceMetadata,
+) -> DeviceMetadata:
+    """Retain previously received metadata when a message omits a field."""
+    return DeviceMetadata(
+        customer_name=incoming.customer_name or current.customer_name,
+        customer_id=(
+            incoming.customer_id
+            if incoming.customer_id is not None
+            else current.customer_id
+        ),
+        location=incoming.location or current.location,
+        mount_point=incoming.mount_point or current.mount_point,
+        innermost_location=(
+            incoming.innermost_location or current.innermost_location
+        ),
+    )
+
 
 def device_identity(message: dict[str, Any]) -> tuple[str, str]:
     """Return the device ID and device type ID from a wire-format message."""
@@ -188,12 +345,19 @@ def resource_value_snapshots(
                 if equivalent_id
                 else None
             )
+            key_equivalent_id = equivalent_id
+            if definition is None:
+                definition = SUPPORTED_RESOURCES_BY_TYPE_INSTANCE.get(
+                    (resource_type_id, instance_number)
+                )
+                if definition is not None:
+                    key_equivalent_id = None
 
             raw_value = _raw_value(resource_value)
             snapshots.append(
                 ResourceValueSnapshot(
                     key=_resource_key(
-                        equivalent_id,
+                        key_equivalent_id,
                         resource_type_id,
                         instance_number,
                     ),
@@ -294,9 +458,48 @@ def battery_percentage(
     return snapshot.definition.battery_percent_values.get(snapshot.raw_value)
 
 
+def source_timestamp(logged_at: Any) -> str | None:
+    """Return the reading's source timestamp for entity attributes."""
+    if isinstance(logged_at, datetime):
+        return logged_at.isoformat()
+    if isinstance(logged_at, str) and logged_at.strip().casefold() != "unknown":
+        return logged_at.strip()
+    return None
+
+
+def should_accept_reading(
+    incoming: ResourceValueSnapshot,
+    current: ResourceValueSnapshot,
+) -> bool:
+    """Reject older readings when both timestamps can be compared."""
+    current_time = _parse_timestamp(current.logged_at)
+    if current_time is None:
+        return True
+
+    incoming_time = _parse_timestamp(incoming.logged_at)
+    return incoming_time is not None and incoming_time >= current_time
+
+
 def resource_value_key(snapshot: ResourceValueSnapshot) -> str:
     """Build a stable per-device key for an equivalent resource instance."""
     return snapshot.key
+
+
+def _parse_timestamp(value: Any) -> datetime | None:
+    """Parse a source timestamp, treating timezone-naive values as UTC."""
+    if isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, str):
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    else:
+        return None
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
 
 
 def _resource_key(
