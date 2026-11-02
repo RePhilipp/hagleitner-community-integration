@@ -41,22 +41,29 @@ Home Assistant, then add **Hagleitner Community** from **Settings → Devices &
 services → Add integration**. Enter the queue connection string and queue name.
 
 When Home Assistant receives a message, the integration registers the device
-using its device ID if it is not already registered, then logs each
-`ResourceValue`, including whether the resource is in the supported catalog.
-The initial catalog includes the Fragrance dispenser's Refill state:
+using its device ID if it is not already registered, then logs each `ResourceValue`, including its raw and normalized value when
+known. The hard-coded catalog currently includes:
 
-| Equivalent ID | Resource type ID | Instance | Current handling |
-|---|---:|---:|---|
-| `4b963ce8-14f4-4f90-03a9-08dac1664f9a` | `12290` | `0` | Log only |
+| Equivalent ID | Resource | Value handling |
+|---|---|---|
+| `84b96502-7738-43fb-f3dd-08dace26c91e` | Dispense count | Numeric counter |
+| `491d2cd9-92a0-4107-f3de-08dace26c91e` | Refill count | Numeric counter |
+| `77d144fd-d7a3-42f7-03aa-08dac1664f9a` | Energy supply status | `0=ok`, `1=low`, `2=empty`, `3=mains_adapter` |
+| `4b963ce8-14f4-4f90-03a9-08dac1664f9a` | Refill status | `0=full`, `1=low`, `2=empty` |
+| `9a77375d-964c-451f-03ab-08dac1664f9a` | Error status | `0=no_error`, `1=error` |
+| `7c178f1d-271f-4554-03ac-08dac1664f9a` | Connection status | `0=offline`, `1=temporarily_offline`, `2=online`, `3=not_connected` |
+| `9c336908-7a04-4adc-8bd7-08dc3d205c10` | Fill status | `0=empty`, `1=nearly_full`, `2=full` |
+| `f8cdaa9a-4633-4fd4-1d0d-08de5e8412d5` | Passage counter | Numeric counter |
 
 When an equivalent ID is present, the catalog matches on that ID. A
 device-type/resource/instance match remains as a fallback for identifiers that
 do not include an equivalent ID.
 
-The supplied enum values `0`, `1`, and `2` do not yet define their meanings, so
-no state conversion is guessed. Once those meanings and the desired Home
-Assistant entities are confirmed, mappings can be added to the resource
-catalog.
+Error values are normalized only to `no_error` or `error`; their detailed
+meaning depends on the device. Gateway LONGRANGE connection values are
+overridden to `0=not_available` and `2=available` using the device-type
+translations. The integration still only logs values; it does not create
+entities or assign Home Assistant device classes yet.
 
 ## Project status
 
