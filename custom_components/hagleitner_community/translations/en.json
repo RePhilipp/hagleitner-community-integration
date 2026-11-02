@@ -8,6 +8,11 @@
           "connection_string": "Queue connection string",
           "queue_name": "Queue name"
         }
+      },
+      "confirm": {
+        "title": "New Hagleitner device",
+        "description": "Add {name} to Home Assistant? The device and its entities are created only after you confirm.",
+        "data": {}
       }
     }
   }

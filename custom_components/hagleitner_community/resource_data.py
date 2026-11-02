@@ -7,42 +7,64 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
-FRAGRANCE_DISPENSER_DEVICE_TYPE_ID = "d15a2a06-5fea-43ba-1cff-08d87b4a7749"
 REFILL_STATE_EQUIVALENT_ID = "4b963ce8-14f4-4f90-03a9-08dac1664f9a"
 
 
 @dataclass(frozen=True)
 class ResourceDefinition:
-    """Metadata for a resource that will eventually become an HA entity."""
+    """Entity mapping for one supported resource equivalent ID."""
 
     name: str
-    platform: str
+    kind: str
     enum_values: dict[int, Any] = field(default_factory=dict)
     device_type_enum_values: dict[str, dict[int, Any]] = field(default_factory=dict)
+    battery_percent_values: dict[int, int | None] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class ResourceValueSnapshot:
+    """Latest values and identifiers for one wire-format resource value."""
+
+    key: str
+    logged_at: Any
+    resource_type_id: Any
+    instance_number: Any
+    equivalent_id: str | None
+    raw_value: Any
+    mapped_value: Any
+    raw_resource: dict[str, Any]
+    definition: ResourceDefinition | None
+    device_type_names: frozenset[str]
 
 
 SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     "84b96502-7738-43fb-f3dd-08dace26c91e": ResourceDefinition(
         name="Dispense count",
-        platform="sensor",
+        kind="counter",
     ),
     "491d2cd9-92a0-4107-f3de-08dace26c91e": ResourceDefinition(
         name="Refill count",
-        platform="sensor",
+        kind="counter",
     ),
     "77d144fd-d7a3-42f7-03aa-08dac1664f9a": ResourceDefinition(
         name="Energy supply status",
-        platform="sensor",
+        kind="battery",
         enum_values={
             0: "ok",
             1: "low",
             2: "empty",
             3: "mains_adapter",
         },
+        battery_percent_values={
+            0: 100,
+            1: 20,
+            2: 0,
+            3: None,
+        },
     ),
     REFILL_STATE_EQUIVALENT_ID: ResourceDefinition(
         name="Refill state",
-        platform="sensor",
+        kind="enum",
         enum_values={
             0: "full",
             1: "low",
@@ -51,7 +73,7 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     ),
     "9a77375d-964c-451f-03ab-08dac1664f9a": ResourceDefinition(
         name="Error status",
-        platform="sensor",
+        kind="problem",
         enum_values={
             0: "no_error",
             1: "error",
@@ -59,7 +81,7 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     ),
     "7c178f1d-271f-4554-03ac-08dac1664f9a": ResourceDefinition(
         name="Connection status",
-        platform="sensor",
+        kind="connection",
         enum_values={
             0: "offline",
             1: "temporarily_offline",
@@ -75,7 +97,7 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     ),
     "9c336908-7a04-4adc-8bd7-08dc3d205c10": ResourceDefinition(
         name="Fill status",
-        platform="sensor",
+        kind="enum",
         enum_values={
             0: "empty",
             1: "nearly_full",
@@ -84,24 +106,9 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     ),
     "f8cdaa9a-4633-4fd4-1d0d-08de5e8412d5": ResourceDefinition(
         name="Passage counter",
-        platform="sensor",
+        kind="counter",
     ),
 }
-
-SUPPORTED_RESOURCES_BY_DEVICE_RESOURCE: dict[
-    tuple[str, int, int], ResourceDefinition
-] = {
-    (FRAGRANCE_DISPENSER_DEVICE_TYPE_ID, 12290, 0): ResourceDefinition(
-        name="Refill state",
-        platform="sensor",
-        enum_values={
-            0: "full",
-            1: "low",
-            2: "empty",
-        },
-    )
-}
-
 
 def device_identity(message: dict[str, Any]) -> tuple[str, str]:
     """Return the device ID and device type ID from a wire-format message."""
@@ -118,10 +125,34 @@ def device_identity(message: dict[str, Any]) -> tuple[str, str]:
 
 
 def log_resource_values(message: dict[str, Any], logger: logging.Logger) -> None:
-    """Log each resource value, flagging identifiers in the supported catalog."""
+    """Log raw and normalized values for every resource in a message."""
     device_id, device_type_id = device_identity(message)
+    for snapshot in resource_value_snapshots(message):
+        logger.info(
+            "Resource value device_id=%s logged_at=%s resource_type_id=%s "
+            "instance=%s equivalent_id=%s device_type_id=%s "
+            "supported=%s name=%s mapped_value=%s value=%s",
+            device_id,
+            snapshot.logged_at,
+            snapshot.resource_type_id,
+            snapshot.instance_number,
+            snapshot.equivalent_id,
+            device_type_id,
+            snapshot.definition is not None,
+            snapshot.definition.name if snapshot.definition else None,
+            snapshot.mapped_value,
+            json.dumps(snapshot.raw_resource, ensure_ascii=False, sort_keys=True),
+        )
+
+
+def resource_value_snapshots(
+    message: dict[str, Any],
+) -> list[ResourceValueSnapshot]:
+    """Extract resource values and their best available mapping metadata."""
+    device_identity(message)
     device_info = _field(message, "deviceInfo", "DeviceInfo", default={}) or {}
-    device_type_names = _device_type_names(device_info)
+    device_type_names = frozenset(_device_type_names(device_info))
+    snapshots = []
 
     for reading in _field(message, "readings", "Readings", default=[]) or []:
         logged_at = _field(reading, "loggedAt", "LoggedAt", default="unknown")
@@ -142,44 +173,105 @@ def log_resource_values(message: dict[str, Any], logger: logging.Logger) -> None
             instance_number = _field(
                 identifier, "resourceInstanceNo", "ResourceInstanceNo"
             )
-            equivalent_id = _field(
+            equivalent_id_value = _field(
                 identifier,
                 "resourceInstanceEquivalentId",
                 "ResourceInstanceEquivalentId",
             )
+            equivalent_id = (
+                equivalent_id_value.lower()
+                if isinstance(equivalent_id_value, str)
+                else None
+            )
+            definition = (
+                SUPPORTED_RESOURCES_BY_EQUIVALENT_ID.get(equivalent_id)
+                if equivalent_id
+                else None
+            )
 
-            definition = None
-            if isinstance(equivalent_id, str):
-                definition = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID.get(
-                    equivalent_id.lower()
-                )
-
-            if isinstance(resource_type_id, int) and isinstance(instance_number, int):
-                definition = definition or SUPPORTED_RESOURCES_BY_DEVICE_RESOURCE.get(
-                    (device_type_id, resource_type_id, instance_number)
-                )
             raw_value = _raw_value(resource_value)
-            mapped_value = _mapped_value(
-                raw_value,
-                definition,
-                device_type_names,
+            snapshots.append(
+                ResourceValueSnapshot(
+                    key=_resource_key(
+                        equivalent_id,
+                        resource_type_id,
+                        instance_number,
+                    ),
+                    logged_at=logged_at,
+                    resource_type_id=resource_type_id,
+                    instance_number=instance_number,
+                    equivalent_id=equivalent_id,
+                    raw_value=raw_value,
+                    mapped_value=_mapped_value(
+                        raw_value,
+                        definition,
+                        device_type_names,
+                    ),
+                    raw_resource=resource_value,
+                    definition=definition,
+                    device_type_names=device_type_names,
+                )
             )
+    return snapshots
 
-            logger.info(
-                "Resource value device_id=%s logged_at=%s resource_type_id=%s "
-                "instance=%s equivalent_id=%s device_type_id=%s "
-                "supported=%s name=%s mapped_value=%s value=%s",
-                device_id,
-                logged_at,
-                resource_type_id,
-                instance_number,
-                equivalent_id,
-                device_type_id,
-                definition is not None,
-                definition.name if definition else None,
-                mapped_value,
-                json.dumps(resource_value, ensure_ascii=False, sort_keys=True),
-            )
+
+def device_display_name(message: dict[str, Any]) -> str:
+    """Return a translated type name for discovery, falling back to the ID."""
+    device_id, _ = device_identity(message)
+    device_info = _field(message, "deviceInfo", "DeviceInfo", default={}) or {}
+    translations = (
+        _field(
+            device_info,
+            "deviceTypeNameTranslations",
+            "DeviceTypeNameTranslations",
+            default=[],
+        )
+        or []
+    )
+    for translation in translations:
+        if str(_field(translation, "languageTag", "LanguageTag", default="")).casefold() == "en":
+            value = _field(translation, "value", "Value")
+            if isinstance(value, str) and value:
+                return f"Hagleitner {value}"
+    return f"Hagleitner {device_id[:8]}"
+
+
+def enum_options(
+    definition: ResourceDefinition,
+    device_type_names: frozenset[str],
+) -> list[str]:
+    """Return allowed HA enum states for the device type."""
+    for device_type_name, values in definition.device_type_enum_values.items():
+        if device_type_name.casefold() in device_type_names:
+            return list(dict.fromkeys(values.values()))
+    return list(dict.fromkeys(definition.enum_values.values()))
+
+
+def battery_percentage(
+    snapshot: ResourceValueSnapshot,
+) -> int | None:
+    """Convert energy-supply enums to a battery percentage where applicable."""
+    if snapshot.definition is None or snapshot.definition.kind != "battery":
+        return None
+    if not isinstance(snapshot.raw_value, int) or isinstance(snapshot.raw_value, bool):
+        return None
+    return snapshot.definition.battery_percent_values.get(snapshot.raw_value)
+
+
+def resource_value_key(snapshot: ResourceValueSnapshot) -> str:
+    """Build a stable per-device key for an equivalent resource instance."""
+    return snapshot.key
+
+
+def _resource_key(
+    equivalent_id: str | None,
+    resource_type_id: Any,
+    instance_number: Any,
+) -> str:
+    """Classify by equivalent ID but keep distinct type/instance entities apart."""
+    if equivalent_id is not None:
+        return f"{equivalent_id}:{resource_type_id}:{instance_number}"
+    return f"{resource_type_id}:{instance_number}"
 
 
 def _device_type_names(device_info: dict[str, Any]) -> set[str]:

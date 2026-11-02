@@ -4,9 +4,9 @@ An unofficial Home Assistant custom integration for receiving Hagleitner
 resource-data messages from Azure Service Bus. This is an independent community
 project; it is not maintained, supported, or endorsed by Hagleitner.
 
-The first version is deliberately a receiver/debugging foundation: it creates a
-Home Assistant device registry entry on the first message for a device and
-logs each resource value. It does not create sensor entities yet.
+The integration discovers devices from incoming messages and asks before
+adding each one to Home Assistant. It then creates entities for supported
+resources as they arrive, without requiring a restart.
 
 ## Local receiver
 
@@ -40,9 +40,14 @@ your Home Assistant configuration's `custom_components` directory, restart
 Home Assistant, then add **Hagleitner Community** from **Settings → Devices &
 services → Add integration**. Enter the queue connection string and queue name.
 
-When Home Assistant receives a message, the integration registers the device
-using its device ID if it is not already registered, then logs each `ResourceValue`, including its raw and normalized value when
-known. The hard-coded catalog currently includes:
+When Home Assistant first receives a message for an unknown device, it offers
+the device for adoption. No device-registry entry or entities are created
+unless the user confirms. After adoption, the integration registers the device
+and creates entities when supported resource values arrive. Supported values
+received before adoption are cached and their entities are created once the
+device is adopted. Existing disabled entities are not enabled automatically.
+
+The hard-coded catalog currently includes:
 
 | Equivalent ID | Resource | Value handling |
 |---|---|---|
@@ -55,15 +60,18 @@ known. The hard-coded catalog currently includes:
 | `9c336908-7a04-4adc-8bd7-08dc3d205c10` | Fill status | `0=empty`, `1=nearly_full`, `2=full` |
 | `f8cdaa9a-4633-4fd4-1d0d-08de5e8412d5` | Passage counter | Numeric counter |
 
-When an equivalent ID is present, the catalog matches on that ID. A
-device-type/resource/instance match remains as a fallback for identifiers that
-do not include an equivalent ID.
+The catalog matches resources by equivalent ID. Resource type and instance
+numbers are retained as part of entity identity so separate resources sharing
+an equivalent ID do not overwrite one another.
 
 Error values are normalized only to `no_error` or `error`; their detailed
 meaning depends on the device. Gateway LONGRANGE connection values are
 overridden to `0=not_available` and `2=available` using the device-type
-translations. The integration still only logs values; it does not create
-entities or assign Home Assistant device classes yet.
+translations. Numeric counts are total-increasing sensors, refill and status
+values are enum sensors, and energy supply status also creates a battery
+percentage sensor (`0=100%`, `1=20%`, `2=0%`, `3=unknown`) and low-battery
+binary sensor. Error and connection values create Home Assistant problem and
+connectivity binary sensors, respectively.
 
 ## Project status
 
