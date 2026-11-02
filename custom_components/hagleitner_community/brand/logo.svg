@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="300" viewBox="0 0 960 300">
+  <rect width="960" height="300" fill="#087FC2"/>
+  <g transform="translate(2 -18) scale(.25)">
+    <g fill="none" stroke="#fff" stroke-linecap="round" stroke-width="60">
+      <path d="M864 218c148 103 230 258 230 423 0 139-67 264-179 340"/>
+      <path d="M175 637c7 222 177 396 396 428 94 14 190 1 270-35"/>
+    </g>
+    <path d="M146 602c28-217 195-402 397-448 105-24 218-10 272 27 38 26 45 63 22 107-16 31-37 52-55 47-20-6-12-28-3-49 14-34 7-58-25-69-30-10-73-8-126-2-208 24-355 184-452 383-13 27-23 45-30 43Z" fill="#83C341"/>
+    <path d="M641 541c85 43 207 43 329-6v295c-106 38-223 54-330 16 42-34 64-78 64-126 0-67-26-128-63-179Z" fill="#fff"/>
+    <ellipse cx="771" cy="500" rx="146" ry="53" fill="#fff"/>
+    <ellipse cx="771" cy="502" rx="60" ry="26" fill="#087FC2"/>
+    <path d="M496 352c-53 72-197 259-197 368 0 103 82 184 191 184 116 0 210-82 210-184 0-110-153-297-204-368Z" fill="#fff"/>
+    <path d="M642 543c38 60 60 119 60 177 0 51-22 96-62 129" fill="none" stroke="#087FC2" stroke-linecap="round" stroke-width="9"/>
+    <path d="M368 663c-24 55-17 143 66 181" fill="none" stroke="#087FC2" stroke-linecap="round" stroke-width="30"/>
+  </g>
+  <text x="310" y="126" fill="#fff" font-family="Arial, sans-serif" font-size="48" font-weight="700">Hagleitner</text>
+  <text x="310" y="177" fill="#fff" font-family="Arial, sans-serif" font-size="27" font-weight="700" letter-spacing="2">COMMUNITY</text>
+  <text x="310" y="222" fill="#fff" font-family="Arial, sans-serif" font-size="17" letter-spacing="1">UNOFFICIAL HOME ASSISTANT INTEGRATION</text>
+</svg>

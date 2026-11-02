@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from enum import Enum
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
@@ -10,6 +12,15 @@ from .resource_data import ResourceValueSnapshot
 
 _REFILL_STATE_EQUIVALENT_ID = "4b963ce8-14f4-4f90-03a9-08dac1664f9a"
 _FILL_STATUS_EQUIVALENT_ID = "9c336908-7a04-4adc-8bd7-08dc3d205c10"
+
+
+class _IssueState(Enum):
+    """Whether a maintenance issue is active, resolved, or not interpretable."""
+
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    UNKNOWN = "unknown"
+
 
 _ISSUE_SEVERITIES = {
     "battery_low": ir.IssueSeverity.WARNING,
@@ -40,10 +51,13 @@ def async_update_maintenance_issue(
         return
 
     registry = ir.async_get(hass)
-    for issue_key, is_active in issue_states.items():
+    for issue_key, state in issue_states.items():
+        if state is _IssueState.UNKNOWN:
+            continue
+
         issue_id = _issue_id(device_id, snapshot, issue_key)
         current_issue = registry.async_get_issue(DOMAIN, issue_id)
-        if not is_active:
+        if state is _IssueState.INACTIVE:
             if current_issue is not None:
                 ir.async_delete_issue(hass, DOMAIN, issue_id)
             continue
@@ -79,37 +93,76 @@ def async_clear_maintenance_issues(
             ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
-def _issue_states(snapshot: ResourceValueSnapshot) -> dict[str, bool]:
-    """Return possible issue keys and whether each is active."""
+def _issue_states(snapshot: ResourceValueSnapshot) -> dict[str, _IssueState]:
+    """Return each issue's active, recognized-healthy, or unknown state."""
     definition = snapshot.definition
     if definition is None:
         return {}
 
     if definition.kind == "battery":
         return {
-            "battery_low": snapshot.mapped_value == "low",
-            "battery_empty": snapshot.mapped_value == "empty",
+            "battery_low": _issue_state(
+                snapshot.mapped_value, "low", ("ok", "empty", "mains_adapter")
+            ),
+            "battery_empty": _issue_state(
+                snapshot.mapped_value, "empty", ("ok", "low", "mains_adapter")
+            ),
         }
 
     if snapshot.equivalent_id == _REFILL_STATE_EQUIVALENT_ID:
         return {
-            "refill_low": snapshot.mapped_value == "low",
-            "refill_empty": snapshot.mapped_value == "empty",
+            "refill_low": _issue_state(
+                snapshot.mapped_value, "low", ("full", "empty")
+            ),
+            "refill_empty": _issue_state(
+                snapshot.mapped_value, "empty", ("full", "low")
+            ),
         }
 
     if snapshot.equivalent_id == _FILL_STATUS_EQUIVALENT_ID:
         return {
-            "fill_nearly_full": snapshot.mapped_value == "nearly_full",
-            "fill_full": snapshot.mapped_value == "full",
+            "fill_nearly_full": _issue_state(
+                snapshot.mapped_value, "nearly_full", ("empty", "full")
+            ),
+            "fill_full": _issue_state(
+                snapshot.mapped_value, "full", ("empty", "nearly_full")
+            ),
         }
 
     if definition.kind == "problem":
-        return {"error_active": snapshot.mapped_value == "error"}
+        return {
+            "error_active": _issue_state(snapshot.mapped_value, "error", ("no_error",))
+        }
 
     if definition.kind == "connection":
-        return {"connection_offline": snapshot.mapped_value == "offline"}
+        return {
+            "connection_offline": _issue_state(
+                snapshot.mapped_value,
+                "offline",
+                (
+                    "temporarily_offline",
+                    "online",
+                    "not_connected",
+                    "not_available",
+                    "available",
+                ),
+            )
+        }
 
     return {}
+
+
+def _issue_state(
+    value: object,
+    active_value: str,
+    healthy_values: tuple[str, ...],
+) -> _IssueState:
+    """Interpret only the condition and explicitly healthy normalized values."""
+    if value == active_value:
+        return _IssueState.ACTIVE
+    if value in healthy_values:
+        return _IssueState.INACTIVE
+    return _IssueState.UNKNOWN
 
 
 def _issue_id(

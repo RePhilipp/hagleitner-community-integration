@@ -31,7 +31,13 @@ into an issue.
 
 The receiver uses peek-lock mode. Successfully decoded and logged messages are
 completed; malformed JSON or messages without a device ID are dead-lettered.
-Press `Ctrl+C` to stop the local process.
+If message handling fails, the message is abandoned for redelivery; repeated
+failures are eventually dead-lettered according to the queue's configured
+maximum delivery count. Azure's SDK retries transient Service Bus failures; if
+those retries are exhausted, the integration recreates the receiver with
+exponential backoff capped at 60 seconds. Processing is at-least-once, so a
+message may be delivered more than once. Press `Ctrl+C` to stop the local
+process.
 
 ## Home Assistant setup
 
@@ -49,6 +55,9 @@ unless the user confirms. After adoption, the integration registers the device
 and creates entities when supported resource values arrive. Supported values
 received before adoption are cached and their entities are created once the
 device is adopted. Existing disabled entities are not enabled automatically.
+Adoption is per device, not per message; a fleet of 100 unknown devices can
+produce 100 separate adoption flows. An unadopted device may be offered again
+after a two-minute retry interval.
 
 The hard-coded catalog currently includes:
 
