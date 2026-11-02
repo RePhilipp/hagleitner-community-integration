@@ -11,7 +11,10 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.core import callback
-from homeassistant.helpers import area_registry as ar
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+)
 
 from .const import DOMAIN
 from .repairs import async_update_maintenance_issue
@@ -269,10 +272,16 @@ class HagleitnerHub:
         metadata = self.metadata_for_device(device_id)
         discovery_data["hsm_location_path"] = metadata.location or "—"
         discovery_data["hsm_mount_point"] = metadata.mount_point or "—"
-        suggested_area_id = _suggest_existing_area_id(
+        has_location_area, suggested_area_id = _suggest_area_from_hsm_location(
             self.hass,
-            metadata.innermost_location,
+            device_id,
+            metadata.location,
         )
+        if not has_location_area:
+            suggested_area_id = _suggest_existing_area_id(
+                self.hass,
+                metadata.innermost_location,
+            )
         if suggested_area_id is not None:
             discovery_data["suggested_area_id"] = suggested_area_id
 
@@ -281,6 +290,57 @@ class HagleitnerHub:
             context={"source": SOURCE_INTEGRATION_DISCOVERY},
             data=discovery_data,
         )
+
+
+def _suggest_area_from_hsm_location(
+    hass: HomeAssistant,
+    device_id: str,
+    location_path: str | None,
+) -> tuple[bool, str | None]:
+    """Reuse an adopted sibling device's area for the exact HSM location."""
+    if not location_path:
+        return False, None
+
+    shared = hass.data.get(DOMAIN, {}).get("_shared_device_state", {})
+    metadata_by_device = shared.get("device_metadata", {})
+    if not isinstance(metadata_by_device, dict):
+        return False, None
+
+    normalized_path = _normalize_area_name(location_path)
+    area_registry = ar.async_get(hass)
+    device_registry = dr.async_get(hass)
+    matching_area_ids: set[str] = set()
+    for device in device_registry.devices.values():
+        candidate_id = next(
+            (
+                identifier
+                for domain, identifier in device.identifiers
+                if domain == DOMAIN
+            ),
+            None,
+        )
+        if candidate_id is None or candidate_id == device_id:
+            continue
+        metadata = metadata_by_device.get(candidate_id)
+        candidate_path = (
+            metadata.location if isinstance(metadata, DeviceMetadata) else None
+        )
+        if (
+            not isinstance(candidate_path, str)
+            or _normalize_area_name(candidate_path) != normalized_path
+        ):
+            continue
+        if (
+            device.area_id is not None
+            and area_registry.async_get_area(device.area_id) is not None
+        ):
+            matching_area_ids.add(device.area_id)
+
+    if len(matching_area_ids) == 1:
+        return True, next(iter(matching_area_ids))
+    if matching_area_ids:
+        return True, None
+    return False, None
 
 
 def _suggest_existing_area_id(
