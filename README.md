@@ -68,10 +68,11 @@ Error values are normalized only to `no_error` or `error`; their detailed
 meaning depends on the device. Gateway LONGRANGE connection values are
 overridden to `0=not_available` and `2=available` using the device-type
 translations. Numeric counts are total-increasing sensors, refill and status
-values are enum sensors, and energy supply status also creates a battery
-percentage sensor (`0=100%`, `1=20%`, `2=0%`, `3=unknown`) and low-battery
-binary sensor. Error and connection values create Home Assistant problem and
-connectivity binary sensors, respectively.
+values are enum sensors, and energy supply status adds a battery percentage
+sensor (`0=100%`, `1=20%`, `2=0%`) and low-battery binary sensor only after a
+battery-powered state is received. Mains-powered state (`3`) alone creates no
+battery entities. Error and connection values create Home Assistant problem
+and connectivity binary sensors, respectively.
 
 ## Project status
 

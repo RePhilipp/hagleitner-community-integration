@@ -54,11 +54,11 @@ class HagleitnerHub:
         log_resource_values(message, self.logger)
 
         device_values = self.latest_values.setdefault(device_id, {})
-        new_resources: list[ResourceValueSnapshot] = []
+        resource_updates: dict[str, ResourceValueSnapshot] = {}
         for snapshot in resource_value_snapshots(message):
-            if snapshot.key not in device_values and snapshot.definition is not None:
-                new_resources.append(snapshot)
             device_values[snapshot.key] = snapshot
+            if snapshot.definition is not None:
+                resource_updates[snapshot.key] = snapshot
 
         if device_id not in self.adopted_device_ids:
             await self._async_start_discovery(
@@ -68,7 +68,7 @@ class HagleitnerHub:
             )
             return
 
-        for snapshot in new_resources:
+        for snapshot in resource_updates.values():
             for listener in tuple(self._resource_listeners.get(device_id, ())):
                 listener(snapshot)
 
@@ -113,7 +113,7 @@ class HagleitnerHub:
         device_id: str,
         listener: Callable[[ResourceValueSnapshot], None],
     ) -> Callable[[], None]:
-        """Subscribe a platform to resources discovered after device adoption."""
+        """Subscribe a platform to supported resource updates."""
         listeners = self._resource_listeners.setdefault(device_id, set())
         listeners.add(listener)
         return lambda: listeners.discard(listener)

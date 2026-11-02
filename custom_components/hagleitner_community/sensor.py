@@ -45,7 +45,7 @@ async def async_setup_entry(
             return
 
         entities = []
-        for mode, name in _sensor_modes(definition):
+        for mode, name in _sensor_modes(definition, snapshot):
             unique_id = f"{device_id}_{snapshot.key}_{mode}"
             if unique_id in added_ids:
                 continue
@@ -69,17 +69,20 @@ async def async_setup_entry(
     entry.async_on_unload(hub.async_add_resource_listener(device_id, add_resource))
 
 
-def _sensor_modes(definition: ResourceDefinition) -> tuple[tuple[str, str], ...]:
+def _sensor_modes(
+    definition: ResourceDefinition,
+    snapshot: ResourceValueSnapshot,
+) -> tuple[tuple[str, str], ...]:
     """Return HA sensor entities for a resource kind."""
     if definition.kind == "counter":
         return (("counter", definition.name),)
     if definition.kind == "enum":
         return (("enum", definition.name),)
     if definition.kind == "battery":
-        return (
-            ("enum", definition.name),
-            ("battery_level", "Battery level"),
-        )
+        modes = [("enum", definition.name)]
+        if snapshot.mapped_value != "mains_adapter":
+            modes.append(("battery_level", "Battery level"))
+        return tuple(modes)
     if definition.kind == "connection":
         return (("enum", definition.name),)
     return ()

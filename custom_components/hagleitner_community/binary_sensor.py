@@ -39,6 +39,9 @@ async def async_setup_entry(
         if mode is None:
             return
 
+        if mode == "battery" and snapshot.mapped_value == "mains_adapter":
+            return
+
         unique_id = f"{device_id}_{snapshot.key}_{mode}"
         if unique_id in added_ids:
             return
