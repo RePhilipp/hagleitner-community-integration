@@ -14,6 +14,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
+    entity_registry as er,
 )
 
 from .const import DOMAIN
@@ -304,11 +305,12 @@ def _suggest_area_from_hsm_location(
     shared = hass.data.get(DOMAIN, {}).get("_shared_device_state", {})
     metadata_by_device = shared.get("device_metadata", {})
     if not isinstance(metadata_by_device, dict):
-        return False, None
+        metadata_by_device = {}
 
     normalized_path = _normalize_area_name(location_path)
     area_registry = ar.async_get(hass)
     device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
     matching_area_ids: set[str] = set()
     for device in device_registry.devices.values():
         candidate_id = next(
@@ -325,6 +327,30 @@ def _suggest_area_from_hsm_location(
         candidate_path = (
             metadata.location if isinstance(metadata, DeviceMetadata) else None
         )
+        if candidate_path is None:
+            location_entity = next(
+                (
+                    entity
+                    for entity in er.async_entries_for_device(
+                        entity_registry,
+                        device.id,
+                    )
+                    if entity.platform == DOMAIN
+                    and entity.domain == "sensor"
+                    and entity.unique_id == f"{candidate_id}_location"
+                ),
+                None,
+            )
+            location_state = (
+                hass.states.get(location_entity.entity_id)
+                if location_entity is not None
+                else None
+            )
+            if (
+                location_state is not None
+                and location_state.state not in ("unknown", "unavailable")
+            ):
+                candidate_path = location_state.state
         if (
             not isinstance(candidate_path, str)
             or _normalize_area_name(candidate_path) != normalized_path
