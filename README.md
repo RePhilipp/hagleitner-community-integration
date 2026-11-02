@@ -45,9 +45,13 @@ using its device ID if it is not already registered, then logs each
 `ResourceValue`, including whether the resource is in the supported catalog.
 The initial catalog includes the Fragrance dispenser's Refill state:
 
-| Device type ID | Resource type ID | Instance | Current handling |
+| Equivalent ID | Resource type ID | Instance | Current handling |
 |---|---:|---:|---|
-| `d15a2a06-5fea-43ba-1cff-08d87b4a7749` | `12290` | `0` | Log only |
+| `4b963ce8-14f4-4f90-03a9-08dac1664f9a` | `12290` | `0` | Log only |
+
+When an equivalent ID is present, the catalog matches on that ID. A
+device-type/resource/instance match remains as a fallback for identifiers that
+do not include an equivalent ID.
 
 The supplied enum values `0`, `1`, and `2` do not yet define their meanings, so
 no state conversion is guessed. Once those meanings and the desired Home

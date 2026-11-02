@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 FRAGRANCE_DISPENSER_DEVICE_TYPE_ID = "d15a2a06-5fea-43ba-1cff-08d87b4a7749"
+REFILL_STATE_EQUIVALENT_ID = "4b963ce8-14f4-4f90-03a9-08dac1664f9a"
 
 
 @dataclass(frozen=True)
@@ -20,7 +21,16 @@ class ResourceDefinition:
 
 
 # The enum labels for values 0, 1, and 2 have not been confirmed yet.
-SUPPORTED_RESOURCES: dict[tuple[str, int, int], ResourceDefinition] = {
+SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
+    REFILL_STATE_EQUIVALENT_ID: ResourceDefinition(
+        name="Refill state",
+        platform="sensor",
+    )
+}
+
+SUPPORTED_RESOURCES_BY_DEVICE_RESOURCE: dict[
+    tuple[str, int, int], ResourceDefinition
+] = {
     (FRAGRANCE_DISPENSER_DEVICE_TYPE_ID, 12290, 0): ResourceDefinition(
         name="Refill state",
         platform="sensor",
@@ -65,20 +75,31 @@ def log_resource_values(message: dict[str, Any], logger: logging.Logger) -> None
             instance_number = _field(
                 identifier, "resourceInstanceNo", "ResourceInstanceNo"
             )
+            equivalent_id = _field(
+                identifier,
+                "resourceInstanceEquivalentId",
+                "ResourceInstanceEquivalentId",
+            )
 
             definition = None
+            if isinstance(equivalent_id, str):
+                definition = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID.get(
+                    equivalent_id.lower()
+                )
+
             if isinstance(resource_type_id, int) and isinstance(instance_number, int):
-                definition = SUPPORTED_RESOURCES.get(
+                definition = definition or SUPPORTED_RESOURCES_BY_DEVICE_RESOURCE.get(
                     (device_type_id, resource_type_id, instance_number)
                 )
 
             logger.info(
                 "Resource value device_id=%s logged_at=%s resource_type_id=%s "
-                "instance=%s supported=%s name=%s value=%s",
+                "instance=%s equivalent_id=%s supported=%s name=%s value=%s",
                 device_id,
                 logged_at,
                 resource_type_id,
                 instance_number,
+                equivalent_id,
                 definition is not None,
                 definition.name if definition else None,
                 json.dumps(resource_value, ensure_ascii=False, sort_keys=True),
