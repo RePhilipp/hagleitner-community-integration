@@ -1,0 +1,102 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hagleitner Community csatlakoztatása",
+        "description": "Adja meg az Azure Service Bus-sor adatait. A kapcsolati karakterlánc a Home Assistant konfigurációjában tárolódik, ezért gondoskodjon a biztonsági mentések védelméről.",
+        "data": {
+          "connection_string": "A sor kapcsolati karakterlánca",
+          "queue_name": "Sor neve"
+        }
+      },
+      "confirm": {
+        "title": "Új Hagleitner-eszköz",
+        "description": "Hozzáadja ezt: {name} a Home Assistanthoz? Az eszköz és az entitásai csak a megerősítés után jönnek létre. Ha egy meglévő Home Assistant-terület megfelel az eszköz legbelső helyszínének, az alább javaslatként jelenik meg, és módosítható.",
+        "data": {
+          "area_id": "Javasolt terület"
+        }
+      }
+    }
+  },
+  "issues": {
+    "battery_low": {
+      "title": "{device_name}: alacsony töltöttség",
+      "description": "A(z) {resource_name} alacsony energiaszintet jelez. Hamarosan cserélje ki vagy töltse fel."
+    },
+    "battery_empty": {
+      "title": "{device_name}: lemerült elem",
+      "description": "A(z) {resource_name} lemerült energiaforrást jelez. Cserélje ki vagy töltse fel."
+    },
+    "refill_low": {
+      "title": "{device_name}: fogyóban az utántöltő",
+      "description": "A(z) {resource_name} szerint kevés a felhasználható készlet. Hamarosan töltse fel az eszközt."
+    },
+    "refill_empty": {
+      "title": "{device_name}: kiürült az utántöltő",
+      "description": "A(z) {resource_name} szerint elfogyott a felhasználható készlet. Töltse fel az eszközt."
+    },
+    "fill_nearly_full": {
+      "title": "{device_name}: a tartály majdnem tele",
+      "description": "A(z) {resource_name} szerint a tartály majdnem tele van. Hamarosan ürítse ki."
+    },
+    "fill_full": {
+      "title": "{device_name}: a tartály tele van",
+      "description": "A(z) {resource_name} szerint a tartály megtelt. Ürítse ki."
+    },
+    "error_active": {
+      "title": "{device_name}: aktív hiba",
+      "description": "A(z) {resource_name} aktív hibát jelez (erőforrástípus: {resource_type_id}). A részletekért ellenőrizze az eszközt."
+    },
+    "connection_offline": {
+      "title": "{device_name}: offline",
+      "description": "A(z) {resource_name} szerint az eszköz offline állapotban van."
+    },
+    "flowmeter_replacement": {
+      "title": "{device_name}: cserélje ki az átfolyásmérőt",
+      "description": "Az átfolyásmérő elérte a térfogat alapján meghatározott cserehatárt. Cserélje ki, majd a feladat törléséhez állítsa vissza az átfolyásmérő-csere műveletet."
+    },
+    "pump_replacement": {
+      "title": "{device_name}: cserélje ki a szivattyút",
+      "description": "A szivattyú elérte az idő- vagy térfogat-alapú cserehatárt. Cserélje ki, majd a feladat törléséhez állítsa vissza a szivattyúcsere műveletet."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "metadata_customer_name": {
+        "name": "Ügyfél neve"
+      },
+      "metadata_customer_id": {
+        "name": "Ügyfél-azonosító"
+      },
+      "metadata_location": {
+        "name": "Helyszín"
+      },
+      "metadata_mount_point": {
+        "name": "Felszerelési hely"
+      },
+      "battery_level": {
+        "name": "Töltöttségi szint"
+      }
+    },
+    "binary_sensor": {
+      "battery": {
+        "name": "Elem"
+      },
+      "battery_charging": {
+        "name": "Töltés"
+      },
+      "connectivity": {
+        "name": "Kapcsolat"
+      },
+      "refill_problem": {
+        "name": "Utántöltési probléma"
+      },
+      "fill_problem": {
+        "name": "Töltöttségi probléma"
+      },
+      "connection_problem": {
+        "name": "Kapcsolati probléma"
+      }
+    }
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Poveži Hagleitner Community",
+        "description": "Unesite podatke o redu čekanja Azure Service Bus. Niz za povezivanje pohranjen je u konfiguraciji Home Assistanta, stoga zaštitite sigurnosne kopije.",
+        "data": {
+          "connection_string": "Niz za povezivanje reda čekanja",
+          "queue_name": "Naziv reda čekanja"
+        }
+      },
+      "confirm": {
+        "title": "Novi uređaj Hagleitner",
+        "description": "Dodati {name} u Home Assistant? Uređaj i njegovi entiteti izradit će se tek nakon potvrde. Ako postojeće područje u Home Assistantu odgovara najdubljoj lokaciji uređaja, bit će predloženo u nastavku i moći ćete ga promijeniti.",
+        "data": {
+          "area_id": "Predloženo područje"
+        }
+      }
+    }
+  },
+  "issues": {
+    "battery_low": {
+      "title": "{device_name}: baterija je pri kraju",
+      "description": "{resource_name} prijavljuje nisku razinu energije. Uskoro zamijenite ili napunite bateriju."
+    },
+    "battery_empty": {
+      "title": "{device_name}: baterija je prazna",
+      "description": "{resource_name} prijavljuje praznu bateriju. Zamijenite je ili napunite."
+    },
+    "refill_low": {
+      "title": "{device_name}: zaliha pri kraju",
+      "description": "{resource_name} prijavljuje nisku razinu zalihe. Uskoro nadopunite uređaj."
+    },
+    "refill_empty": {
+      "title": "{device_name}: zaliha je prazna",
+      "description": "{resource_name} prijavljuje da više nema upotrebljive zalihe. Nadopunite uređaj."
+    },
+    "fill_nearly_full": {
+      "title": "{device_name}: spremnik je gotovo pun",
+      "description": "{resource_name} prijavljuje da je spremnik gotovo pun. Uskoro ga ispraznite."
+    },
+    "fill_full": {
+      "title": "{device_name}: spremnik je pun",
+      "description": "{resource_name} prijavljuje da je spremnik pun. Ispraznite ga."
+    },
+    "error_active": {
+      "title": "{device_name}: aktivna pogreška",
+      "description": "{resource_name} prijavljuje aktivnu pogrešku (vrsta resursa {resource_type_id}). Pojedinosti provjerite na uređaju."
+    },
+    "connection_offline": {
+      "title": "{device_name}: izvan mreže",
+      "description": "{resource_name} prijavljuje da je uređaj izvan mreže."
+    },
+    "flowmeter_replacement": {
+      "title": "{device_name}: zamijenite mjerač protoka",
+      "description": "Dosegnut je prag zamjene mjerača protoka prema količini. Zamijenite ga i poništite radnju zamjene mjerača protoka kako biste zatvorili ovaj zadatak."
+    },
+    "pump_replacement": {
+      "title": "{device_name}: zamijenite pumpu",
+      "description": "Dosegnut je vremenski ili količinski prag zamjene pumpe. Zamijenite je i poništite radnju zamjene pumpe kako biste zatvorili ovaj zadatak."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "metadata_customer_name": {
+        "name": "Naziv kupca"
+      },
+      "metadata_customer_id": {
+        "name": "ID kupca"
+      },
+      "metadata_location": {
+        "name": "Lokacija"
+      },
+      "metadata_mount_point": {
+        "name": "Mjesto montaže"
+      },
+      "battery_level": {
+        "name": "Razina baterije"
+      }
+    },
+    "binary_sensor": {
+      "battery": {
+        "name": "Baterija"
+      },
+      "battery_charging": {
+        "name": "Punjenje baterije"
+      },
+      "connectivity": {
+        "name": "Povezivost"
+      },
+      "refill_problem": {
+        "name": "Problem sa zalihom"
+      },
+      "fill_problem": {
+        "name": "Problem s napunjenošću"
+      },
+      "connection_problem": {
+        "name": "Problem s vezom"
+      }
+    }
+  }
+}

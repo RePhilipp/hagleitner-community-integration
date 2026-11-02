@@ -227,6 +227,12 @@ class HagleitnerMetadataSensor(SensorEntity):
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
         self._attr_translation_key = f"metadata_{metadata_key}"
         self._attr_unique_id = f"{device_id}_{metadata_key}"
+        self._attr_icon = {
+            "customer_name": "mdi:account",
+            "customer_id": "mdi:identifier",
+            "location": "mdi:map-marker",
+            "mount_point": "mdi:map-marker-radius",
+        }[metadata_key]
 
     @property
     def native_value(self) -> Any:

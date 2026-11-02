@@ -37,6 +37,10 @@ Treat the Service Bus connection string as a password: anyone with access to it
 may be able to access the queue. Do not post it in issues, screenshots, or
 messages, and protect your Home Assistant configuration and backups.
 
+Home Assistant diagnostics include the queue name and anonymized resource
+summaries, but omit connection strings and device or customer identifiers.
+Review the report before sharing it.
+
 ## Local receiver/debug
 
 For troubleshooting from a local checkout, set `HAGLEITNER_SERVICE_BUS_CONNECTION_STRING`

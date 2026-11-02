@@ -1,0 +1,102 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pripojiť Hagleitner Community",
+        "description": "Zadajte údaje frontu Azure Service Bus. Pripojovací reťazec sa ukladá v konfigurácii Home Assistant, preto chráňte svoje zálohy.",
+        "data": {
+          "connection_string": "Pripojovací reťazec frontu",
+          "queue_name": "Názov frontu"
+        }
+      },
+      "confirm": {
+        "title": "Nové zariadenie Hagleitner",
+        "description": "Pridať {name} do Home Assistant? Zariadenie a jeho entity sa vytvoria až po potvrdení. Ak existujúca oblasť Home Assistant zodpovedá najvnútornejšiemu umiestneniu zariadenia, navrhne sa nižšie a možno ju zmeniť.",
+        "data": {
+          "area_id": "Navrhovaná oblasť"
+        }
+      }
+    }
+  },
+  "issues": {
+    "battery_low": {
+      "title": "{device_name}: slabá batéria",
+      "description": "{resource_name} hlási nízku úroveň energie. Batériu čoskoro vymeňte alebo nabite."
+    },
+    "battery_empty": {
+      "title": "{device_name}: vybitá batéria",
+      "description": "{resource_name} hlási vybitú batériu. Vymeňte ju alebo nabite."
+    },
+    "refill_low": {
+      "title": "{device_name}: náplň sa míňa",
+      "description": "{resource_name} hlási nízku zásobu. Zariadenie čoskoro doplňte."
+    },
+    "refill_empty": {
+      "title": "{device_name}: náplň je prázdna",
+      "description": "{resource_name} hlási, že nezostala žiadna použiteľná zásoba. Doplňte zariadenie."
+    },
+    "fill_nearly_full": {
+      "title": "{device_name}: nádoba je takmer plná",
+      "description": "{resource_name} hlási, že nádoba je takmer plná. Čoskoro ju vyprázdnite."
+    },
+    "fill_full": {
+      "title": "{device_name}: nádoba je plná",
+      "description": "{resource_name} hlási, že nádoba je plná. Vyprázdnite ju."
+    },
+    "error_active": {
+      "title": "{device_name}: aktívna chyba",
+      "description": "{resource_name} hlási aktívnu chybu (typ zdroja {resource_type_id}). Podrobnosti zistíte kontrolou zariadenia."
+    },
+    "connection_offline": {
+      "title": "{device_name}: offline",
+      "description": "{resource_name} hlási, že zariadenie je offline."
+    },
+    "flowmeter_replacement": {
+      "title": "{device_name}: vymeňte prietokomer",
+      "description": "Bol dosiahnutý objemový limit na výmenu prietokomeru. Vymeňte ho a resetujte akciu výmeny prietokomeru, aby sa táto úloha uzavrela."
+    },
+    "pump_replacement": {
+      "title": "{device_name}: vymeňte čerpadlo",
+      "description": "Bol dosiahnutý časový alebo objemový limit na výmenu čerpadla. Vymeňte čerpadlo a resetujte akciu výmeny čerpadla, aby sa táto úloha uzavrela."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "metadata_customer_name": {
+        "name": "Názov zákazníka"
+      },
+      "metadata_customer_id": {
+        "name": "ID zákazníka"
+      },
+      "metadata_location": {
+        "name": "Umiestnenie"
+      },
+      "metadata_mount_point": {
+        "name": "Miesto montáže"
+      },
+      "battery_level": {
+        "name": "Úroveň nabitia batérie"
+      }
+    },
+    "binary_sensor": {
+      "battery": {
+        "name": "Batéria"
+      },
+      "battery_charging": {
+        "name": "Nabíjanie batérie"
+      },
+      "connectivity": {
+        "name": "Pripojenie"
+      },
+      "refill_problem": {
+        "name": "Problém s náplňou"
+      },
+      "fill_problem": {
+        "name": "Problém so stavom naplnenia"
+      },
+      "connection_problem": {
+        "name": "Problém s pripojením"
+      }
+    }
+  }
+}

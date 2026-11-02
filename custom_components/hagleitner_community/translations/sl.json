@@ -1,0 +1,102 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Poveži Hagleitner Community",
+        "description": "Vnesi podatke o čakalni vrsti Azure Service Bus. Povezovalni niz je shranjen v konfiguraciji Home Assistant, zato zaščiti varnostne kopije.",
+        "data": {
+          "connection_string": "Povezovalni niz čakalne vrste",
+          "queue_name": "Ime čakalne vrste"
+        }
+      },
+      "confirm": {
+        "title": "Nova naprava Hagleitner",
+        "description": "Želiš dodati {name} v Home Assistant? Naprava in njene entitete bodo ustvarjene šele po potrditvi. Če se obstoječe območje Home Assistant ujema z najbolj notranjo lokacijo naprave, bo predlagano spodaj in ga lahko spremeniš.",
+        "data": {
+          "area_id": "Predlagano območje"
+        }
+      }
+    }
+  },
+  "issues": {
+    "battery_low": {
+      "title": "{device_name}: baterija je skoraj prazna",
+      "description": "{resource_name} sporoča nizko raven energije. Baterijo kmalu zamenjaj ali napolni."
+    },
+    "battery_empty": {
+      "title": "{device_name}: baterija je prazna",
+      "description": "{resource_name} sporoča, da je baterija prazna. Zamenjaj ali napolni jo."
+    },
+    "refill_low": {
+      "title": "{device_name}: zaloga se izteka",
+      "description": "{resource_name} sporoča, da je zaloga uporabnega sredstva majhna. Kmalu dopolni napravo."
+    },
+    "refill_empty": {
+      "title": "{device_name}: zaloga je prazna",
+      "description": "{resource_name} sporoča, da ni več uporabne zaloge. Dopolni napravo."
+    },
+    "fill_nearly_full": {
+      "title": "{device_name}: posoda je skoraj polna",
+      "description": "{resource_name} sporoča, da je posoda skoraj polna. Kmalu jo izprazni."
+    },
+    "fill_full": {
+      "title": "{device_name}: posoda je polna",
+      "description": "{resource_name} sporoča, da je posoda polna. Izprazni jo."
+    },
+    "error_active": {
+      "title": "{device_name}: aktivna napaka",
+      "description": "{resource_name} sporoča aktivno napako (vrsta vira {resource_type_id}). Za podrobnosti preveri napravo."
+    },
+    "connection_offline": {
+      "title": "{device_name}: brez povezave",
+      "description": "{resource_name} sporoča, da naprava nima povezave."
+    },
+    "flowmeter_replacement": {
+      "title": "{device_name}: zamenjaj merilnik pretoka",
+      "description": "Dosežen je prag za zamenjavo merilnika pretoka glede na količino. Zamenjaj ga in ponastavi opravilo zamenjave merilnika pretoka, da zapreš to nalogo."
+    },
+    "pump_replacement": {
+      "title": "{device_name}: zamenjaj črpalko",
+      "description": "Dosežen je časovni ali količinski prag za zamenjavo črpalke. Zamenjaj jo in ponastavi opravilo zamenjave črpalke, da zapreš to nalogo."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "metadata_customer_name": {
+        "name": "Ime stranke"
+      },
+      "metadata_customer_id": {
+        "name": "ID stranke"
+      },
+      "metadata_location": {
+        "name": "Lokacija"
+      },
+      "metadata_mount_point": {
+        "name": "Mesto namestitve"
+      },
+      "battery_level": {
+        "name": "Raven baterije"
+      }
+    },
+    "binary_sensor": {
+      "battery": {
+        "name": "Baterija"
+      },
+      "battery_charging": {
+        "name": "Polnjenje baterije"
+      },
+      "connectivity": {
+        "name": "Povezljivost"
+      },
+      "refill_problem": {
+        "name": "Težava z zalogo"
+      },
+      "fill_problem": {
+        "name": "Težava s polnostjo"
+      },
+      "connection_problem": {
+        "name": "Težava s povezavo"
+      }
+    }
+  }
+}

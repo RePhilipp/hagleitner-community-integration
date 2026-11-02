@@ -1,0 +1,102 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Połącz Hagleitner Community",
+        "description": "Wprowadź dane kolejki Azure Service Bus. Ciąg połączenia jest przechowywany w konfiguracji Home Assistant, dlatego chroń kopie zapasowe.",
+        "data": {
+          "connection_string": "Ciąg połączenia kolejki",
+          "queue_name": "Nazwa kolejki"
+        }
+      },
+      "confirm": {
+        "title": "Nowe urządzenie Hagleitner",
+        "description": "Dodać {name} do Home Assistant? Urządzenie i jego encje zostaną utworzone dopiero po potwierdzeniu. Jeśli istniejący obszar Home Assistant pasuje do najbardziej szczegółowej lokalizacji urządzenia, zostanie zaproponowany poniżej i będzie można go zmienić.",
+        "data": {
+          "area_id": "Sugerowany obszar"
+        }
+      }
+    }
+  },
+  "issues": {
+    "battery_low": {
+      "title": "{device_name}: niski poziom baterii",
+      "description": "{resource_name} zgłasza niski poziom energii. Wkrótce wymień lub naładuj baterię."
+    },
+    "battery_empty": {
+      "title": "{device_name}: bateria rozładowana",
+      "description": "{resource_name} zgłasza brak energii. Wymień lub naładuj baterię."
+    },
+    "refill_low": {
+      "title": "{device_name}: kończy się wkład",
+      "description": "{resource_name} zgłasza niski poziom zapasu. Wkrótce uzupełnij urządzenie."
+    },
+    "refill_empty": {
+      "title": "{device_name}: wkład pusty",
+      "description": "{resource_name} zgłasza brak zapasu. Uzupełnij urządzenie."
+    },
+    "fill_nearly_full": {
+      "title": "{device_name}: pojemnik prawie pełny",
+      "description": "{resource_name} zgłasza, że pojemnik jest prawie pełny. Wkrótce go opróżnij."
+    },
+    "fill_full": {
+      "title": "{device_name}: pojemnik pełny",
+      "description": "{resource_name} zgłasza, że pojemnik jest pełny. Opróżnij go."
+    },
+    "error_active": {
+      "title": "{device_name}: aktywny błąd",
+      "description": "{resource_name} zgłasza aktywny błąd (typ zasobu {resource_type_id}). Sprawdź urządzenie, aby poznać szczegóły."
+    },
+    "connection_offline": {
+      "title": "{device_name}: urządzenie offline",
+      "description": "{resource_name} zgłasza, że urządzenie jest offline."
+    },
+    "flowmeter_replacement": {
+      "title": "{device_name}: wymień przepływomierz",
+      "description": "Osiągnięto próg wymiany przepływomierza zależny od objętości. Wymień go i zresetuj czynność wymiany przepływomierza, aby zamknąć to zadanie."
+    },
+    "pump_replacement": {
+      "title": "{device_name}: wymień pompę",
+      "description": "Osiągnięto próg wymiany pompy zależny od czasu lub objętości. Wymień pompę i zresetuj czynność jej wymiany, aby zamknąć to zadanie."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "metadata_customer_name": {
+        "name": "Nazwa klienta"
+      },
+      "metadata_customer_id": {
+        "name": "Identyfikator klienta"
+      },
+      "metadata_location": {
+        "name": "Lokalizacja"
+      },
+      "metadata_mount_point": {
+        "name": "Miejsce montażu"
+      },
+      "battery_level": {
+        "name": "Poziom baterii"
+      }
+    },
+    "binary_sensor": {
+      "battery": {
+        "name": "Bateria"
+      },
+      "battery_charging": {
+        "name": "Ładowanie baterii"
+      },
+      "connectivity": {
+        "name": "Łączność"
+      },
+      "refill_problem": {
+        "name": "Problem z wkładem"
+      },
+      "fill_problem": {
+        "name": "Problem ze stanem napełnienia"
+      },
+      "connection_problem": {
+        "name": "Problem z połączeniem"
+      }
+    }
+  }
+}
