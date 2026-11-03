@@ -64,12 +64,6 @@
       "connectivity": {
         "name": "Povezivost"
       },
-      "refill_problem": {
-        "name": "Problem sa zalihom"
-      },
-      "fill_problem": {
-        "name": "Problem s napunjenošću"
-      },
       "connection_problem": {
         "name": "Problem s vezom"
       }

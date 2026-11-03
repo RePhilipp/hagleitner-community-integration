@@ -127,11 +127,6 @@ def test_binary_statuses_use_home_assistant_device_class_icons():
             BinarySensorDeviceClass.CONNECTIVITY,
         ),
         (_ERROR_DEFINITION, "problem", BinarySensorDeviceClass.PROBLEM),
-        (
-            _REFILL_STATE_DEFINITION,
-            "refill_problem",
-            BinarySensorDeviceClass.PROBLEM,
-        ),
     ):
         entity = HagleitnerBinarySensor(
             _EntityHub(_snapshot(definition)),

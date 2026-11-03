@@ -75,8 +75,9 @@ from the portal.
 When a message arrives for a new device, Home Assistant offers it for adoption.
 Confirm adoption to add the device. Entities appear as supported values arrive;
 there is no fixed list of entities guaranteed for every device. Recognized
-battery, refill, connectivity, device-error, and replacement conditions can
-also appear as maintenance tasks in Home Assistant's Repairs page.
+connectivity issues, device errors, and component replacement thresholds can
+also appear as maintenance tasks in Home Assistant's Repairs page. Battery,
+refill, and fill levels remain available as entities, not Repairs issues.
 
 ## Keep your connection details safe
 

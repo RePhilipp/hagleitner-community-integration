@@ -64,12 +64,6 @@
       "connectivity": {
         "name": "Connectivity"
       },
-      "refill_problem": {
-        "name": "Refill problem"
-      },
-      "fill_problem": {
-        "name": "Fill status problem"
-      },
       "connection_problem": {
         "name": "Connection problem"
       }

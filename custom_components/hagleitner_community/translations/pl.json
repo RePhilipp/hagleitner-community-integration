@@ -64,12 +64,6 @@
       "connectivity": {
         "name": "Łączność"
       },
-      "refill_problem": {
-        "name": "Problem z wkładem"
-      },
-      "fill_problem": {
-        "name": "Problem ze stanem napełnienia"
-      },
       "connection_problem": {
         "name": "Problem z połączeniem"
       }
