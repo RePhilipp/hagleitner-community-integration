@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 
 from .const import DOMAIN
-from .coordinator import HagleitnerHub
+from .coordinator import HagleitnerHub, async_restore_persisted_state
 from .repairs import (
     async_clear_maintenance_issues,
     async_clear_obsolete_consumable_issues,
@@ -45,6 +45,7 @@ def _device_model(device_data: Mapping[str, Any]) -> str | None:
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up the integration domain."""
     hass.data.setdefault(DOMAIN, {})
+    await async_restore_persisted_state(hass)
     async_clear_obsolete_consumable_issues(hass)
     return True
 

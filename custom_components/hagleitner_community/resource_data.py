@@ -375,6 +375,102 @@ def resource_value_snapshots(
     return snapshots
 
 
+def serialize_resource_snapshot(
+    snapshot: ResourceValueSnapshot,
+) -> dict[str, Any] | None:
+    """Return the minimal JSON-safe state needed to restore a resource."""
+    if (
+        snapshot.definition is None
+        or not isinstance(snapshot.resource_type_id, int)
+        or isinstance(snapshot.resource_type_id, bool)
+        or not isinstance(snapshot.instance_number, int)
+        or isinstance(snapshot.instance_number, bool)
+        or not (
+            snapshot.raw_value is None
+            or isinstance(snapshot.raw_value, (str, int, bool))
+        )
+    ):
+        return None
+
+    return {
+        "resource_type_id": snapshot.resource_type_id,
+        "instance_number": snapshot.instance_number,
+        "equivalent_id": snapshot.equivalent_id,
+        "raw_value": snapshot.raw_value,
+        "logged_at": source_timestamp(snapshot.logged_at),
+        "device_type_names": sorted(snapshot.device_type_names),
+    }
+
+
+def restore_resource_snapshot(data: Any) -> ResourceValueSnapshot | None:
+    """Rebuild a supported resource snapshot from stored primitive values."""
+    if not isinstance(data, dict):
+        return None
+
+    resource_type_id = data.get("resource_type_id")
+    instance_number = data.get("instance_number")
+    if (
+        not isinstance(resource_type_id, int)
+        or isinstance(resource_type_id, bool)
+        or not isinstance(instance_number, int)
+        or isinstance(instance_number, bool)
+    ):
+        return None
+
+    raw_value = data.get("raw_value")
+    if raw_value is not None and not isinstance(raw_value, (str, int, bool)):
+        return None
+
+    equivalent_id = data.get("equivalent_id")
+    if not isinstance(equivalent_id, str):
+        equivalent_id = None
+    else:
+        equivalent_id = equivalent_id.lower()
+
+    stored_names = data.get("device_type_names", [])
+    if not isinstance(stored_names, (list, tuple, set)):
+        stored_names = []
+    device_type_names = frozenset(
+        name.strip().casefold()
+        for name in stored_names
+        if isinstance(name, str) and name.strip()
+    )
+    definition = (
+        SUPPORTED_RESOURCES_BY_EQUIVALENT_ID.get(equivalent_id)
+        if equivalent_id is not None
+        else None
+    )
+    key_equivalent_id = equivalent_id
+    if definition is None:
+        definition = SUPPORTED_RESOURCES_BY_TYPE_INSTANCE.get(
+            (resource_type_id, instance_number)
+        )
+        key_equivalent_id = None
+    if definition is None:
+        return None
+
+    logged_at = data.get("logged_at")
+    if not isinstance(logged_at, str) or not logged_at.strip():
+        logged_at = "unknown"
+
+    return ResourceValueSnapshot(
+        key=_resource_key(
+            key_equivalent_id,
+            resource_type_id,
+            instance_number,
+        ),
+        logged_at=logged_at,
+        resource_type_id=resource_type_id,
+        instance_number=instance_number,
+        equivalent_id=equivalent_id,
+        raw_value=raw_value,
+        mapped_value=_mapped_value(raw_value, definition, device_type_names),
+        raw_resource={},
+        definition=definition,
+        device_type_names=device_type_names,
+    )
+
+
 def device_display_name(message: dict[str, Any]) -> str:
     """Return a translated type name for discovery, falling back to the ID."""
     device_id, _ = device_identity(message)
@@ -538,7 +634,7 @@ def _raw_value(resource_value: dict[str, Any]) -> Any:
 def _mapped_value(
     raw_value: Any,
     definition: ResourceDefinition | None,
-    device_type_names: set[str],
+    device_type_names: frozenset[str],
 ) -> Any:
     """Map known integer enums to normalized states; leave other values intact."""
     if definition is None or not isinstance(raw_value, int) or isinstance(raw_value, bool):

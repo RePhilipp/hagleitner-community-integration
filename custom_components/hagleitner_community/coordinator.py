@@ -16,6 +16,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     floor_registry as fr,
 )
+from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .device import device_info, is_valid_customer_id
@@ -29,6 +30,8 @@ from .resource_data import (
     merge_device_metadata,
     parse_device_metadata,
     resource_value_snapshots,
+    restore_resource_snapshot,
+    serialize_resource_snapshot,
     should_accept_reading,
 )
 
@@ -37,6 +40,93 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 _DISCOVERY_RETRY_SECONDS = 120
+_STATE_STORE_VERSION = 1
+_STATE_STORE_KEY = f"{DOMAIN}_device_state"
+
+
+async def async_restore_persisted_state(hass: HomeAssistant) -> None:
+    """Load the last known adopted-device values before platforms are set up."""
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    if domain_data.get("_state_restored"):
+        return
+
+    store: Store[dict[str, Any]] = Store(
+        hass,
+        _STATE_STORE_VERSION,
+        _STATE_STORE_KEY,
+        private=True,
+    )
+    stored = await store.async_load()
+    shared = domain_data.setdefault("_shared_device_state", {})
+    latest_values = shared.setdefault("latest_values", {})
+    device_metadata = shared.setdefault("device_metadata", {})
+
+    if isinstance(stored, dict):
+        stored_devices = stored.get("devices", {})
+        if isinstance(stored_devices, dict):
+            for device_id, device_data in stored_devices.items():
+                if not isinstance(device_id, str) or not isinstance(device_data, dict):
+                    continue
+                stored_resources = device_data.get("resources", {})
+                if isinstance(stored_resources, dict):
+                    restored_resources = {}
+                    for resource_key, resource_data in stored_resources.items():
+                        if not isinstance(resource_key, str):
+                            continue
+                        snapshot = restore_resource_snapshot(resource_data)
+                        if snapshot is not None and snapshot.key == resource_key:
+                            restored_resources[resource_key] = snapshot
+                    if restored_resources:
+                        latest_values[device_id] = restored_resources
+
+                metadata = _restore_device_metadata(device_data.get("metadata"))
+                if metadata is not None:
+                    device_metadata[device_id] = metadata
+
+    shared["_state_store"] = store
+    domain_data["_state_restored"] = True
+
+
+def _restore_device_metadata(data: Any) -> DeviceMetadata | None:
+    """Restore only the typed metadata fields used by integration entities."""
+    if not isinstance(data, dict):
+        return None
+
+    customer_id = data.get("customer_id")
+    if not isinstance(customer_id, int) or isinstance(customer_id, bool):
+        customer_id = None
+    metadata = DeviceMetadata(
+        customer_name=(
+            data["customer_name"]
+            if isinstance(data.get("customer_name"), str)
+            else None
+        ),
+        customer_id=customer_id,
+        location=data["location"] if isinstance(data.get("location"), str) else None,
+        mount_point=(
+            data["mount_point"]
+            if isinstance(data.get("mount_point"), str)
+            else None
+        ),
+        innermost_location=(
+            data["innermost_location"]
+            if isinstance(data.get("innermost_location"), str)
+            else None
+        ),
+    )
+    return (
+        metadata
+        if any(
+            (
+                metadata.customer_name,
+                metadata.customer_id,
+                metadata.location,
+                metadata.mount_point,
+                metadata.innermost_location,
+            )
+        )
+        else None
+    )
 
 
 class HagleitnerHub:
@@ -52,6 +142,7 @@ class HagleitnerHub:
         self.entry = entry
         self.logger = logger
         shared = hass.data[DOMAIN].setdefault("_shared_device_state", {})
+        self._shared_state = shared
         self.adopted_device_ids: set[str] = shared.setdefault(
             "adopted_device_ids", set()
         )
@@ -149,6 +240,7 @@ class HagleitnerHub:
         if not resource_updates and not metadata_changed:
             return
 
+        self._async_schedule_state_save()
         for listener in tuple(self._state_listeners.get(device_id, ())):
             listener()
 
@@ -164,6 +256,7 @@ class HagleitnerHub:
         self.device_names[device_id] = device_name
         self._pending_discoveries.pop(device_id, None)
         self._async_record_device_location(device_id)
+        self._async_schedule_state_save()
         for snapshot in self.resources_for_device(device_id):
             self._async_update_maintenance_issue(device_id, snapshot)
 
@@ -282,6 +375,43 @@ class HagleitnerHub:
                 "_hsm_location_path": location,
             },
         )
+
+    def _async_schedule_state_save(self) -> None:
+        """Debounce persistence of the latest adopted-device values."""
+        store: Store[dict[str, Any]] | None = self._shared_state.get("_state_store")
+        if store is not None:
+            store.async_delay_save(self._serialize_persisted_state, delay=1)
+
+    def _serialize_persisted_state(self) -> dict[str, Any]:
+        """Serialize only supported values and metadata for adopted devices."""
+        devices: dict[str, Any] = {}
+        for device_id in self.adopted_device_ids:
+            resources = {}
+            for key, snapshot in self.latest_values.get(device_id, {}).items():
+                serialized = serialize_resource_snapshot(snapshot)
+                if serialized is not None:
+                    resources[key] = serialized
+
+            metadata = self.device_metadata.get(device_id)
+            serialized_metadata = (
+                {
+                    "customer_name": metadata.customer_name,
+                    "customer_id": metadata.customer_id,
+                    "location": metadata.location,
+                    "mount_point": metadata.mount_point,
+                    "innermost_location": metadata.innermost_location,
+                }
+                if metadata is not None
+                else {}
+            )
+            if resources or any(
+                value is not None for value in serialized_metadata.values()
+            ):
+                devices[device_id] = {
+                    "resources": resources,
+                    "metadata": serialized_metadata,
+                }
+        return {"devices": devices}
 
     def resources_for_device(
         self, device_id: str
