@@ -140,6 +140,7 @@ class HagleitnerHub:
 
         self._async_record_device_source(device_id)
         self._async_record_customer_id(device_id)
+        self._async_record_device_location(device_id)
         for snapshot in resource_updates.values():
             self._async_update_maintenance_issue(device_id, snapshot)
             for listener in tuple(self._resource_listeners.get(device_id, ())):
@@ -162,6 +163,7 @@ class HagleitnerHub:
         self.device_entry_ids[device_id] = device_entry_id
         self.device_names[device_id] = device_name
         self._pending_discoveries.pop(device_id, None)
+        self._async_record_device_location(device_id)
         for snapshot in self.resources_for_device(device_id):
             self._async_update_maintenance_issue(device_id, snapshot)
 
@@ -260,6 +262,26 @@ class HagleitnerHub:
                 registered_device.id,
                 configuration_url=configuration_url,
             )
+
+    def _async_record_device_location(self, device_id: str) -> None:
+        """Persist the latest HSM location for suggestions after a restart."""
+        device_entry_id = self.device_entry_ids.get(device_id)
+        if device_entry_id is None:
+            return
+        device_entry = self.hass.config_entries.async_get_entry(device_entry_id)
+        if device_entry is None:
+            return
+
+        location = self.metadata_for_device(device_id).location
+        if not location or device_entry.data.get("_hsm_location_path") == location:
+            return
+        self.hass.config_entries.async_update_entry(
+            device_entry,
+            data={
+                **device_entry.data,
+                "_hsm_location_path": location,
+            },
+        )
 
     def resources_for_device(
         self, device_id: str
@@ -362,6 +384,13 @@ def _suggest_area_from_hsm_location(
     area_registry = ar.async_get(hass)
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
+    persisted_locations = {
+        entry.data["device_id"]: entry.data["_hsm_location_path"]
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.data.get("entry_type") == "device"
+        and isinstance(entry.data.get("device_id"), str)
+        and isinstance(entry.data.get("_hsm_location_path"), str)
+    }
     matching_area_ids: set[str] = set()
     for device in device_registry.devices:
         candidate_id = next(
@@ -378,6 +407,8 @@ def _suggest_area_from_hsm_location(
         candidate_path = (
             metadata.location if isinstance(metadata, DeviceMetadata) else None
         )
+        if candidate_path is None:
+            candidate_path = persisted_locations.get(candidate_id)
         if candidate_path is None:
             location_entity = next(
                 (

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.helpers import (
     area_registry as ar,
@@ -12,6 +14,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.hagleitner_community.const import DOMAIN
 from custom_components.hagleitner_community.coordinator import (
+    HagleitnerHub,
     _suggest_area_from_hsm_location,
     _suggest_existing_area_id,
 )
@@ -93,6 +96,41 @@ async def test_hsm_location_falls_back_to_persisted_location_sensor(hass):
         hass,
         "new-device",
         "HQ / Production",
+    ) == (True, area.id)
+
+
+async def test_hsm_location_reuses_persisted_device_entry_after_restart(hass):
+    """Keep location-to-area matching when sibling runtime metadata is empty."""
+    area = ar.async_get(hass).async_create("WC")
+    hub_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"entry_type": "hub"},
+    )
+    hub_entry.add_to_hass(hass)
+    device_id = "existing-device"
+    device_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"entry_type": "device", "device_id": device_id},
+    )
+    device_entry.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=device_entry.entry_id,
+        identifiers={(DOMAIN, device_id)},
+    )
+    dr.async_get(hass).async_update_device(device.id, area_id=area.id)
+
+    hass.data[DOMAIN] = {}
+    hub = HagleitnerHub(hass, hub_entry, logging.getLogger(__name__))
+    hub.device_metadata[device_id] = DeviceMetadata(
+        location="Building 2 / EG / Room4",
+    )
+    hub.adopt_device(device_id, device_entry.entry_id, "Dispenser")
+
+    hass.data[DOMAIN] = {}
+    assert _suggest_area_from_hsm_location(
+        hass,
+        "new-device",
+        "Building 2 / EG / Room4",
     ) == (True, area.id)
 
 
