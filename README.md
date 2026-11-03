@@ -34,7 +34,7 @@ existing integration or Python 3.12 environment. From the repository root:
 python3.14 -m venv .venv-ha
 source .venv-ha/bin/activate
 python -m pip install --upgrade pip
-python -m pip install -r requirements_test.txt
+python -m pip install -r requirements.txt -r requirements_test.txt
 python -m pytest -q
 ```
 
