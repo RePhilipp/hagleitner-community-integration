@@ -11,7 +11,7 @@
       },
       "confirm": {
         "title": "New Hagleitner device",
-        "description": "Add {name} to Home Assistant? HSM location path: {location_path}. HSM mount point: {mount_point}. A dash (—) means HSM did not provide that value. The device and its entities are created only after you confirm. If an existing Home Assistant area matches the innermost device location, it is suggested below and can be changed.",
+        "description": "Add {name} to Home Assistant?\n\n**HSM location:** {location_path}  \n**HSM mount point:** {mount_point}\n\nThe device and its entities are created only after you confirm. A dash (—) means HSM did not provide that value. The suggested area can be changed.",
         "data": {
           "area_id": "Suggested area"
         }

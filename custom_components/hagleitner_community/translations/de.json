@@ -11,7 +11,7 @@
       },
       "confirm": {
         "title": "Neues Hagleitner-Gerät",
-        "description": "{name} zu Home Assistant hinzufügen? HSM-Standortpfad: {location_path}. HSM-Montagepunkt: {mount_point}. Ein Gedankenstrich (—) bedeutet, dass HSM diesen Wert nicht bereitgestellt hat. Das Gerät und seine Entitäten werden erst nach deiner Bestätigung erstellt. Wenn ein vorhandener Bereich in Home Assistant zum innersten Gerätestandort passt, wird er unten vorgeschlagen und kann geändert werden.",
+        "description": "{name} zu Home Assistant hinzufügen?\n\n**HSM-Standort:** {location_path}  \n**HSM-Montagepunkt:** {mount_point}\n\nDas Gerät und seine Entitäten werden erst nach deiner Bestätigung erstellt. Ein Gedankenstrich (—) bedeutet, dass HSM diesen Wert nicht bereitgestellt hat. Der vorgeschlagene Bereich kann geändert werden.",
         "data": {
           "area_id": "Vorgeschlagener Bereich"
         }
