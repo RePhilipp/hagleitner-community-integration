@@ -14,6 +14,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
 )
 
 from .const import DOMAIN
@@ -354,6 +355,7 @@ class HagleitnerHub:
                     metadata.location,
                     metadata.innermost_location,
                 ),
+                _parent_location_name(metadata.location),
             )
         if suggested_area_id is not None:
             discovery_data["suggested_area_id"] = suggested_area_id
@@ -453,8 +455,9 @@ def _suggest_area_from_hsm_location(
 def _suggest_existing_area_id(
     hass: HomeAssistant,
     location_name: str | None,
+    floor_name: str | None = None,
 ) -> str | None:
-    """Suggest a confident match to an existing Home Assistant area."""
+    """Suggest an exact floor-and-room match, then an exact room match."""
     if not location_name:
         return None
 
@@ -463,6 +466,22 @@ def _suggest_existing_area_id(
         return None
 
     areas = list(ar.async_get(hass).async_list_areas())
+    if floor_name and (normalized_floor := _normalize_area_name(floor_name)):
+        matching_floors = [
+            floor
+            for floor in fr.async_get(hass).async_list_floors()
+            if _normalize_area_name(floor.name) == normalized_floor
+        ]
+        if len(matching_floors) == 1:
+            floor_matches = {
+                area.id
+                for area in areas
+                if area.floor_id == matching_floors[0].floor_id
+                and _normalize_area_name(area.name) == normalized_location
+            }
+            if len(floor_matches) == 1:
+                return next(iter(floor_matches))
+
     exact_matches = {
         area.id
         for area in areas
@@ -478,15 +497,28 @@ def _innermost_location_name(
     innermost_location: str | None,
 ) -> str | None:
     """Return the leaf location, including when HSM supplies a delimited path."""
-    location_name = innermost_location or location_path
-    if not isinstance(location_name, str):
-        return None
+    if isinstance(innermost_location, str) and innermost_location.strip():
+        return innermost_location.strip()
 
-    segments = location_name.replace(">", "/").split("/")
-    return next(
-        (segment.strip() for segment in reversed(segments) if segment.strip()),
-        None,
-    )
+    segments = _location_path_segments(location_path)
+    return segments[-1] if segments else None
+
+
+def _parent_location_name(location_path: str | None) -> str | None:
+    """Return the HSM path segment immediately above the room."""
+    segments = _location_path_segments(location_path)
+    return segments[-2] if len(segments) > 1 else None
+
+
+def _location_path_segments(location_path: str | None) -> list[str]:
+    """Split an HSM location path into non-empty, trimmed segments."""
+    if not isinstance(location_path, str):
+        return []
+    return [
+        segment.strip()
+        for segment in location_path.replace(">", "/").split("/")
+        if segment.strip()
+    ]
 
 
 def _normalize_area_name(name: str) -> str:
