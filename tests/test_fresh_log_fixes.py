@@ -161,6 +161,8 @@ async def test_receiver_preloads_tls_context_off_loop_and_keeps_async_io(
     expected_context = object()
     client_options = {}
     receiver = None
+    receiver_closed = False
+    client_closed = False
 
     def create_ssl_context():
         nonlocal context_thread
@@ -172,7 +174,8 @@ async def test_receiver_preloads_tls_context_off_loop_and_keeps_async_io(
             return self
 
         async def __aexit__(self, *_args):
-            pass
+            nonlocal receiver_closed
+            receiver_closed = True
 
         async def receive_messages(self, **_kwargs):
             raise asyncio.CancelledError
@@ -182,7 +185,8 @@ async def test_receiver_preloads_tls_context_off_loop_and_keeps_async_io(
             return self
 
         async def __aexit__(self, *_args):
-            pass
+            nonlocal client_closed
+            client_closed = True
 
         def get_queue_receiver(self, **_kwargs):
             nonlocal receiver_thread
@@ -207,3 +211,5 @@ async def test_receiver_preloads_tls_context_off_loop_and_keeps_async_io(
     assert context_thread is not None and context_thread != event_loop_thread
     assert receiver_thread is not None and receiver_thread != event_loop_thread
     assert client_options["ssl_context"] is expected_context
+    assert receiver_closed is True
+    assert client_closed is True
