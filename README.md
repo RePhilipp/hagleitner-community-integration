@@ -22,6 +22,24 @@ You can use multiple forwarding rules. Add each rule's queue as a separate
 integration entry; devices included by more than one rule remain a single
 Home Assistant device.
 
+## Run tests locally
+
+Tests target stable Home Assistant 2026.10.4 and require Python 3.14.2 or newer.
+The matching test package is a regular release, although the project is marked
+Alpha on PyPI. Tests run Home Assistant in-process; they do not start a server
+or require Docker. The separate `.venv-ha` environment avoids changing an
+existing integration or Python 3.12 environment. From the repository root:
+
+```bash
+python3.14 -m venv .venv-ha
+source .venv-ha/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements_test.txt
+python -m pytest -q
+```
+
+Test dependencies are separate from the integration's runtime requirements.
+
 ## Set up Home Assistant
 
 After installing the integration through HACS, restart Home Assistant if
