@@ -5,9 +5,11 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import ssl
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+import certifi
 from azure.servicebus.aio import ServiceBusClient
 
 from .resource_data import device_identity
@@ -25,13 +27,16 @@ async def run_receiver(
 ) -> None:
     """Receive and settle messages, rebuilding the receiver after runtime failures."""
     retry_delay = _INITIAL_RETRY_DELAY
+    ssl_context: ssl.SSLContext | None = None
     while True:
         try:
+            if ssl_context is None:
+                ssl_context = await asyncio.to_thread(_create_ssl_context)
             async with ServiceBusClient.from_connection_string(
-                connection_string
+                connection_string,
+                ssl_context=ssl_context,
             ) as client:
-                receiver = await asyncio.to_thread(
-                    client.get_queue_receiver,
+                receiver = client.get_queue_receiver(
                     queue_name=queue_name,
                     max_wait_time=5,
                 )
@@ -89,6 +94,11 @@ async def run_receiver(
             )
             await asyncio.sleep(retry_delay)
             retry_delay = min(retry_delay * 2, _MAX_RETRY_DELAY)
+
+
+def _create_ssl_context() -> ssl.SSLContext:
+    """Load Azure's default CA bundle outside the event loop."""
+    return ssl.create_default_context(cafile=certifi.where())
 
 
 def _decode_message(body: Any) -> dict[str, Any]:

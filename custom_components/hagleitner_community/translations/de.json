@@ -19,30 +19,6 @@
     }
   },
   "issues": {
-    "battery_low": {
-      "title": "{device_name}: Batteriestand niedrig",
-      "description": "{resource_name} meldet einen niedrigen Batteriestand. Ersetze oder lade die Batterie bald auf."
-    },
-    "battery_empty": {
-      "title": "{device_name}: Batterie leer",
-      "description": "{resource_name} meldet, dass die Batterie leer ist. Ersetze oder lade sie auf."
-    },
-    "refill_low": {
-      "title": "{device_name}: Nachfüllvorrat fast aufgebraucht",
-      "description": "{resource_name} meldet, dass der nutzbare Vorrat fast aufgebraucht ist. Fülle das Gerät bald nach."
-    },
-    "refill_empty": {
-      "title": "{device_name}: Nachfüllvorrat aufgebraucht",
-      "description": "{resource_name} meldet, dass kein nutzbarer Vorrat mehr vorhanden ist. Fülle das Gerät nach."
-    },
-    "fill_nearly_full": {
-      "title": "{device_name}: Behälter fast voll",
-      "description": "{resource_name} meldet, dass der Behälter fast voll ist. Leere ihn bald."
-    },
-    "fill_full": {
-      "title": "{device_name}: Behälter voll",
-      "description": "{resource_name} meldet, dass der Behälter voll ist. Leere ihn."
-    },
     "error_active": {
       "title": "{device_name}: Fehler aktiv",
       "description": "{resource_name} meldet einen aktiven Fehler (Ressourcentyp {resource_type_id}). Prüfe die Gerätedetails."

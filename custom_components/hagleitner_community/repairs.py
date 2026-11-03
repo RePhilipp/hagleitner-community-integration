@@ -10,9 +10,15 @@ from homeassistant.helpers import issue_registry as ir
 from .const import DOMAIN
 from .resource_data import ResourceValueSnapshot
 
-_REFILL_STATE_EQUIVALENT_ID = "4b963ce8-14f4-4f90-03a9-08dac1664f9a"
-_FILL_STATUS_EQUIVALENT_ID = "9c336908-7a04-4adc-8bd7-08dc3d205c10"
 _REPLACEMENT_RESOURCE_TYPE_ID = 12307
+_OBSOLETE_CONSUMABLE_ISSUE_KEYS = (
+    "battery_low",
+    "battery_empty",
+    "refill_low",
+    "refill_empty",
+    "fill_nearly_full",
+    "fill_full",
+)
 
 
 class _IssueState(Enum):
@@ -24,12 +30,6 @@ class _IssueState(Enum):
 
 
 _ISSUE_SEVERITIES = {
-    "battery_low": ir.IssueSeverity.WARNING,
-    "battery_empty": ir.IssueSeverity.ERROR,
-    "refill_low": ir.IssueSeverity.WARNING,
-    "refill_empty": ir.IssueSeverity.ERROR,
-    "fill_nearly_full": ir.IssueSeverity.WARNING,
-    "fill_full": ir.IssueSeverity.ERROR,
     "error_active": ir.IssueSeverity.ERROR,
     "connection_offline": ir.IssueSeverity.ERROR,
     "flowmeter_replacement": ir.IssueSeverity.WARNING,
@@ -96,6 +96,18 @@ def async_clear_maintenance_issues(
             ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
+@callback
+def async_clear_obsolete_consumable_issues(hass: HomeAssistant) -> None:
+    """Remove old Repairs entries for states now exposed as device entities."""
+    registry = ir.async_get(hass)
+    obsolete_suffixes = tuple(
+        f"_{issue_key}" for issue_key in _OBSOLETE_CONSUMABLE_ISSUE_KEYS
+    )
+    for domain, issue_id in tuple(registry.issues):
+        if domain == DOMAIN and issue_id.endswith(obsolete_suffixes):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
 def _issue_states(
     snapshot: ResourceValueSnapshot,
     device_snapshots: tuple[ResourceValueSnapshot, ...] = (),
@@ -104,36 +116,6 @@ def _issue_states(
     definition = snapshot.definition
     if definition is None:
         return {}
-
-    if definition.kind == "battery":
-        return {
-            "battery_low": _issue_state(
-                snapshot.mapped_value, "low", ("ok", "empty", "mains_adapter")
-            ),
-            "battery_empty": _issue_state(
-                snapshot.mapped_value, "empty", ("ok", "low", "mains_adapter")
-            ),
-        }
-
-    if snapshot.equivalent_id == _REFILL_STATE_EQUIVALENT_ID:
-        return {
-            "refill_low": _issue_state(
-                snapshot.mapped_value, "low", ("full", "empty")
-            ),
-            "refill_empty": _issue_state(
-                snapshot.mapped_value, "empty", ("full", "low")
-            ),
-        }
-
-    if snapshot.equivalent_id == _FILL_STATUS_EQUIVALENT_ID:
-        return {
-            "fill_nearly_full": _issue_state(
-                snapshot.mapped_value, "nearly_full", ("empty", "full")
-            ),
-            "fill_full": _issue_state(
-                snapshot.mapped_value, "full", ("empty", "nearly_full")
-            ),
-        }
 
     if definition.kind == "problem":
         return {

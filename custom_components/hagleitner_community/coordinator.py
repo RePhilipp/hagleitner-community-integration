@@ -18,6 +18,7 @@ from homeassistant.helpers import (
 )
 
 from .const import DOMAIN
+from .device import device_info, is_valid_customer_id
 from .repairs import async_update_maintenance_issue
 from .resource_data import (
     DeviceMetadata,
@@ -138,6 +139,7 @@ class HagleitnerHub:
             )
 
         self._async_record_device_source(device_id)
+        self._async_record_customer_id(device_id)
         for snapshot in resource_updates.values():
             self._async_update_maintenance_issue(device_id, snapshot)
             for listener in tuple(self._resource_listeners.get(device_id, ())):
@@ -214,6 +216,49 @@ class HagleitnerHub:
             },
         )
 
+    def _async_record_customer_id(self, device_id: str) -> None:
+        """Persist a known customer ID and update an existing device link."""
+        device_entry_id = self.device_entry_ids.get(device_id)
+        if device_entry_id is None:
+            return
+        device_entry = self.hass.config_entries.async_get_entry(device_entry_id)
+        if device_entry is None:
+            return
+
+        customer_id = device_entry.data.get("customer_id")
+        if not is_valid_customer_id(customer_id):
+            customer_id = self.metadata_for_device(device_id).customer_id
+            if not is_valid_customer_id(customer_id):
+                return
+            self.hass.config_entries.async_update_entry(
+                device_entry,
+                data={
+                    **device_entry.data,
+                    "customer_id": customer_id,
+                },
+            )
+
+        configuration_url = device_info(device_id, customer_id).configuration_url
+        if configuration_url is None:
+            return
+        device_registry = dr.async_get(self.hass)
+        registered_device = next(
+            iter(
+                device_registry.async_get_devices(
+                    identifiers={(DOMAIN, device_id)}
+                )
+            ),
+            None,
+        )
+        if (
+            registered_device is not None
+            and registered_device.configuration_url != configuration_url
+        ):
+            device_registry.async_update_device(
+                registered_device.id,
+                configuration_url=configuration_url,
+            )
+
     def resources_for_device(
         self, device_id: str
     ) -> tuple[ResourceValueSnapshot, ...]:
@@ -263,13 +308,15 @@ class HagleitnerHub:
             return
 
         self._pending_discoveries[device_id] = now
-        discovery_data = {
+        discovery_data: dict[str, Any] = {
             "hub_entry_id": self.entry.entry_id,
             "device_id": device_id,
             "device_type_id": device_type_id,
             "device_name": device_display_name(message),
         }
         metadata = self.metadata_for_device(device_id)
+        if is_valid_customer_id(metadata.customer_id):
+            discovery_data["customer_id"] = metadata.customer_id
         discovery_data["hsm_location_path"] = metadata.location or "—"
         discovery_data["hsm_mount_point"] = metadata.mount_point or "—"
         has_location_area, suggested_area_id = _suggest_area_from_hsm_location(
@@ -280,7 +327,10 @@ class HagleitnerHub:
         if not has_location_area:
             suggested_area_id = _suggest_existing_area_id(
                 self.hass,
-                metadata.innermost_location,
+                _innermost_location_name(
+                    metadata.location,
+                    metadata.innermost_location,
+                ),
             )
         if suggested_area_id is not None:
             discovery_data["suggested_area_id"] = suggested_area_id
@@ -416,6 +466,22 @@ def _suggest_existing_area_id(
     if len(area_scores) > 1 and area_scores[0][0] - area_scores[1][0] < 0.1:
         return None
     return area_scores[0][1]
+
+
+def _innermost_location_name(
+    location_path: str | None,
+    innermost_location: str | None,
+) -> str | None:
+    """Return the leaf location, including when HSM supplies a delimited path."""
+    location_name = innermost_location or location_path
+    if not isinstance(location_name, str):
+        return None
+
+    segments = location_name.replace(">", "/").split("/")
+    return next(
+        (segment.strip() for segment in reversed(segments) if segment.strip()),
+        None,
+    )
 
 
 def _normalize_area_name(name: str) -> str:

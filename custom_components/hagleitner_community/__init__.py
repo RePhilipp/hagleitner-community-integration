@@ -4,14 +4,19 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 
 from .const import DOMAIN
 from .coordinator import HagleitnerHub
-from .repairs import async_clear_maintenance_issues
+from .repairs import (
+    async_clear_maintenance_issues,
+    async_clear_obsolete_consumable_issues,
+)
 from .service_bus import run_receiver
 
 if TYPE_CHECKING:
@@ -23,9 +28,24 @@ PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 _DEVICE_SETUP_TASKS = "_device_setup_tasks"
 
 
+def _device_model(device_data: Mapping[str, Any]) -> str | None:
+    """Return a readable model name without exposing a device type UUID."""
+    for key in ("device_type_name", "device_name"):
+        value = device_data.get(key)
+        if not isinstance(value, str) or not value.strip():
+            continue
+        value = value.strip()
+        try:
+            UUID(value)
+        except ValueError:
+            return value
+    return None
+
+
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up the integration domain."""
     hass.data.setdefault(DOMAIN, {})
+    async_clear_obsolete_consumable_issues(hass)
     return True
 
 
@@ -53,7 +73,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             hub._async_record_device_source(configured_entry.data["device_id"])
 
-    hub.receiver_task = hass.async_create_task(
+    hub.receiver_task = entry.async_create_background_task(
+        hass,
         run_receiver(
             entry.data["connection_string"],
             entry.data["queue_name"],
@@ -221,16 +242,16 @@ async def _async_setup_device(
     hub._async_record_device_source(device_id)
     identifiers = {(DOMAIN, device_id)}
     device_registry = dr.async_get(hass)
-    existing_device = device_registry.async_get_device(identifiers=identifiers)
+    existing_devices = device_registry.async_get_devices(identifiers=identifiers)
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers=identifiers,
         manufacturer="Hagleitner",
-        model=entry.data.get("device_type_id") or None,
+        model=_device_model(entry.data),
         name=entry.data["device_name"],
     )
     area_id = entry.data.get("area_id")
-    if existing_device is None and isinstance(area_id, str):
+    if not existing_devices and isinstance(area_id, str):
         if ar.async_get(hass).async_get_area(area_id) is not None:
             device_registry.async_update_device(device.id, area_id=area_id)
         else:

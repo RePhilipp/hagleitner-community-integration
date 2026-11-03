@@ -19,30 +19,6 @@
     }
   },
   "issues": {
-    "battery_low": {
-      "title": "{device_name}: niski poziom baterii",
-      "description": "{resource_name} zgłasza niski poziom energii. Wkrótce wymień lub naładuj baterię."
-    },
-    "battery_empty": {
-      "title": "{device_name}: bateria rozładowana",
-      "description": "{resource_name} zgłasza brak energii. Wymień lub naładuj baterię."
-    },
-    "refill_low": {
-      "title": "{device_name}: kończy się wkład",
-      "description": "{resource_name} zgłasza niski poziom zapasu. Wkrótce uzupełnij urządzenie."
-    },
-    "refill_empty": {
-      "title": "{device_name}: wkład pusty",
-      "description": "{resource_name} zgłasza brak zapasu. Uzupełnij urządzenie."
-    },
-    "fill_nearly_full": {
-      "title": "{device_name}: pojemnik prawie pełny",
-      "description": "{resource_name} zgłasza, że pojemnik jest prawie pełny. Wkrótce go opróżnij."
-    },
-    "fill_full": {
-      "title": "{device_name}: pojemnik pełny",
-      "description": "{resource_name} zgłasza, że pojemnik jest pełny. Opróżnij go."
-    },
     "error_active": {
       "title": "{device_name}: aktywny błąd",
       "description": "{resource_name} zgłasza aktywny błąd (typ zasobu {resource_type_id}). Sprawdź urządzenie, aby poznać szczegóły."

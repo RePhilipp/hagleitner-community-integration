@@ -19,30 +19,6 @@
     }
   },
   "issues": {
-    "battery_low": {
-      "title": "{device_name}: slabá baterie",
-      "description": "{resource_name} hlásí nízkou úroveň napájení. Brzy baterii vyměňte nebo nabijte."
-    },
-    "battery_empty": {
-      "title": "{device_name}: vybitá baterie",
-      "description": "{resource_name} hlásí vybitou baterii. Vyměňte ji nebo nabijte."
-    },
-    "refill_low": {
-      "title": "{device_name}: náplň dochází",
-      "description": "{resource_name} hlásí nízkou zásobu. Brzy zařízení doplňte."
-    },
-    "refill_empty": {
-      "title": "{device_name}: prázdná náplň",
-      "description": "{resource_name} hlásí, že nezbývá žádná použitelná zásoba. Doplňte zařízení."
-    },
-    "fill_nearly_full": {
-      "title": "{device_name}: nádoba je téměř plná",
-      "description": "{resource_name} hlásí, že nádoba je téměř plná. Brzy ji vyprázdněte."
-    },
-    "fill_full": {
-      "title": "{device_name}: nádoba je plná",
-      "description": "{resource_name} hlásí, že nádoba je plná. Vyprázdněte ji."
-    },
     "error_active": {
       "title": "{device_name}: aktivní chyba",
       "description": "{resource_name} hlásí aktivní chybu (typ prostředku {resource_type_id}). Podrobnosti zjistíte kontrolou zařízení."

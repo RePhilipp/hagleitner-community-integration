@@ -11,13 +11,14 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import DOMAIN
+from .device import is_valid_customer_id
 
 
 class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Configure an Azure Service Bus queue."""
 
     VERSION = 1
-    _discovery_info: dict[str, str] | None = None
+    _discovery_info: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -68,7 +69,7 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_integration_discovery(
-        self, discovery_info: dict[str, str]
+        self, discovery_info: dict[str, Any]
     ) -> FlowResult:
         """Ask the user whether to adopt a newly detected device."""
         await self.async_set_unique_id(discovery_info["device_id"])
@@ -95,8 +96,12 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "suggested_area_id",
                     "hsm_location_path",
                     "hsm_mount_point",
+                    "customer_id",
                 }
             }
+            customer_id = self._discovery_info.get("customer_id")
+            if is_valid_customer_id(customer_id):
+                device_data["customer_id"] = customer_id
             if area_id := user_input.get("area_id"):
                 device_data["area_id"] = area_id
             return self.async_create_entry(

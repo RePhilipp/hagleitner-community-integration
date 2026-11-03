@@ -7,13 +7,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import HagleitnerHub
+from .device import device_info
 from .resource_data import (
     ResourceDefinition,
     ResourceValueSnapshot,
@@ -41,6 +42,7 @@ async def async_setup_entry(
         raise ConfigEntryNotReady("Waiting for the Hagleitner queue connection")
 
     device_id = entry.data["device_id"]
+    customer_id = entry.data.get("customer_id")
     added_ids: set[str] = set()
 
     def add_resource(snapshot: ResourceValueSnapshot) -> None:
@@ -61,6 +63,7 @@ async def async_setup_entry(
                     snapshot.key,
                     definition,
                     mode,
+                    customer_id,
                 )
             )
         if entities:
@@ -110,6 +113,7 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         resource_key: str,
         definition: ResourceDefinition,
         mode: str,
+        customer_id: int | None,
     ) -> None:
         """Initialize a binary sensor for one resource instance."""
         self._hub = hub
@@ -117,7 +121,10 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         self._resource_key = resource_key
         self._definition = definition
         self._mode = mode
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
+        self._attr_device_info = device_info(device_id, customer_id)
+        if mode == "battery":
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+            self._attr_icon = "mdi:battery-alert"
         if mode in {
             "battery",
             "mains_adapter",
@@ -134,16 +141,16 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         )
         if mode == "refill_inserted":
             self._attr_icon = "mdi:package-check"
-        else:
+        elif mode == "opening":
+            self._attr_icon = "mdi:package-variant"
+        elif mode not in {"battery", "opening"}:
             self._attr_device_class = {
-                "battery": BinarySensorDeviceClass.BATTERY,
                 "mains_adapter": BinarySensorDeviceClass.PLUG,
                 "problem": BinarySensorDeviceClass.PROBLEM,
                 "connectivity": BinarySensorDeviceClass.CONNECTIVITY,
                 "refill_problem": BinarySensorDeviceClass.PROBLEM,
                 "fill_problem": BinarySensorDeviceClass.PROBLEM,
                 "connection_problem": BinarySensorDeviceClass.PROBLEM,
-                "opening": BinarySensorDeviceClass.OPENING,
                 "maintenance_required": BinarySensorDeviceClass.PROBLEM,
             }[mode]
 

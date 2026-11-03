@@ -13,11 +13,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, PERCENTAGE, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import HagleitnerHub
+from .device import device_info
 from .resource_data import (
     ResourceDefinition,
     ResourceValueSnapshot,
@@ -39,6 +39,7 @@ async def async_setup_entry(
         raise ConfigEntryNotReady("Waiting for the Hagleitner queue connection")
 
     device_id = entry.data["device_id"]
+    customer_id = entry.data.get("customer_id")
     added_ids: set[str] = set()
 
     def add_resource(snapshot: ResourceValueSnapshot) -> None:
@@ -61,6 +62,7 @@ async def async_setup_entry(
                     snapshot.device_type_names,
                     mode,
                     name,
+                    customer_id,
                 )
             )
         if entities:
@@ -75,10 +77,11 @@ async def async_setup_entry(
                 hub,
                 device_id,
                 "customer_name",
+                customer_id,
             ),
-            HagleitnerMetadataSensor(hub, device_id, "customer_id"),
-            HagleitnerMetadataSensor(hub, device_id, "location"),
-            HagleitnerMetadataSensor(hub, device_id, "mount_point"),
+            HagleitnerMetadataSensor(hub, device_id, "customer_id", customer_id),
+            HagleitnerMetadataSensor(hub, device_id, "location", customer_id),
+            HagleitnerMetadataSensor(hub, device_id, "mount_point", customer_id),
         ]
     )
 
@@ -121,6 +124,7 @@ class HagleitnerSensor(SensorEntity):
         device_type_names: frozenset[str],
         mode: str,
         name: str | None,
+        customer_id: int | None,
     ) -> None:
         """Initialize a sensor for one resource instance."""
         self._hub = hub
@@ -128,13 +132,26 @@ class HagleitnerSensor(SensorEntity):
         self._resource_key = resource_key
         self._definition = definition
         self._mode = mode
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
+        self._attr_device_info = device_info(device_id, customer_id)
         if mode == "battery_level":
             self._attr_translation_key = "battery_level"
         elif name is not None:
             self._attr_name = name
         self._attr_unique_id = f"{device_id}_{resource_key}_{mode}"
-        if mode == "enum" or (
+        if mode == "enum" and definition.kind == "battery":
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        if mode == "counter" and definition.name in {
+            "Dispense count",
+            "Refill count",
+        }:
+            self._attr_icon = "mdi:counter"
+        elif mode == "enum" and definition.kind == "battery":
+            self._attr_icon = "mdi:battery-alert"
+        elif mode == "enum" and definition.kind == "connection":
+            self._attr_icon = "mdi:lan-connect"
+        elif mode == "enum" and definition.name == "Refill state":
+            self._attr_icon = "mdi:package-variant-closed"
+        elif mode == "enum" or (
             mode == "counter" and definition.device_class is None
         ):
             self._attr_icon = device_type_icon(device_type_names)
@@ -219,12 +236,13 @@ class HagleitnerMetadataSensor(SensorEntity):
         hub: HagleitnerHub,
         device_id: str,
         metadata_key: str,
+        customer_id: int | None,
     ) -> None:
         """Initialize a diagnostic sensor for one metadata field."""
         self._hub = hub
         self._device_id = device_id
         self._metadata_key = metadata_key
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
+        self._attr_device_info = device_info(device_id, customer_id)
         self._attr_translation_key = f"metadata_{metadata_key}"
         self._attr_unique_id = f"{device_id}_{metadata_key}"
         self._attr_icon = {

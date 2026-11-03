@@ -19,30 +19,6 @@
     }
   },
   "issues": {
-    "battery_low": {
-      "title": "{device_name}: baterija je pri kraju",
-      "description": "{resource_name} prijavljuje nisku razinu energije. Uskoro zamijenite ili napunite bateriju."
-    },
-    "battery_empty": {
-      "title": "{device_name}: baterija je prazna",
-      "description": "{resource_name} prijavljuje praznu bateriju. Zamijenite je ili napunite."
-    },
-    "refill_low": {
-      "title": "{device_name}: zaliha pri kraju",
-      "description": "{resource_name} prijavljuje nisku razinu zalihe. Uskoro nadopunite uređaj."
-    },
-    "refill_empty": {
-      "title": "{device_name}: zaliha je prazna",
-      "description": "{resource_name} prijavljuje da više nema upotrebljive zalihe. Nadopunite uređaj."
-    },
-    "fill_nearly_full": {
-      "title": "{device_name}: spremnik je gotovo pun",
-      "description": "{resource_name} prijavljuje da je spremnik gotovo pun. Uskoro ga ispraznite."
-    },
-    "fill_full": {
-      "title": "{device_name}: spremnik je pun",
-      "description": "{resource_name} prijavljuje da je spremnik pun. Ispraznite ga."
-    },
     "error_active": {
       "title": "{device_name}: aktivna pogreška",
       "description": "{resource_name} prijavljuje aktivnu pogrešku (vrsta resursa {resource_type_id}). Pojedinosti provjerite na uređaju."
