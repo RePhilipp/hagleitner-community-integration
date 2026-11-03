@@ -30,10 +30,12 @@ async def run_receiver(
             async with ServiceBusClient.from_connection_string(
                 connection_string
             ) as client:
-                async with client.get_queue_receiver(
+                receiver = await asyncio.to_thread(
+                    client.get_queue_receiver,
                     queue_name=queue_name,
                     max_wait_time=5,
-                ) as receiver:
+                )
+                async with receiver:
                     _LOGGER.info("Listening on Azure Service Bus queue %s", queue_name)
                     while True:
                         messages = await receiver.receive_messages(

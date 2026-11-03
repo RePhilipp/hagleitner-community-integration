@@ -337,4 +337,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove repair issues when an adopted device entry is deleted."""
     if entry.data.get("entry_type") == "device":
-        async_clear_maintenance_issues(hass, entry.entry_id)
+        async_clear_maintenance_issues(hass, entry.data["device_id"])

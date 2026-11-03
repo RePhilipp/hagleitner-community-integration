@@ -41,7 +41,6 @@ _ISSUE_SEVERITIES = {
 def async_update_maintenance_issue(
     hass: HomeAssistant,
     device_id: str,
-    device_entry_id: str,
     device_name: str,
     snapshot: ResourceValueSnapshot,
     device_snapshots: tuple[ResourceValueSnapshot, ...] = (),
@@ -72,7 +71,6 @@ def async_update_maintenance_issue(
             hass,
             DOMAIN,
             issue_id,
-            config_entry_id=device_entry_id,
             is_fixable=False,
             is_persistent=True,
             severity=_ISSUE_SEVERITIES[issue_key],
@@ -88,12 +86,13 @@ def async_update_maintenance_issue(
 @callback
 def async_clear_maintenance_issues(
     hass: HomeAssistant,
-    device_entry_id: str,
+    device_id: str,
 ) -> None:
     """Remove this device's issues when its config entry is removed."""
     registry = ir.async_get(hass)
-    for (domain, issue_id), issue in tuple(registry.issues.items()):
-        if domain == DOMAIN and issue.config_entry_id == device_entry_id:
+    device_issue_prefix = f"{device_id}_"
+    for domain, issue_id in tuple(registry.issues):
+        if domain == DOMAIN and issue_id.startswith(device_issue_prefix):
             ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 

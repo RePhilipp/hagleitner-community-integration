@@ -183,7 +183,6 @@ class HagleitnerHub:
         async_update_maintenance_issue(
             self.hass,
             device_id,
-            device_entry_id,
             self.device_names.get(device_id, f"Hagleitner {device_id[:8]}"),
             snapshot,
             tuple(self.resources_for_device(device_id)),
@@ -312,7 +311,7 @@ def _suggest_area_from_hsm_location(
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     matching_area_ids: set[str] = set()
-    for device in device_registry.devices.values():
+    for device in device_registry.devices:
         candidate_id = next(
             (
                 identifier
