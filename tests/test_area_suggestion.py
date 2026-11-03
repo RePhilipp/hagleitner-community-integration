@@ -31,3 +31,17 @@ async def test_area_suggestion_trims_surrounding_whitespace(hass):
     location_name = _innermost_location_name(" Home > OG 3 >   WC  ", None)
 
     assert _suggest_existing_area_id(hass, location_name) == area.id
+
+
+async def test_area_suggestion_does_not_fuzzy_match(hass):
+    """Names that only resemble one another are not area suggestions."""
+    ar.async_get(hass).async_create("Room 4")
+
+    assert _suggest_existing_area_id(hass, "Room4") is None
+
+
+async def test_area_suggestion_does_not_match_area_aliases(hass):
+    """Only the HA area name, not its aliases, is used as the fallback."""
+    ar.async_get(hass).async_create("Bathroom", aliases={"Room4"})
+
+    assert _suggest_existing_area_id(hass, "Room4") is None

@@ -6,7 +6,6 @@ import logging
 import time
 from asyncio import Task
 from collections.abc import Callable
-from difflib import SequenceMatcher
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
@@ -380,7 +379,7 @@ def _suggest_area_from_hsm_location(
     if not isinstance(metadata_by_device, dict):
         metadata_by_device = {}
 
-    normalized_path = _normalize_area_name(location_path)
+    normalized_path = _normalize_location_path(location_path)
     area_registry = ar.async_get(hass)
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
@@ -435,7 +434,7 @@ def _suggest_area_from_hsm_location(
                 candidate_path = location_state.state
         if (
             not isinstance(candidate_path, str)
-            or _normalize_area_name(candidate_path) != normalized_path
+            or _normalize_location_path(candidate_path) != normalized_path
         ):
             continue
         if (
@@ -467,38 +466,11 @@ def _suggest_existing_area_id(
     exact_matches = {
         area.id
         for area in areas
-        if any(
-            _normalize_area_name(name) == normalized_location
-            for name in (area.name, *area.aliases)
-        )
+        if _normalize_area_name(area.name) == normalized_location
     }
     if len(exact_matches) == 1:
         return next(iter(exact_matches))
-    if exact_matches:
-        return None
-
-    area_scores: list[tuple[float, str]] = []
-    for area in areas:
-        score = max(
-            (
-                SequenceMatcher(
-                    None,
-                    normalized_location,
-                    _normalize_area_name(name),
-                ).ratio()
-                for name in (area.name, *area.aliases)
-                if _normalize_area_name(name)
-            ),
-            default=0.0,
-        )
-        area_scores.append((score, area.id))
-
-    area_scores.sort(reverse=True)
-    if not area_scores or area_scores[0][0] < 0.85:
-        return None
-    if len(area_scores) > 1 and area_scores[0][0] - area_scores[1][0] < 0.1:
-        return None
-    return area_scores[0][1]
+    return None
 
 
 def _innermost_location_name(
@@ -518,5 +490,10 @@ def _innermost_location_name(
 
 
 def _normalize_area_name(name: str) -> str:
-    """Normalize whitespace and case before comparing location names."""
-    return " ".join(name.casefold().split())
+    """Trim and case-fold a room name for exact area-name matching."""
+    return name.strip().casefold()
+
+
+def _normalize_location_path(path: str) -> str:
+    """Normalize whitespace and case before comparing HSM location paths."""
+    return " ".join(path.casefold().split())
