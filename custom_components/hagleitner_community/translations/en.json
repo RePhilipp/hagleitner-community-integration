@@ -55,17 +55,8 @@
       }
     },
     "binary_sensor": {
-      "battery": {
-        "name": "Battery"
-      },
       "mains_adapter": {
         "name": "Mains adapter connected"
-      },
-      "connectivity": {
-        "name": "Connectivity"
-      },
-      "connection_problem": {
-        "name": "Connection problem"
       }
     }
   },

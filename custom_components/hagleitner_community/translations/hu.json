@@ -55,17 +55,8 @@
       }
     },
     "binary_sensor": {
-      "battery": {
-        "name": "Elem"
-      },
       "mains_adapter": {
         "name": "Hálózati adapter csatlakoztatva"
-      },
-      "connectivity": {
-        "name": "Kapcsolat"
-      },
-      "connection_problem": {
-        "name": "Kapcsolati probléma"
       }
     }
   },

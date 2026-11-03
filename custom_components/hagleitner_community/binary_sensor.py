@@ -7,7 +7,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
@@ -23,9 +22,16 @@ from .resource_data import (
 )
 
 _LEGACY_UNIQUE_ID_SUFFIXES = {"mains_adapter": "battery_charging"}
-_OBSOLETE_CONSUMABLE_PROBLEM_SUFFIXES = (
-    "_refill_problem",
+_OBSOLETE_BINARY_SENSOR_SUFFIXES = (
+    "_battery",
+    "_connectivity",
+    "_connection_problem",
     "_fill_problem",
+    "_maintenance_required",
+    "_opening",
+    "_problem",
+    "_refill_inserted",
+    "_refill_problem",
 )
 
 
@@ -41,7 +47,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensors for one adopted device."""
     device_id = entry.data["device_id"]
-    _remove_obsolete_consumable_problem_entities(hass, entry, device_id)
+    _remove_obsolete_binary_sensors(hass, entry, device_id)
 
     hub: HagleitnerHub | None = hass.data[DOMAIN].get(entry.data["hub_entry_id"])
     if hub is None:
@@ -80,12 +86,12 @@ async def async_setup_entry(
 
 
 @callback
-def _remove_obsolete_consumable_problem_entities(
+def _remove_obsolete_binary_sensors(
     hass: HomeAssistant,
     entry: ConfigEntry,
     device_id: str,
 ) -> None:
-    """Remove old refill/fill problem binary sensors from the entity registry."""
+    """Remove old duplicate binary sensors from the entity registry."""
     registry = er.async_get(hass)
     device_prefix = f"{device_id}_"
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
@@ -93,7 +99,7 @@ def _remove_obsolete_consumable_problem_entities(
             entity.platform == DOMAIN
             and entity.domain == "binary_sensor"
             and entity.unique_id.startswith(device_prefix)
-            and entity.unique_id.endswith(_OBSOLETE_CONSUMABLE_PROBLEM_SUFFIXES)
+            and entity.unique_id.endswith(_OBSOLETE_BINARY_SENSOR_SUFFIXES)
         ):
             registry.async_remove(entity.entity_id)
 
@@ -103,20 +109,9 @@ def _binary_modes(snapshot: ResourceValueSnapshot) -> tuple[str, ...]:
     definition = snapshot.definition
     if definition is None:
         return ()
-    if definition.kind == "opening":
-        return ("opening",)
-    if definition.kind == "presence":
-        return ("refill_inserted",)
-    if definition.kind == "maintenance":
-        return ("maintenance_required",)
     if definition.kind == "battery":
         if snapshot.mapped_value == "mains_adapter":
             return ("mains_adapter",)
-        return ("battery",)
-    if definition.kind == "problem":
-        return ("problem",)
-    if definition.kind == "connection":
-        return ("connectivity", "connection_problem")
     return ()
 
 
@@ -142,99 +137,27 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         self._definition = definition
         self._mode = mode
         self._attr_device_info = device_info(device_id, customer_id)
-        if mode == "battery":
-            self._attr_entity_category = EntityCategory.DIAGNOSTIC
-            self._attr_icon = "mdi:battery-alert"
-        elif mode == "opening":
-            self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        if mode in {
-            "battery",
-            "mains_adapter",
-            "connectivity",
-            "connection_problem",
-        }:
+        if mode == "mains_adapter":
             self._attr_translation_key = mode
         else:
             self._attr_name = definition.name
         self._attr_unique_id = (
             f"{device_id}_{resource_key}_{_unique_id_suffix(mode)}"
         )
-        if mode == "refill_inserted":
-            self._attr_icon = "mdi:package-check"
-        elif mode == "opening":
-            self._attr_icon = "mdi:package-variant"
-        elif mode not in {"battery", "opening"}:
-            self._attr_device_class = {
-                "mains_adapter": BinarySensorDeviceClass.PLUG,
-                "problem": BinarySensorDeviceClass.PROBLEM,
-                "connectivity": BinarySensorDeviceClass.CONNECTIVITY,
-                "connection_problem": BinarySensorDeviceClass.PROBLEM,
-                "maintenance_required": BinarySensorDeviceClass.PROBLEM,
-            }[mode]
+        if mode == "mains_adapter":
+            self._attr_device_class = BinarySensorDeviceClass.PLUG
 
     @property
     def is_on(self) -> bool | None:
-        """Return the current low-battery, problem, or connectivity state."""
+        """Return whether the mains adapter is connected."""
         snapshot = self._hub.value_for_resource(self._device_id, self._resource_key)
         if snapshot is None:
             return None
 
-        if self._mode == "refill_inserted":
-            if snapshot.mapped_value == "inserted":
-                return True
-            if snapshot.mapped_value == "removed":
-                return False
-            return None
-        if self._mode == "maintenance_required":
-            if snapshot.mapped_value == "change_required":
-                return True
-            if snapshot.mapped_value == "no_change_required":
-                return False
-            return None
-        if self._mode == "opening":
-            if snapshot.mapped_value == "opened":
-                return True
-            if snapshot.mapped_value == "closed":
-                return False
-            return None
-        if self._mode == "battery":
-            if snapshot.mapped_value in ("low", "empty"):
-                return True
-            if snapshot.mapped_value in ("ok", "mains_adapter"):
-                return False
-            return None
         if self._mode == "mains_adapter":
             if snapshot.mapped_value == "mains_adapter":
                 return True
             if snapshot.mapped_value in ("ok", "low", "empty"):
-                return False
-            return None
-        if self._mode == "problem":
-            if snapshot.mapped_value == "error":
-                return True
-            if snapshot.mapped_value == "no_error":
-                return False
-            return None
-        if self._mode == "connectivity":
-            if snapshot.mapped_value in ("online", "available"):
-                return True
-            if snapshot.mapped_value in (
-                "offline",
-                "temporarily_offline",
-                "not_available",
-            ):
-                return False
-            return None
-        if self._mode == "connection_problem":
-            if snapshot.mapped_value == "offline":
-                return True
-            if snapshot.mapped_value in (
-                "temporarily_offline",
-                "online",
-                "not_connected",
-                "not_available",
-                "available",
-            ):
                 return False
             return None
         return None

@@ -55,17 +55,8 @@
       }
     },
     "binary_sensor": {
-      "battery": {
-        "name": "Baterija"
-      },
       "mains_adapter": {
         "name": "Mrežni adapter priključen"
-      },
-      "connectivity": {
-        "name": "Povezivost"
-      },
-      "connection_problem": {
-        "name": "Problem s vezom"
       }
     }
   },

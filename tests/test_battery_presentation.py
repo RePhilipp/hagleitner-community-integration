@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import EntityCategory, PERCENTAGE
+from homeassistant.const import PERCENTAGE
 
 from custom_components.hagleitner_community.binary_sensor import (
     HagleitnerBinarySensor,
@@ -52,15 +53,14 @@ class _BatteryHub:
         return self._snapshot
 
 
-def test_battery_percentage_is_primary_and_status_is_diagnostic():
-    """Keep the useful percentage primary and status entities diagnostic."""
+def test_battery_percentage_is_the_only_low_normal_empty_sensor():
+    """Expose one battery entity for states that map to a percentage."""
     snapshot = _battery_snapshot("low", 1)
 
     assert _sensor_modes(_BATTERY_DEFINITION, snapshot) == (
-        ("enum", _BATTERY_DEFINITION.name),
         ("battery_level", None),
     )
-    assert _binary_modes(snapshot) == ("battery",)
+    assert _binary_modes(snapshot) == ()
 
     level_entity = HagleitnerSensor(
         _BatteryHub(snapshot),
@@ -77,33 +77,6 @@ def test_battery_percentage_is_primary_and_status_is_diagnostic():
     assert level_entity._attr_native_unit_of_measurement == PERCENTAGE
     assert level_entity._attr_state_class == SensorStateClass.MEASUREMENT
     assert getattr(level_entity, "_attr_entity_category", None) is None
-
-    enum_entity = HagleitnerSensor(
-        _BatteryHub(snapshot),
-        "device",
-        snapshot.key,
-        _BATTERY_DEFINITION,
-        frozenset(),
-        "enum",
-        _BATTERY_DEFINITION.name,
-        None,
-    )
-    assert enum_entity.native_value == "low"
-    assert enum_entity._attr_entity_category == EntityCategory.DIAGNOSTIC
-
-    binary_entity = HagleitnerBinarySensor(
-        _BatteryHub(snapshot),
-        "device",
-        snapshot.key,
-        _BATTERY_DEFINITION,
-        "battery",
-        None,
-    )
-    assert binary_entity.is_on is True
-    assert binary_entity.unique_id == "device_battery-resource_battery"
-    assert getattr(binary_entity, "_attr_device_class", None) is None
-    assert binary_entity._attr_entity_category == EntityCategory.DIAGNOSTIC
-    assert binary_entity._attr_icon == "mdi:battery-alert"
 
 
 def test_normal_battery_is_reported_as_one_hundred_percent():
@@ -124,10 +97,18 @@ def test_normal_battery_is_reported_as_one_hundred_percent():
 
 
 def test_mains_adapter_indicator_is_preserved():
-    """A distinct mains-adapter indication remains available."""
+    """A mains adapter gets its own binary state, not an enum duplicate."""
     snapshot = _battery_snapshot("mains_adapter", 3)
 
-    assert _sensor_modes(_BATTERY_DEFINITION, snapshot) == (
-        ("enum", _BATTERY_DEFINITION.name),
-    )
+    assert _sensor_modes(_BATTERY_DEFINITION, snapshot) == ()
     assert _binary_modes(snapshot) == ("mains_adapter",)
+    entity = HagleitnerBinarySensor(
+        _BatteryHub(snapshot),
+        "device",
+        snapshot.key,
+        _BATTERY_DEFINITION,
+        "mains_adapter",
+        None,
+    )
+    assert entity.is_on is True
+    assert entity._attr_device_class == BinarySensorDeviceClass.PLUG

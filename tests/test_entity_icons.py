@@ -2,12 +2,8 @@
 
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 
-from custom_components.hagleitner_community.binary_sensor import (
-    HagleitnerBinarySensor,
-)
 from custom_components.hagleitner_community.resource_data import (
     ResourceDefinition,
     ResourceValueSnapshot,
@@ -23,9 +19,6 @@ _REFILL_STATE_DEFINITION = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
 ]
 _CONNECTION_DEFINITION = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
     "7c178f1d-271f-4554-03ac-08dac1664f9a"
-]
-_ERROR_DEFINITION = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
-    "9a77375d-964c-451f-03ab-08dac1664f9a"
 ]
 _OPENING_DEFINITION = ResourceDefinition(
     name="Cover state",
@@ -96,7 +89,6 @@ def test_sensor_icons_match_the_resource_meaning():
         )
         assert entity._attr_icon == expected_icon
 
-    assert _sensor(_BATTERY_DEFINITION, mode="enum")._attr_icon == "mdi:battery-alert"
     assert _sensor(_CONNECTION_DEFINITION, mode="enum")._attr_icon == "mdi:lan-connect"
     assert (
         _sensor(_REFILL_STATE_DEFINITION, mode="enum")._attr_icon
@@ -111,49 +103,3 @@ def test_battery_level_uses_home_assistant_battery_icon_pattern():
 
     assert entity._attr_device_class == SensorDeviceClass.BATTERY
     assert getattr(entity, "_attr_icon", None) is None
-
-
-def test_binary_statuses_use_home_assistant_device_class_icons():
-    """Use HA's standard state-aware icons for connection and problem statuses."""
-    for definition, mode, expected_class in (
-        (
-            _CONNECTION_DEFINITION,
-            "connection_problem",
-            BinarySensorDeviceClass.PROBLEM,
-        ),
-        (
-            _CONNECTION_DEFINITION,
-            "connectivity",
-            BinarySensorDeviceClass.CONNECTIVITY,
-        ),
-        (_ERROR_DEFINITION, "problem", BinarySensorDeviceClass.PROBLEM),
-    ):
-        entity = HagleitnerBinarySensor(
-            _EntityHub(_snapshot(definition)),
-            "device",
-            "resource",
-            definition,
-            mode,
-            None,
-        )
-        assert entity._attr_device_class == expected_class
-
-    battery = HagleitnerBinarySensor(
-        _EntityHub(_snapshot(_BATTERY_DEFINITION)),
-        "device",
-        "battery",
-        _BATTERY_DEFINITION,
-        "battery",
-        None,
-    )
-    assert battery._attr_icon == "mdi:battery-alert"
-
-    opening = HagleitnerBinarySensor(
-        _EntityHub(_snapshot(_OPENING_DEFINITION, mapped_value="closed", raw_value=1)),
-        "device",
-        "cover",
-        _OPENING_DEFINITION,
-        "opening",
-        None,
-    )
-    assert opening._attr_icon == "mdi:package-variant"

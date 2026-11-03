@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, PERCENTAGE, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -27,6 +28,8 @@ from .resource_data import (
     source_timestamp,
 )
 
+_OBSOLETE_BATTERY_STATUS_NAME = "Energy supply status"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -34,11 +37,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for one adopted device."""
+    device_id = entry.data["device_id"]
+    _remove_obsolete_battery_status_sensors(hass, entry, device_id)
+
     hub: HagleitnerHub | None = hass.data[DOMAIN].get(entry.data["hub_entry_id"])
     if hub is None:
         raise ConfigEntryNotReady("Waiting for the Hagleitner queue connection")
 
-    device_id = entry.data["device_id"]
     customer_id = entry.data.get("customer_id")
     added_ids: set[str] = set()
 
@@ -86,6 +91,26 @@ async def async_setup_entry(
     )
 
 
+@callback
+def _remove_obsolete_battery_status_sensors(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    device_id: str,
+) -> None:
+    """Remove the old enum sensor now that battery percent is the primary value."""
+    registry = er.async_get(hass)
+    device_prefix = f"{device_id}_"
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if (
+            entity.platform == DOMAIN
+            and entity.domain == "sensor"
+            and entity.unique_id.startswith(device_prefix)
+            and entity.unique_id.endswith("_enum")
+            and entity.original_name == _OBSOLETE_BATTERY_STATUS_NAME
+        ):
+            registry.async_remove(entity.entity_id)
+
+
 def _sensor_modes(
     definition: ResourceDefinition,
     snapshot: ResourceValueSnapshot,
@@ -102,10 +127,9 @@ def _sensor_modes(
     if definition.kind == "opening":
         return (("enum", definition.name),)
     if definition.kind == "battery":
-        modes: list[tuple[str, str | None]] = [("enum", definition.name)]
-        if snapshot.mapped_value != "mains_adapter":
-            modes.append(("battery_level", None))
-        return tuple(modes)
+        if snapshot.mapped_value == "mains_adapter":
+            return ()
+        return (("battery_level", None),)
     if definition.kind == "connection":
         return (("enum", definition.name),)
     return ()
@@ -140,15 +164,11 @@ class HagleitnerSensor(SensorEntity):
         elif name is not None:
             self._attr_name = name
         self._attr_unique_id = f"{device_id}_{resource_key}_{mode}"
-        if mode == "enum" and definition.kind == "battery":
-            self._attr_entity_category = EntityCategory.DIAGNOSTIC
         if mode == "counter" and definition.name in {
             "Dispense count",
             "Refill count",
         }:
             self._attr_icon = "mdi:counter"
-        elif mode == "enum" and definition.kind == "battery":
-            self._attr_icon = "mdi:battery-alert"
         elif mode == "enum" and definition.kind == "connection":
             self._attr_icon = "mdi:lan-connect"
         elif mode == "enum" and definition.kind == "opening":

@@ -160,14 +160,6 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
         name="Number of openings",
         kind="counter",
     ),
-    (12294, 0): ResourceDefinition(
-        name="Refill inserted",
-        kind="presence",
-        enum_values={
-            0: "inserted",
-            1: "removed",
-        },
-    ),
     (20485, 0): ResourceDefinition(
         name="Passage count",
         kind="counter",

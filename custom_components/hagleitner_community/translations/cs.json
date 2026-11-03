@@ -55,17 +55,8 @@
       }
     },
     "binary_sensor": {
-      "battery": {
-        "name": "Baterie"
-      },
       "mains_adapter": {
         "name": "Síťový adaptér připojen"
-      },
-      "connectivity": {
-        "name": "Připojení"
-      },
-      "connection_problem": {
-        "name": "Problém s připojením"
       }
     }
   },
