@@ -40,6 +40,31 @@ python -m pytest -q
 
 Test dependencies are separate from the integration's runtime requirements.
 
+## Try the integration in a local Home Assistant container
+
+This isolated test instance uses Home Assistant 2026.10.4 and mounts the
+integration from this checkout. Its configuration, including any credentials
+entered in the UI, stays under the ignored `ha-test/` directory. From the
+repository root:
+
+```bash
+mkdir -p ha-test/config
+docker run -d \
+  --name hagleitner-ha-test \
+  -p 8124:8123 \
+  -e TZ=Etc/UTC \
+  -v "$PWD/ha-test/config:/config" \
+  -v "$PWD/custom_components/hagleitner_community:/config/custom_components/hagleitner_community:ro" \
+  ghcr.io/home-assistant/home-assistant:2026.10.4
+docker logs -f hagleitner-ha-test
+```
+
+Open [http://localhost:8124](http://localhost:8124) to finish Home Assistant
+onboarding and add the integration. A live queue connection is needed to
+trigger device discovery. Stop and restart the container with
+`docker stop hagleitner-ha-test` and `docker start hagleitner-ha-test`; the test
+configuration is preserved between runs.
+
 ## Set up Home Assistant
 
 After installing the integration through HACS, restart Home Assistant if
