@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from unittest.mock import AsyncMock
 
+import custom_components.hagleitner_community as integration
 from custom_components.hagleitner_community import async_setup
 from custom_components.hagleitner_community.binary_sensor import (
     HagleitnerBinarySensor,
@@ -23,6 +26,31 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 _CONNECTION_STATUS_EQUIVALENT_ID = "7c178f1d-271f-4554-03ac-08dac1664f9a"
 _BATTERY_STATUS_EQUIVALENT_ID = "77d144fd-d7a3-42f7-03aa-08dac1664f9a"
+
+
+async def test_config_entry_setup_initializes_persisted_state(hass, monkeypatch):
+    """Load the state store through config-entry setup."""
+    restore = AsyncMock(wraps=async_restore_persisted_state)
+    monkeypatch.setattr(integration, "async_restore_persisted_state", restore)
+
+    async def idle_receiver(*_args):
+        await asyncio.sleep(0)
+
+    monkeypatch.setattr(integration, "run_receiver", idle_receiver)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "entry_type": "hub",
+            "connection_string": "Endpoint=sb://example/",
+            "queue_name": "queue",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    assert await integration.async_setup_entry(hass, entry)
+    restore.assert_awaited_once_with(hass)
+    assert hass.data[DOMAIN]["_state_restored"] is True
+    assert "_state_store" in hass.data[DOMAIN]["_shared_device_state"]
 
 
 async def test_last_known_resource_and_metadata_values_survive_restart(hass):

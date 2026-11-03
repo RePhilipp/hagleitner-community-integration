@@ -52,6 +52,7 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a queue hub or an adopted device."""
+    await async_restore_persisted_state(hass)
     if entry.data.get("entry_type") == "device":
         return await _async_setup_device(hass, entry)
 
