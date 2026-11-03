@@ -36,7 +36,8 @@ async def run_receiver(
                 connection_string,
                 ssl_context=ssl_context,
             ) as client:
-                receiver = client.get_queue_receiver(
+                receiver = await asyncio.to_thread(
+                    client.get_queue_receiver,
                     queue_name=queue_name,
                     max_wait_time=5,
                 )

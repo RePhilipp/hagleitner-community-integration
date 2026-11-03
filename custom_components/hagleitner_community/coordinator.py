@@ -238,7 +238,9 @@ class HagleitnerHub:
                 },
             )
 
-        configuration_url = device_info(device_id, customer_id).configuration_url
+        configuration_url = device_info(device_id, customer_id).get(
+            "configuration_url"
+        )
         if configuration_url is None:
             return
         device_registry = dr.async_get(self.hass)

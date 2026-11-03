@@ -154,9 +154,10 @@ async def test_hub_receiver_uses_config_entry_background_task(hass, monkeypatch)
 async def test_receiver_preloads_tls_context_off_loop_and_keeps_async_io(
     monkeypatch,
 ):
-    """TLS certificate loading is offloaded, not receiver/network I/O."""
+    """TLS setup and SDK receiver creation are off-loop; network I/O stays async."""
     event_loop_thread = threading.get_ident()
     context_thread = None
+    receiver_thread = None
     expected_context = object()
     client_options = {}
     receiver = None
@@ -184,7 +185,8 @@ async def test_receiver_preloads_tls_context_off_loop_and_keeps_async_io(
             pass
 
         def get_queue_receiver(self, **_kwargs):
-            assert threading.get_ident() == event_loop_thread
+            nonlocal receiver_thread
+            receiver_thread = threading.get_ident()
             return receiver
 
     def from_connection_string(_connection_string, **kwargs):
@@ -203,4 +205,5 @@ async def test_receiver_preloads_tls_context_off_loop_and_keeps_async_io(
         await service_bus.run_receiver("connection", "queue", lambda _message: None)
 
     assert context_thread is not None and context_thread != event_loop_thread
+    assert receiver_thread is not None and receiver_thread != event_loop_thread
     assert client_options["ssl_context"] is expected_context

@@ -19,8 +19,8 @@ def test_device_info_links_to_hsm_customer_devices():
     """A valid customer ID produces the working customer devices URL."""
     info = device_info("device & 123", 456)
 
-    assert info.identifiers == {(DOMAIN, "device & 123")}
-    assert info.configuration_url == (
+    assert info["identifiers"] == {(DOMAIN, "device & 123")}
+    assert info.get("configuration_url") == (
         "https://hsm.hygieneportal.com/devices/devices-list?customerId=456"
     )
 
@@ -29,7 +29,7 @@ def test_device_info_falls_back_to_customer_when_device_id_is_invalid():
     """A valid customer link is retained if the device ID is unusable."""
     info = device_info("   ", 456)
 
-    assert info.configuration_url == (
+    assert info.get("configuration_url") == (
         "https://hsm.hygieneportal.com/devices/devices-list?customerId=456"
     )
 
@@ -39,7 +39,7 @@ def test_device_info_omits_link_for_invalid_customer_id(customer_id):
     """Invalid customer identifiers never result in a malformed HSM URL."""
     info = device_info("device-123", customer_id)
 
-    assert info.configuration_url is None
+    assert info.get("configuration_url") is None
 
 
 async def test_device_discovery_persists_valid_customer_id(
@@ -88,7 +88,7 @@ async def test_device_discovery_persists_valid_customer_id(
         "https://hsm.hygieneportal.com/devices/devices-list?customerId=456"
     )
     assert all(
-        entity._attr_device_info.configuration_url == expected_url
+        entity._attr_device_info.get("configuration_url") == expected_url
         for entity in entities
     )
 
