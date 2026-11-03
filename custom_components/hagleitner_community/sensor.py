@@ -99,6 +99,8 @@ def _sensor_modes(
         return (("diagnostic", definition.name),)
     if definition.kind == "enum":
         return (("enum", definition.name),)
+    if definition.kind == "opening":
+        return (("enum", definition.name),)
     if definition.kind == "battery":
         modes: list[tuple[str, str | None]] = [("enum", definition.name)]
         if snapshot.mapped_value != "mains_adapter":
@@ -149,6 +151,8 @@ class HagleitnerSensor(SensorEntity):
             self._attr_icon = "mdi:battery-alert"
         elif mode == "enum" and definition.kind == "connection":
             self._attr_icon = "mdi:lan-connect"
+        elif mode == "enum" and definition.kind == "opening":
+            self._attr_icon = "mdi:package-variant"
         elif mode == "enum" and definition.name == "Refill state":
             self._attr_icon = "mdi:package-variant-closed"
         elif mode == "enum" or (

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from homeassistant.const import EntityCategory
+
 from custom_components.hagleitner_community.binary_sensor import (
     HagleitnerBinarySensor,
     _binary_modes,
@@ -9,6 +11,10 @@ from custom_components.hagleitner_community.binary_sensor import (
 from custom_components.hagleitner_community.resource_data import (
     ResourceDefinition,
     ResourceValueSnapshot,
+)
+from custom_components.hagleitner_community.sensor import (
+    HagleitnerSensor,
+    _sensor_modes,
 )
 
 _COVER_DEFINITION = ResourceDefinition(
@@ -44,30 +50,59 @@ def _cover_snapshot(mapped_value: str) -> ResourceValueSnapshot:
     )
 
 
-def test_cover_state_keeps_automation_state_without_security_class():
-    """The lid remains usable as a binary sensor, but not a security opening."""
-    snapshot = _cover_snapshot("opened")
-    entity = HagleitnerBinarySensor(
-        _CoverHub(snapshot),
+def test_cover_state_shows_opened_and_closed_without_security_class():
+    """Expose HSM's text states and keep a diagnostic boolean for automations."""
+    opened_snapshot = _cover_snapshot("opened")
+    assert _sensor_modes(_COVER_DEFINITION, opened_snapshot) == (
+        ("enum", "Cover state"),
+    )
+    assert _binary_modes(opened_snapshot) == ("opening",)
+
+    opened_entity = HagleitnerSensor(
+        _CoverHub(opened_snapshot),
         "device",
-        snapshot.key,
+        opened_snapshot.key,
+        _COVER_DEFINITION,
+        frozenset(),
+        "enum",
+        "Cover state",
+        None,
+    )
+    assert opened_entity.native_value == "opened"
+    assert opened_entity.unique_id == "device_cover-resource_enum"
+
+    closed_snapshot = _cover_snapshot("closed")
+    closed_entity = HagleitnerSensor(
+        _CoverHub(closed_snapshot),
+        "device",
+        closed_snapshot.key,
+        _COVER_DEFINITION,
+        frozenset(),
+        "enum",
+        "Cover state",
+        None,
+    )
+    assert closed_entity.native_value == "closed"
+
+    opening_binary = HagleitnerBinarySensor(
+        _CoverHub(opened_snapshot),
+        "device",
+        opened_snapshot.key,
         _COVER_DEFINITION,
         "opening",
         None,
     )
+    assert opening_binary.is_on is True
+    assert getattr(opening_binary, "_attr_device_class", None) is None
+    assert opening_binary._attr_entity_category == EntityCategory.DIAGNOSTIC
+    assert opening_binary.unique_id == "device_cover-resource_opening"
 
-    assert _binary_modes(snapshot) == ("opening",)
-    assert entity.is_on is True
-    assert getattr(entity, "_attr_device_class", None) is None
-    assert entity.name == "Cover state"
-    assert entity.unique_id == "device_cover-resource_opening"
-
-    closed_entity = HagleitnerBinarySensor(
-        _CoverHub(_cover_snapshot("closed")),
+    closed_binary = HagleitnerBinarySensor(
+        _CoverHub(closed_snapshot),
         "device",
-        snapshot.key,
+        closed_snapshot.key,
         _COVER_DEFINITION,
         "opening",
         None,
     )
-    assert closed_entity.is_on is False
+    assert closed_binary.is_on is False

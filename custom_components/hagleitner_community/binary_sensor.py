@@ -125,6 +125,8 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         if mode == "battery":
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
             self._attr_icon = "mdi:battery-alert"
+        elif mode == "opening":
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
         if mode in {
             "battery",
             "mains_adapter",

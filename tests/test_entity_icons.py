@@ -27,6 +27,11 @@ _CONNECTION_DEFINITION = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
 _ERROR_DEFINITION = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
     "9a77375d-964c-451f-03ab-08dac1664f9a"
 ]
+_OPENING_DEFINITION = ResourceDefinition(
+    name="Cover state",
+    kind="opening",
+    enum_values={0: "opened", 1: "closed"},
+)
 
 
 class _EntityHub:
@@ -97,6 +102,7 @@ def test_sensor_icons_match_the_resource_meaning():
         _sensor(_REFILL_STATE_DEFINITION, mode="enum")._attr_icon
         == "mdi:package-variant-closed"
     )
+    assert _sensor(_OPENING_DEFINITION, mode="enum")._attr_icon == "mdi:package-variant"
 
 
 def test_battery_level_uses_home_assistant_battery_icon_pattern():
@@ -147,16 +153,11 @@ def test_binary_statuses_use_home_assistant_device_class_icons():
     )
     assert battery._attr_icon == "mdi:battery-alert"
 
-    opening_definition = ResourceDefinition(
-        name="Cover state",
-        kind="opening",
-        enum_values={0: "opened", 1: "closed"},
-    )
     opening = HagleitnerBinarySensor(
-        _EntityHub(_snapshot(opening_definition, mapped_value="closed", raw_value=1)),
+        _EntityHub(_snapshot(_OPENING_DEFINITION, mapped_value="closed", raw_value=1)),
         "device",
         "cover",
-        opening_definition,
+        _OPENING_DEFINITION,
         "opening",
         None,
     )
