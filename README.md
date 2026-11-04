@@ -33,7 +33,23 @@ messages between them, so each instance may miss some readings. If you run
 multiple Home Assistant instances, create a separate forwarding rule (and queue)
 for each instance.
 
-## Run tests locally
+## Set up Home Assistant
+
+After installing the integration through HACS, restart Home Assistant if
+prompted. Go to **Settings → Devices & services → Add integration** and choose
+**Hagleitner Community**. Enter the Service Bus connection string and queue name
+from the portal.
+
+When a message arrives for a new device, Home Assistant offers it for adoption.
+Confirm adoption to add the device. Entities appear as supported values arrive;
+there is no fixed list of entities guaranteed for every device. Recognized
+connectivity issues, device errors, and component replacement thresholds can
+also appear as maintenance tasks in Home Assistant's Repairs page. Battery,
+refill, and fill levels remain available as entities, not Repairs issues.
+
+## Developer information
+
+### Run tests locally
 
 Tests target stable Home Assistant 2026.10.4 and require Python 3.14.2 or newer.
 The matching test package is a regular release, although the project is marked
@@ -51,7 +67,7 @@ python -m pytest -q
 
 Test dependencies are separate from the integration's runtime requirements.
 
-## Try the integration in a local Home Assistant container
+### Try the integration in a local Home Assistant container
 
 This isolated test instance uses Home Assistant 2026.10.4 and mounts the
 integration from this checkout. Its configuration, including any credentials
@@ -76,31 +92,7 @@ trigger device discovery. Stop and restart the container with
 `docker stop hagleitner-ha-test` and `docker start hagleitner-ha-test`; the test
 configuration is preserved between runs.
 
-## Set up Home Assistant
-
-After installing the integration through HACS, restart Home Assistant if
-prompted. Go to **Settings → Devices & services → Add integration** and choose
-**Hagleitner Community**. Enter the Service Bus connection string and queue name
-from the portal.
-
-When a message arrives for a new device, Home Assistant offers it for adoption.
-Confirm adoption to add the device. Entities appear as supported values arrive;
-there is no fixed list of entities guaranteed for every device. Recognized
-connectivity issues, device errors, and component replacement thresholds can
-also appear as maintenance tasks in Home Assistant's Repairs page. Battery,
-refill, and fill levels remain available as entities, not Repairs issues.
-
-## Keep your connection details safe
-
-Treat the Service Bus connection string as a password: anyone with access to it
-may be able to access the queue. Do not post it in issues, screenshots, or
-messages, and protect your Home Assistant configuration and backups.
-
-Home Assistant diagnostics include the queue name and anonymized resource
-summaries, but omit connection strings and device or customer identifiers.
-Review the report before sharing it.
-
-## Local receiver/debug
+### Local receiver/debug
 
 For troubleshooting from a local checkout, set `HAGLEITNER_SERVICE_BUS_CONNECTION_STRING`
 and `HAGLEITNER_QUEUE_NAME` in your environment, then run
