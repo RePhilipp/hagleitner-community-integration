@@ -13,6 +13,12 @@ and create a **ResourceDataForwardingRule**. The portal provides the connection
 and queue details. **Only devices selected in that rule have their values
 forwarded.**
 
+Open the rule and select its **Connection strings** tab. Copy the **Service bus
+connection** and **Service bus queue** values into the Home Assistant setup;
+the SignalR connection is not used by this integration.
+
+![Hagleitner portal showing the Service Bus connection and queue fields](docs/images/forwarding-rule-connection-strings.png)
+
 ResourceDataForwarding must be enabled for your customer. If the data-forwarding
 option or rule is unavailable, ask Hagleitner support or sales whether it can
 be enabled. Pricing is unknown and may apply, so confirm any costs with
