@@ -1,0 +1,67 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pripojiť Hagleitner Community",
+        "description": "Zadajte údaje frontu Azure Service Bus. Pripojovací reťazec sa ukladá v konfigurácii Home Assistant, preto chráňte svoje zálohy.",
+        "data": {
+          "connection_string": "Pripojovací reťazec frontu",
+          "queue_name": "Názov frontu"
+        }
+      },
+      "confirm": {
+        "title": "Nové zariadenie Hagleitner",
+        "description": "Pridať {name} do Home Assistant?\n\n**Umiestnenie HSM:** {location_path}  \n**Miesto montáže HSM:** {mount_point}\n\nZariadenie a jeho entity sa vytvoria až po potvrdení. Pomlčka (—) znamená, že HSM túto hodnotu neposkytlo. Navrhovanú oblasť možno zmeniť.",
+        "data": {
+          "area_id": "Navrhovaná oblasť"
+        }
+      }
+    }
+  },
+  "issues": {
+    "error_active": {
+      "title": "{device_name}: aktívna chyba",
+      "description": "{resource_name} hlási aktívnu chybu (typ zdroja {resource_type_id}). Podrobnosti zistíte kontrolou zariadenia."
+    },
+    "connection_offline": {
+      "title": "{device_name}: offline",
+      "description": "{resource_name} hlási, že zariadenie je offline."
+    },
+    "flowmeter_replacement": {
+      "title": "{device_name}: vymeňte prietokomer",
+      "description": "Bol dosiahnutý objemový limit na výmenu prietokomeru. Vymeňte ho a resetujte akciu výmeny prietokomeru, aby sa táto úloha uzavrela."
+    },
+    "pump_replacement": {
+      "title": "{device_name}: vymeňte čerpadlo",
+      "description": "Bol dosiahnutý časový alebo objemový limit na výmenu čerpadla. Vymeňte čerpadlo a resetujte akciu výmeny čerpadla, aby sa táto úloha uzavrela."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "metadata_customer_name": {
+        "name": "Názov zákazníka"
+      },
+      "metadata_customer_id": {
+        "name": "ID zákazníka"
+      },
+      "metadata_location": {
+        "name": "Umiestnenie"
+      },
+      "metadata_mount_point": {
+        "name": "Miesto montáže"
+      },
+      "battery_level": {
+        "name": "Úroveň nabitia batérie"
+      }
+    },
+    "binary_sensor": {
+      "mains_adapter": {
+        "name": "Sieťový adaptér pripojený"
+      }
+    }
+  },
+  "error": {
+    "queue_already_configured": "Tento front už bol pridaný.",
+    "queue_already_configured_disabled": "Tento front už bol pridaný, ale je zakázaný. Namiesto pridania ďalšieho povoľte existujúcu položku."
+  }
+}

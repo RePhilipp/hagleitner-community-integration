@@ -1,0 +1,67 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Poveži Hagleitner Community",
+        "description": "Vnesi podatke o čakalni vrsti Azure Service Bus. Povezovalni niz je shranjen v konfiguraciji Home Assistant, zato zaščiti varnostne kopije.",
+        "data": {
+          "connection_string": "Povezovalni niz čakalne vrste",
+          "queue_name": "Ime čakalne vrste"
+        }
+      },
+      "confirm": {
+        "title": "Nova naprava Hagleitner",
+        "description": "Želiš dodati {name} v Home Assistant?\n\n**Lokacija HSM:** {location_path}  \n**Mesto namestitve HSM:** {mount_point}\n\nNaprava in njene entitete bodo ustvarjene šele po potrditvi. Pomišljaj (—) pomeni, da HSM te vrednosti ni posredoval. Predlagano območje lahko spremeniš.",
+        "data": {
+          "area_id": "Predlagano območje"
+        }
+      }
+    }
+  },
+  "issues": {
+    "error_active": {
+      "title": "{device_name}: aktivna napaka",
+      "description": "{resource_name} sporoča aktivno napako (vrsta vira {resource_type_id}). Za podrobnosti preveri napravo."
+    },
+    "connection_offline": {
+      "title": "{device_name}: brez povezave",
+      "description": "{resource_name} sporoča, da naprava nima povezave."
+    },
+    "flowmeter_replacement": {
+      "title": "{device_name}: zamenjaj merilnik pretoka",
+      "description": "Dosežen je prag za zamenjavo merilnika pretoka glede na količino. Zamenjaj ga in ponastavi opravilo zamenjave merilnika pretoka, da zapreš to nalogo."
+    },
+    "pump_replacement": {
+      "title": "{device_name}: zamenjaj črpalko",
+      "description": "Dosežen je časovni ali količinski prag za zamenjavo črpalke. Zamenjaj jo in ponastavi opravilo zamenjave črpalke, da zapreš to nalogo."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "metadata_customer_name": {
+        "name": "Ime stranke"
+      },
+      "metadata_customer_id": {
+        "name": "ID stranke"
+      },
+      "metadata_location": {
+        "name": "Lokacija"
+      },
+      "metadata_mount_point": {
+        "name": "Mesto namestitve"
+      },
+      "battery_level": {
+        "name": "Raven baterije"
+      }
+    },
+    "binary_sensor": {
+      "mains_adapter": {
+        "name": "Omrežni napajalnik priključen"
+      }
+    }
+  },
+  "error": {
+    "queue_already_configured": "Ta čakalna vrsta je že dodana.",
+    "queue_already_configured_disabled": "Ta čakalna vrsta je že dodana, vendar je onemogočena. Namesto dodajanja nove omogoči obstoječi vnos."
+  }
+}

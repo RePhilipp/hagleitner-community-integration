@@ -1,0 +1,67 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Połącz Hagleitner Community",
+        "description": "Wprowadź dane kolejki Azure Service Bus. Ciąg połączenia jest przechowywany w konfiguracji Home Assistant, dlatego chroń kopie zapasowe.",
+        "data": {
+          "connection_string": "Ciąg połączenia kolejki",
+          "queue_name": "Nazwa kolejki"
+        }
+      },
+      "confirm": {
+        "title": "Nowe urządzenie Hagleitner",
+        "description": "Dodać {name} do Home Assistant?\n\n**Lokalizacja HSM:** {location_path}  \n**Miejsce montażu HSM:** {mount_point}\n\nUrządzenie i jego encje zostaną utworzone dopiero po potwierdzeniu. Myślnik (—) oznacza, że HSM nie przekazał tej wartości. Sugerowany obszar można zmienić.",
+        "data": {
+          "area_id": "Sugerowany obszar"
+        }
+      }
+    }
+  },
+  "issues": {
+    "error_active": {
+      "title": "{device_name}: aktywny błąd",
+      "description": "{resource_name} zgłasza aktywny błąd (typ zasobu {resource_type_id}). Sprawdź urządzenie, aby poznać szczegóły."
+    },
+    "connection_offline": {
+      "title": "{device_name}: urządzenie offline",
+      "description": "{resource_name} zgłasza, że urządzenie jest offline."
+    },
+    "flowmeter_replacement": {
+      "title": "{device_name}: wymień przepływomierz",
+      "description": "Osiągnięto próg wymiany przepływomierza zależny od objętości. Wymień go i zresetuj czynność wymiany przepływomierza, aby zamknąć to zadanie."
+    },
+    "pump_replacement": {
+      "title": "{device_name}: wymień pompę",
+      "description": "Osiągnięto próg wymiany pompy zależny od czasu lub objętości. Wymień pompę i zresetuj czynność jej wymiany, aby zamknąć to zadanie."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "metadata_customer_name": {
+        "name": "Nazwa klienta"
+      },
+      "metadata_customer_id": {
+        "name": "Identyfikator klienta"
+      },
+      "metadata_location": {
+        "name": "Lokalizacja"
+      },
+      "metadata_mount_point": {
+        "name": "Miejsce montażu"
+      },
+      "battery_level": {
+        "name": "Poziom baterii"
+      }
+    },
+    "binary_sensor": {
+      "mains_adapter": {
+        "name": "Zasilacz sieciowy podłączony"
+      }
+    }
+  },
+  "error": {
+    "queue_already_configured": "Ta kolejka została już dodana.",
+    "queue_already_configured_disabled": "Ta kolejka została już dodana, ale jest wyłączona. Włącz istniejący wpis zamiast dodawać kolejny."
+  }
+}

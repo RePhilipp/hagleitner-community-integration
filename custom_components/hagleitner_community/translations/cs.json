@@ -1,0 +1,67 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Připojit Hagleitner Community",
+        "description": "Zadejte údaje fronty Azure Service Bus. Připojovací řetězec se ukládá v konfiguraci Home Assistant, proto chraňte své zálohy.",
+        "data": {
+          "connection_string": "Připojovací řetězec fronty",
+          "queue_name": "Název fronty"
+        }
+      },
+      "confirm": {
+        "title": "Nové zařízení Hagleitner",
+        "description": "Přidat {name} do Home Assistant?\n\n**Umístění HSM:** {location_path}  \n**Místo montáže HSM:** {mount_point}\n\nZařízení a jeho entity se vytvoří až po potvrzení. Pomlčka (—) znamená, že HSM tuto hodnotu neposkytlo. Navrženou oblast lze změnit.",
+        "data": {
+          "area_id": "Navržená oblast"
+        }
+      }
+    }
+  },
+  "issues": {
+    "error_active": {
+      "title": "{device_name}: aktivní chyba",
+      "description": "{resource_name} hlásí aktivní chybu (typ prostředku {resource_type_id}). Podrobnosti zjistíte kontrolou zařízení."
+    },
+    "connection_offline": {
+      "title": "{device_name}: offline",
+      "description": "{resource_name} hlásí, že zařízení je offline."
+    },
+    "flowmeter_replacement": {
+      "title": "{device_name}: vyměňte průtokoměr",
+      "description": "Byl dosažen objemový limit pro výměnu průtokoměru. Vyměňte jej a resetujte akci výměny průtokoměru, aby se tento úkol uzavřel."
+    },
+    "pump_replacement": {
+      "title": "{device_name}: vyměňte čerpadlo",
+      "description": "Byl dosažen časový nebo objemový limit pro výměnu čerpadla. Vyměňte čerpadlo a resetujte akci výměny čerpadla, aby se tento úkol uzavřel."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "metadata_customer_name": {
+        "name": "Název zákazníka"
+      },
+      "metadata_customer_id": {
+        "name": "ID zákazníka"
+      },
+      "metadata_location": {
+        "name": "Umístění"
+      },
+      "metadata_mount_point": {
+        "name": "Místo instalace"
+      },
+      "battery_level": {
+        "name": "Úroveň nabití baterie"
+      }
+    },
+    "binary_sensor": {
+      "mains_adapter": {
+        "name": "Síťový adaptér připojen"
+      }
+    }
+  },
+  "error": {
+    "queue_already_configured": "Tato fronta již byla přidána.",
+    "queue_already_configured_disabled": "Tato fronta již byla přidána, ale je zakázána. Místo přidání další povolte stávající položku."
+  }
+}

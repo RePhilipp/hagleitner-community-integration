@@ -1,0 +1,67 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect Hagleitner Community",
+        "description": "Enter the Azure Service Bus queue details. The connection string is stored in Home Assistant's configuration, so protect your backups.",
+        "data": {
+          "connection_string": "Queue connection string",
+          "queue_name": "Queue name"
+        }
+      },
+      "confirm": {
+        "title": "New Hagleitner device",
+        "description": "Add {name} to Home Assistant?\n\n**HSM location:** {location_path}  \n**HSM mount point:** {mount_point}\n\nThe device and its entities are created only after you confirm. A dash (—) means HSM did not provide that value. The suggested area can be changed.",
+        "data": {
+          "area_id": "Suggested area"
+        }
+      }
+    }
+  },
+  "issues": {
+    "error_active": {
+      "title": "{device_name}: error active",
+      "description": "{resource_name} reports an active error (resource type {resource_type_id}). Check the device for details."
+    },
+    "connection_offline": {
+      "title": "{device_name}: offline",
+      "description": "{resource_name} reports that the device is offline."
+    },
+    "flowmeter_replacement": {
+      "title": "{device_name}: replace flowmeter",
+      "description": "The flowmeter has reached its volume-based replacement threshold. Replace it and reset the flowmeter change action to clear this task."
+    },
+    "pump_replacement": {
+      "title": "{device_name}: replace pump",
+      "description": "A time- or volume-based pump replacement threshold has been reached. Replace the pump and reset its change action to clear this task."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "metadata_customer_name": {
+        "name": "Customer name"
+      },
+      "metadata_customer_id": {
+        "name": "Customer ID"
+      },
+      "metadata_location": {
+        "name": "Location"
+      },
+      "metadata_mount_point": {
+        "name": "Mount point"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      }
+    },
+    "binary_sensor": {
+      "mains_adapter": {
+        "name": "Mains adapter connected"
+      }
+    }
+  },
+  "error": {
+    "queue_already_configured": "This queue is already added.",
+    "queue_already_configured_disabled": "This queue is already added but disabled. Enable the existing entry instead of adding another."
+  }
+}

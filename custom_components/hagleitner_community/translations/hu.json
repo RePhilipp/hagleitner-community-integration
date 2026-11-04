@@ -1,0 +1,67 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hagleitner Community csatlakoztatása",
+        "description": "Adja meg az Azure Service Bus-sor adatait. A kapcsolati karakterlánc a Home Assistant konfigurációjában tárolódik, ezért gondoskodjon a biztonsági mentések védelméről.",
+        "data": {
+          "connection_string": "A sor kapcsolati karakterlánca",
+          "queue_name": "Sor neve"
+        }
+      },
+      "confirm": {
+        "title": "Új Hagleitner-eszköz",
+        "description": "Hozzáadja ezt: {name} a Home Assistanthoz?\n\n**HSM-hely:** {location_path}  \n**HSM-rögzítési pont:** {mount_point}\n\nAz eszköz és az entitásai csak a megerősítés után jönnek létre. A gondolatjel (—) azt jelenti, hogy a HSM nem adott meg ilyen értéket. A javasolt terület módosítható.",
+        "data": {
+          "area_id": "Javasolt terület"
+        }
+      }
+    }
+  },
+  "issues": {
+    "error_active": {
+      "title": "{device_name}: aktív hiba",
+      "description": "A(z) {resource_name} aktív hibát jelez (erőforrástípus: {resource_type_id}). A részletekért ellenőrizze az eszközt."
+    },
+    "connection_offline": {
+      "title": "{device_name}: offline",
+      "description": "A(z) {resource_name} szerint az eszköz offline állapotban van."
+    },
+    "flowmeter_replacement": {
+      "title": "{device_name}: cserélje ki az átfolyásmérőt",
+      "description": "Az átfolyásmérő elérte a térfogat alapján meghatározott cserehatárt. Cserélje ki, majd a feladat törléséhez állítsa vissza az átfolyásmérő-csere műveletet."
+    },
+    "pump_replacement": {
+      "title": "{device_name}: cserélje ki a szivattyút",
+      "description": "A szivattyú elérte az idő- vagy térfogat-alapú cserehatárt. Cserélje ki, majd a feladat törléséhez állítsa vissza a szivattyúcsere műveletet."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "metadata_customer_name": {
+        "name": "Ügyfél neve"
+      },
+      "metadata_customer_id": {
+        "name": "Ügyfél-azonosító"
+      },
+      "metadata_location": {
+        "name": "Helyszín"
+      },
+      "metadata_mount_point": {
+        "name": "Felszerelési hely"
+      },
+      "battery_level": {
+        "name": "Töltöttségi szint"
+      }
+    },
+    "binary_sensor": {
+      "mains_adapter": {
+        "name": "Hálózati adapter csatlakoztatva"
+      }
+    }
+  },
+  "error": {
+    "queue_already_configured": "Ez a sor már hozzá van adva.",
+    "queue_already_configured_disabled": "Ez a sor már hozzá van adva, de le van tiltva. Újabb hozzáadása helyett engedélyezze a meglévő bejegyzést."
+  }
+}

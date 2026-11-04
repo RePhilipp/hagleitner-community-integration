@@ -1,0 +1,67 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hagleitner Community verbinden",
+        "description": "Gib die Details der Azure Service Bus-Warteschlange ein. Die Verbindungszeichenfolge wird in der Konfiguration von Home Assistant gespeichert. Schütze daher deine Sicherungen.",
+        "data": {
+          "connection_string": "Verbindungszeichenfolge der Warteschlange",
+          "queue_name": "Name der Warteschlange"
+        }
+      },
+      "confirm": {
+        "title": "Neues Hagleitner-Gerät",
+        "description": "{name} zu Home Assistant hinzufügen?\n\n**HSM-Standort:** {location_path}  \n**HSM-Montagepunkt:** {mount_point}\n\nDas Gerät und seine Entitäten werden erst nach deiner Bestätigung erstellt. Ein Gedankenstrich (—) bedeutet, dass HSM diesen Wert nicht bereitgestellt hat. Der vorgeschlagene Bereich kann geändert werden.",
+        "data": {
+          "area_id": "Vorgeschlagener Bereich"
+        }
+      }
+    }
+  },
+  "issues": {
+    "error_active": {
+      "title": "{device_name}: Fehler aktiv",
+      "description": "{resource_name} meldet einen aktiven Fehler (Ressourcentyp {resource_type_id}). Prüfe die Gerätedetails."
+    },
+    "connection_offline": {
+      "title": "{device_name}: offline",
+      "description": "{resource_name} meldet, dass das Gerät offline ist."
+    },
+    "flowmeter_replacement": {
+      "title": "{device_name}: Durchflussmesser ersetzen",
+      "description": "Der volumenabhängige Austauschgrenzwert des Durchflussmessers wurde erreicht. Ersetze ihn und setze die Aktion zum Durchflussmesserwechsel zurück, um diese Aufgabe zu löschen."
+    },
+    "pump_replacement": {
+      "title": "{device_name}: Pumpe ersetzen",
+      "description": "Ein zeit- oder volumenabhängiger Austauschgrenzwert für die Pumpe wurde erreicht. Ersetze die Pumpe und setze die Aktion zum Pumpenwechsel zurück, um diese Aufgabe zu löschen."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "metadata_customer_name": {
+        "name": "Kundenname"
+      },
+      "metadata_customer_id": {
+        "name": "Kunden-ID"
+      },
+      "metadata_location": {
+        "name": "Standort"
+      },
+      "metadata_mount_point": {
+        "name": "Montagepunkt"
+      },
+      "battery_level": {
+        "name": "Batteriestand"
+      }
+    },
+    "binary_sensor": {
+      "mains_adapter": {
+        "name": "Netzadapter angeschlossen"
+      }
+    }
+  },
+  "error": {
+    "queue_already_configured": "Diese Warteschlange wurde bereits hinzugefügt.",
+    "queue_already_configured_disabled": "Diese Warteschlange wurde bereits hinzugefügt, ist aber deaktiviert. Aktiviere den vorhandenen Eintrag, anstatt einen weiteren hinzuzufügen."
+  }
+}

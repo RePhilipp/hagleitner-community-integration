@@ -1,0 +1,67 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Poveži Hagleitner Community",
+        "description": "Unesite podatke o redu čekanja Azure Service Bus. Niz za povezivanje pohranjen je u konfiguraciji Home Assistanta, stoga zaštitite sigurnosne kopije.",
+        "data": {
+          "connection_string": "Niz za povezivanje reda čekanja",
+          "queue_name": "Naziv reda čekanja"
+        }
+      },
+      "confirm": {
+        "title": "Novi uređaj Hagleitner",
+        "description": "Dodati {name} u Home Assistant?\n\n**Lokacija HSM-a:** {location_path}  \n**Mjesto montaže HSM-a:** {mount_point}\n\nUređaj i njegovi entiteti izradit će se tek nakon potvrde. Crtica (—) znači da HSM nije dostavio tu vrijednost. Predloženo područje možete promijeniti.",
+        "data": {
+          "area_id": "Predloženo područje"
+        }
+      }
+    }
+  },
+  "issues": {
+    "error_active": {
+      "title": "{device_name}: aktivna pogreška",
+      "description": "{resource_name} prijavljuje aktivnu pogrešku (vrsta resursa {resource_type_id}). Pojedinosti provjerite na uređaju."
+    },
+    "connection_offline": {
+      "title": "{device_name}: izvan mreže",
+      "description": "{resource_name} prijavljuje da je uređaj izvan mreže."
+    },
+    "flowmeter_replacement": {
+      "title": "{device_name}: zamijenite mjerač protoka",
+      "description": "Dosegnut je prag zamjene mjerača protoka prema količini. Zamijenite ga i poništite radnju zamjene mjerača protoka kako biste zatvorili ovaj zadatak."
+    },
+    "pump_replacement": {
+      "title": "{device_name}: zamijenite pumpu",
+      "description": "Dosegnut je vremenski ili količinski prag zamjene pumpe. Zamijenite je i poništite radnju zamjene pumpe kako biste zatvorili ovaj zadatak."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "metadata_customer_name": {
+        "name": "Naziv kupca"
+      },
+      "metadata_customer_id": {
+        "name": "ID kupca"
+      },
+      "metadata_location": {
+        "name": "Lokacija"
+      },
+      "metadata_mount_point": {
+        "name": "Mjesto montaže"
+      },
+      "battery_level": {
+        "name": "Razina baterije"
+      }
+    },
+    "binary_sensor": {
+      "mains_adapter": {
+        "name": "Mrežni adapter priključen"
+      }
+    }
+  },
+  "error": {
+    "queue_already_configured": "Ovaj je red čekanja već dodan.",
+    "queue_already_configured_disabled": "Ovaj je red čekanja već dodan, ali je onemogućen. Omogućite postojeći unos umjesto dodavanja novoga."
+  }
+}
