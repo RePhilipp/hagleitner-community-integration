@@ -22,6 +22,12 @@ You can use multiple forwarding rules. Add each rule's queue as a separate
 integration entry; devices included by more than one rule remain a single
 Home Assistant device.
 
+**Use only one active consumer for each queue.** If multiple Home Assistant
+instances or integration entries consume the same queue, Service Bus distributes
+messages between them, so each instance may miss some readings. If you run
+multiple Home Assistant instances, create a separate forwarding rule (and queue)
+for each instance.
+
 ## Run tests locally
 
 Tests target stable Home Assistant 2026.10.4 and require Python 3.14.2 or newer.
