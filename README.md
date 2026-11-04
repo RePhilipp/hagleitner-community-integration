@@ -20,9 +20,8 @@ the SignalR connection is not used by this integration.
 ![Hagleitner portal showing the Service Bus connection and queue fields](docs/images/forwarding-rule-connection-strings.png)
 
 ResourceDataForwarding must be enabled for your customer. If the data-forwarding
-option or rule is unavailable, ask Hagleitner support or sales whether it can
-be enabled. Pricing is unknown and may apply, so confirm any costs with
-Hagleitner.
+option or rule is unavailable, contact Hagleitner Sales to ask about enabling
+it. Confirm any applicable costs with Sales.
 
 You can use multiple forwarding rules. Add each rule's queue as a separate
 integration entry; devices included by more than one rule remain a single
