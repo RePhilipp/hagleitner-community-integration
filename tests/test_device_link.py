@@ -15,23 +15,22 @@ from custom_components.hagleitner_community.sensor import async_setup_entry
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 
-def test_device_info_links_to_hsm_customer_devices():
-    """A valid customer ID produces the working customer devices URL."""
+def test_device_info_links_to_hsm_device_locations():
+    """Valid customer and device IDs produce the HSM device location URL."""
     info = device_info("device & 123", 456)
 
     assert info["identifiers"] == {(DOMAIN, "device & 123")}
     assert info.get("configuration_url") == (
-        "https://hsm.hygieneportal.com/devices/devices-list?customerId=456"
+        "https://hsm.hygieneportal.com/devices/locations"
+        "?customerId=456&device=device+%26+123"
     )
 
 
-def test_device_info_falls_back_to_customer_when_device_id_is_invalid():
-    """A valid customer link is retained if the device ID is unusable."""
+def test_device_info_omits_link_when_device_id_is_invalid():
+    """Do not create a customer-only URL if the device ID is unusable."""
     info = device_info("   ", 456)
 
-    assert info.get("configuration_url") == (
-        "https://hsm.hygieneportal.com/devices/devices-list?customerId=456"
-    )
+    assert info.get("configuration_url") is None
 
 
 @pytest.mark.parametrize("customer_id", [None, 0, -1, True, "456"])
@@ -85,7 +84,8 @@ async def test_device_discovery_persists_valid_customer_id(
 
     assert entities
     expected_url = (
-        "https://hsm.hygieneportal.com/devices/devices-list?customerId=456"
+        "https://hsm.hygieneportal.com/devices/locations"
+        "?customerId=456&device=device-123"
     )
     assert all(
         entity._attr_device_info.get("configuration_url") == expected_url
@@ -166,7 +166,8 @@ async def test_existing_device_backfills_customer_id_and_registry_url(hass):
     )
     assert refreshed_device is not None
     assert refreshed_device.configuration_url == (
-        "https://hsm.hygieneportal.com/devices/devices-list?customerId=456"
+        "https://hsm.hygieneportal.com/devices/locations"
+        f"?customerId=456&device={device_id}"
     )
     assert registered_device.configuration_url is None
 
@@ -216,5 +217,6 @@ async def test_existing_customer_id_is_not_overwritten_by_missing_metadata(hass)
     )
     assert registered_device is not None
     assert registered_device.configuration_url == (
-        "https://hsm.hygieneportal.com/devices/devices-list?customerId=123"
+        "https://hsm.hygieneportal.com/devices/locations"
+        f"?customerId=123&device={device_id}"
     )

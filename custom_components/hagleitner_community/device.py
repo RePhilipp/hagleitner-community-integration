@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
 
-_HSM_CUSTOMER_DEVICES_URL = "https://hsm.hygieneportal.com/devices/devices-list"
+_HSM_DEVICE_LOCATIONS_URL = "https://hsm.hygieneportal.com/devices/locations"
 
 
 def is_valid_customer_id(customer_id: object) -> bool:
@@ -21,13 +21,17 @@ def is_valid_customer_id(customer_id: object) -> bool:
 
 
 def device_info(device_id: str, customer_id: int | None) -> DeviceInfo:
-    """Return device metadata with an HSM link when its customer ID is valid."""
+    """Return device metadata with an HSM location link when IDs are valid."""
     identifiers = {(DOMAIN, device_id)}
-    if not is_valid_customer_id(customer_id):
+    if (
+        not is_valid_customer_id(customer_id)
+        or not isinstance(device_id, str)
+        or not device_id.strip()
+    ):
         return DeviceInfo(identifiers=identifiers)
 
-    customer_query = urlencode({"customerId": customer_id})
+    query = urlencode({"customerId": customer_id, "device": device_id})
     return DeviceInfo(
         identifiers=identifiers,
-        configuration_url=f"{_HSM_CUSTOMER_DEVICES_URL}?{customer_query}",
+        configuration_url=f"{_HSM_DEVICE_LOCATIONS_URL}?{query}",
     )
