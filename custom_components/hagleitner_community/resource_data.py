@@ -71,6 +71,12 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
         entity_category=None,
         entity_registry_enabled_default=True,
     ),
+    "f8cdaa9a-4633-4fd4-1d0d-08de5e8412d5": ResourceDefinition(
+        name="Passage count",
+        kind="counter",
+        entity_category=None,
+        entity_registry_enabled_default=True,
+    ),
     "77d144fd-d7a3-42f7-03aa-08dac1664f9a": ResourceDefinition(
         name="Energy supply status",
         kind="battery",
@@ -112,6 +118,9 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
             0: "no_error",
             1: "error",
         },
+        problem_entity_on_values=("error",),
+        problem_entity_name="Device error",
+        problem_entity_translation_key="device_error",
     ),
     "7c178f1d-271f-4554-03ac-08dac1664f9a": ResourceDefinition(
         name="Connection status",
@@ -144,12 +153,6 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
         problem_entity_on_values=("nearly_full", "empty"),
         problem_entity_name="Refill warning",
         problem_entity_translation_key="refill_empty",
-    ),
-    "f8cdaa9a-4633-4fd4-1d0d-08de5e8412d5": ResourceDefinition(
-        name="Passage counter",
-        kind="counter",
-        entity_category=None,
-        entity_registry_enabled_default=True,
     ),
 }
 
