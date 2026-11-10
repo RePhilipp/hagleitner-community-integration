@@ -98,11 +98,21 @@
       "mains_adapter": {
         "name": "Omrežni napajalnik priključen"
       },
-      "refill_empty": {
+      "device_error": {
+        "name": "Napaka naprave"
+      },
+      "refill_warning": {
         "name": "Opozorilo za polnjenje",
         "state": {
           "on": "Opozorilo za ponovno polnjenje",
           "off": "Ni opozorila za ponovno polnjenje"
+        }
+      },
+      "fill_warning": {
+        "name": "Opozorilo o ravni polnjenja",
+        "state": {
+          "on": "Opozorilo o ravni polnjenja",
+          "off": "Ni opozorila o ravni polnjenja"
         }
       }
     }

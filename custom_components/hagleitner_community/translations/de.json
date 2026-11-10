@@ -154,11 +154,18 @@
       "mains_adapter": {
         "name": "Netzadapter angeschlossen"
       },
-      "refill_empty": {
+      "refill_warning": {
         "name": "Nachfüllwarnung",
         "state": {
           "on": "Nachfüllwarnung",
           "off": "Keine Nachfüllwarnung"
+        }
+      },
+      "fill_warning": {
+        "name": "Füllstandswarnung",
+        "state": {
+          "on": "Füllstandswarnung",
+          "off": "Keine Füllstandswarnung"
         }
       },
       "device_error": {

@@ -72,13 +72,47 @@ def test_fill_status_resource_is_a_mapped_enum_sensor():
         2: "empty",
     }
     assert definition.problem_entity_on_values == ("nearly_full", "empty")
-    assert definition.problem_entity_translation_key == "refill_empty"
+    assert definition.problem_entity_translation_key == "fill_warning"
+    assert definition.problem_entity_unique_id_suffix == "refill_empty"
 
 
 def test_refill_state_defines_low_and_empty_as_problem_values():
     """Keep refill warning values declarative alongside its enum mapping."""
     definition = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[_REFILL_STATE_EQUIVALENT_ID]
     assert definition.problem_entity_on_values == ("low", "empty")
+    assert definition.problem_entity_translation_key == "refill_warning"
+
+
+@pytest.mark.parametrize(
+    ("mapped_value", "expected"),
+    [("no_error", False), ("error", True)],
+)
+def test_device_error_is_a_problem_binary_sensor(mapped_value, expected):
+    """The device error resource is represented by its own binary sensor."""
+    definition = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
+        "9a77375d-964c-451f-03ab-08dac1664f9a"
+    ]
+    snapshot = _resource_snapshot(definition, None, mapped_value)
+
+    class SnapshotHub:
+        """Return the provided snapshot to the entity."""
+
+        @staticmethod
+        def value_for_resource(_device_id, _resource_key):
+            return snapshot
+
+    entity = HagleitnerBinarySensor(
+        SnapshotHub(),
+        "device-1",
+        snapshot.key,
+        definition,
+        "resource_problem",
+        None,
+    )
+
+    assert _binary_modes(snapshot) == ("resource_problem",)
+    assert entity._attr_translation_key == "device_error"
+    assert entity.is_on is expected
 
 
 @pytest.mark.parametrize(
@@ -122,10 +156,11 @@ def test_refill_problem_state_matches_catalog_warning_values(
     assert entity.is_on is expected
     assert entity.entity_registry_visible_default is True
     assert entity.unique_id == f"device-1_{snapshot.key}_refill_empty"
+    assert entity.entity_category is None
 
 
 def test_only_unique_conditions_create_binary_entities():
-    """Status values already represented by sensors or Repairs stay single."""
+    """Only refill, fill, and mains-adapter states create binary entities."""
     battery_definition = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
         "77d144fd-d7a3-42f7-03aa-08dac1664f9a"
     ]
@@ -141,7 +176,6 @@ def test_only_unique_conditions_create_binary_entities():
     for snapshot in (
         _resource_snapshot(battery_definition, None, "low"),
         _resource_snapshot(connection_definition, None, "offline"),
-        _resource_snapshot(error_definition, None, "error"),
         _resource_snapshot(cover_definition, None, "opened"),
         _resource_snapshot(maintenance_definition, None, "change_required"),
         _resource_snapshot(
@@ -151,6 +185,10 @@ def test_only_unique_conditions_create_binary_entities():
         ),
     ):
         assert _binary_modes(snapshot) == ()
+
+    assert _binary_modes(_resource_snapshot(error_definition, None, "error")) == (
+        "resource_problem",
+    )
 
     assert (12294, 0) not in SUPPORTED_RESOURCES_BY_TYPE_INSTANCE
     assert cover_definition.entity_category == "diagnostic"

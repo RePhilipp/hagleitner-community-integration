@@ -98,11 +98,21 @@
       "mains_adapter": {
         "name": "Zasilacz sieciowy podłączony"
       },
-      "refill_empty": {
+      "device_error": {
+        "name": "Błąd urządzenia"
+      },
+      "refill_warning": {
         "name": "Ostrzeżenie o uzupełnieniu",
         "state": {
           "on": "Ostrzeżenie o uzupełnieniu",
           "off": "Brak ostrzeżenia o uzupełnieniu"
+        }
+      },
+      "fill_warning": {
+        "name": "Ostrzeżenie o poziomie napełnienia",
+        "state": {
+          "on": "Ostrzeżenie o poziomie napełnienia",
+          "off": "Brak ostrzeżenia o poziomie napełnienia"
         }
       }
     }

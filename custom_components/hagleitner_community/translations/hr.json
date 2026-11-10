@@ -98,11 +98,21 @@
       "mains_adapter": {
         "name": "Mrežni adapter priključen"
       },
-      "refill_empty": {
+      "device_error": {
+        "name": "Pogreška uređaja"
+      },
+      "refill_warning": {
         "name": "Upozorenje za punjenje",
         "state": {
           "on": "Upozorenje za nadopunu",
           "off": "Nema upozorenja za nadopunu"
+        }
+      },
+      "fill_warning": {
+        "name": "Upozorenje o razini punjenja",
+        "state": {
+          "on": "Upozorenje o razini punjenja",
+          "off": "Nema upozorenja o razini punjenja"
         }
       }
     }

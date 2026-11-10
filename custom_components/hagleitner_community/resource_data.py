@@ -27,6 +27,7 @@ class ResourceDefinition:
     battery_percent_values: dict[int, int | None] = field(default_factory=dict)
     problem_entity_on_values: tuple[str, ...] = ()
     problem_entity_translation_key: str | None = None
+    problem_entity_unique_id_suffix: str | None = None
     entity_category: EntityCategory | None = None
     entity_registry_enabled_default: bool = True
 
@@ -110,23 +111,27 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
             2: "empty",
         },
         problem_entity_on_values=("low", "empty"),
-        problem_entity_translation_key="refill_empty",
+        problem_entity_translation_key="refill_warning",
+        problem_entity_unique_id_suffix="refill_empty",
     ),
     "9a77375d-964c-451f-03ab-08dac1664f9a": ResourceDefinition(
         name="Error status",
         kind="problem",
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category=None,
         entity_registry_enabled_default=True,
         enum_values={
             0: "no_error",
             1: "error",
         },
+        problem_entity_on_values=("error",),
+        problem_entity_translation_key="device_error",
+        problem_entity_unique_id_suffix="device_error",
     ),
     "7c178f1d-271f-4554-03ac-08dac1664f9a": ResourceDefinition(
         name="Connection status",
         kind="connection",
         entity_translation_key="connection_status",
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category=None,
         entity_registry_enabled_default=True,
         enum_values={
             0: "offline",
@@ -147,7 +152,8 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
             2: "empty",
         },
         problem_entity_on_values=("nearly_full", "empty"),
-        problem_entity_translation_key="refill_empty",
+        problem_entity_translation_key="fill_warning",
+        problem_entity_unique_id_suffix="refill_empty",
     ),
 }
 

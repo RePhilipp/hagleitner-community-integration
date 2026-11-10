@@ -88,16 +88,10 @@ def _snapshot(
 
 
 def test_device_health_entities_are_diagnostic_but_usage_is_primary():
-    """Classify device metadata as diagnostic without hiding usage values."""
+    """Keep user-actionable status primary and technical details diagnostic."""
     diagnostic_definitions = (
         SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
             "77d144fd-d7a3-42f7-03aa-08dac1664f9a"
-        ],
-        SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
-            "9a77375d-964c-451f-03ab-08dac1664f9a"
-        ],
-        SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
-            "7c178f1d-271f-4554-03ac-08dac1664f9a"
         ],
         SUPPORTED_RESOURCES_BY_TYPE_INSTANCE[(45058, 0)],
         SUPPORTED_RESOURCES_BY_TYPE_INSTANCE[(3, 0)],
@@ -109,7 +103,7 @@ def test_device_health_entities_are_diagnostic_but_usage_is_primary():
     )
     assert all(
         not definition.entity_registry_enabled_default
-        for definition in (diagnostic_definitions[3], diagnostic_definitions[4])
+        for definition in (diagnostic_definitions[1], diagnostic_definitions[2])
     )
     assert (
         SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
@@ -118,7 +112,14 @@ def test_device_health_entities_are_diagnostic_but_usage_is_primary():
         is None
     )
 
-    error_definition = diagnostic_definitions[1]
+    error_definition = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
+        "9a77375d-964c-451f-03ab-08dac1664f9a"
+    ]
+    connection_definition = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
+        "7c178f1d-271f-4554-03ac-08dac1664f9a"
+    ]
+    assert error_definition.entity_category is None
+    assert connection_definition.entity_category is None
     error_entity = HagleitnerBinarySensor(
         _ResourceHub(),
         "device-1",
@@ -127,7 +128,8 @@ def test_device_health_entities_are_diagnostic_but_usage_is_primary():
         "resource_problem",
         None,
     )
-    assert error_entity.entity_category is EntityCategory.DIAGNOSTIC
+    assert error_entity.entity_category is None
+    assert error_entity._attr_translation_key == "device_error"
 
     customer_id_sensor = HagleitnerMetadataSensor(
         _ResourceHub(), "device-1", "customer_id", None

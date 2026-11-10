@@ -7,7 +7,7 @@ from inspect import signature
 from custom_components.hagleitner_community.const import DOMAIN
 from custom_components.hagleitner_community.repairs import (
     async_clear_maintenance_issues,
-    async_clear_obsolete_consumable_issues,
+    async_clear_obsolete_issues,
     async_clear_queue_not_found_issue,
     async_create_queue_not_found_issue,
     async_update_maintenance_issue,
@@ -74,11 +74,10 @@ async def test_consumable_states_do_not_create_repairs(hass):
     assert ir.async_get(hass).issues == {}
 
 
-async def test_device_error_is_created_and_cleared_after_recovery(hass):
-    """Actual device faults continue to create and clear Repairs issues."""
+async def test_device_error_is_not_duplicated_as_a_repair(hass):
+    """Device errors are represented by their problem binary sensor, not Repairs."""
     device_id = "device-one"
     definition = ResourceDefinition(name="Error status", kind="problem")
-    issue_id = f"{device_id}_1_0_error_active"
 
     async_update_maintenance_issue(
         hass,
@@ -87,16 +86,22 @@ async def test_device_error_is_created_and_cleared_after_recovery(hass):
         _snapshot(definition, "error"),
     )
 
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is not None
+    assert ir.async_get(hass).issues == {}
 
+
+async def test_connection_offline_is_reported_by_sensor_not_repairs(hass):
+    """The connection-state sensor replaces the former offline Repair issue."""
     async_update_maintenance_issue(
         hass,
-        device_id,
+        "device-one",
         "Dispenser",
-        _snapshot(definition, "no_error"),
+        _snapshot(
+            ResourceDefinition(name="Connection status", kind="connection"),
+            "offline",
+        ),
     )
 
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
+    assert ir.async_get(hass).issues == {}
 
 
 async def test_component_replacement_still_creates_maintenance_repair(hass):
@@ -218,18 +223,22 @@ async def test_unknown_and_missing_problem_state_do_not_create_repairs(hass):
     snapshot = _snapshot(definition, "error")
     async_update_maintenance_issue(hass, device_id, "Dispenser", snapshot)
     async_update_maintenance_issue(hass, device_id, "Dispenser", snapshot)
-    assert len(ir.async_get(hass).issues) == 1
+    assert ir.async_get(hass).issues == {}
 
 
 async def test_maintenance_issue_links_to_config_entry_when_supported(hass):
     """Created maintenance issues point back to their adopted-device entry."""
     device_id = "device-one"
-    issue_id = f"{device_id}_1_0_error_active"
+    issue_id = f"{device_id}_{_REPLACEMENT_RESOURCE_TYPE_ID}_0_flowmeter_replacement"
     async_update_maintenance_issue(
         hass,
         device_id,
         "Dispenser",
-        _snapshot(ResourceDefinition(name="Error status", kind="problem"), "error"),
+        _snapshot(
+            ResourceDefinition(name="Flowmeter replacement", kind="maintenance"),
+            "change_required",
+            resource_type_id=_REPLACEMENT_RESOURCE_TYPE_ID,
+        ),
         config_entry_id="device-entry",
     )
 
@@ -239,8 +248,8 @@ async def test_maintenance_issue_links_to_config_entry_when_supported(hass):
         assert issue.config_entry_id == "device-entry"
 
 
-async def test_obsolete_consumable_repairs_are_removed(hass):
-    """Old persistent consumable issues are cleaned up on integration setup."""
+async def test_obsolete_entity_issues_are_removed(hass):
+    """Old issues are removed when their conditions become device entities."""
     ir.async_create_issue(
         hass,
         DOMAIN,
@@ -259,30 +268,56 @@ async def test_obsolete_consumable_repairs_are_removed(hass):
         severity=ir.IssueSeverity.ERROR,
         translation_key="error_active",
     )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "device-one_1_0_connection_offline",
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="connection_offline",
+    )
 
-    async_clear_obsolete_consumable_issues(hass)
+    async_clear_obsolete_issues(hass)
     registry = ir.async_get(hass)
 
     assert registry.async_get_issue(DOMAIN, "device-one_12290_0_refill_empty") is None
-    assert registry.async_get_issue(DOMAIN, "device-one_1_0_error_active") is not None
+    assert registry.async_get_issue(DOMAIN, "device-one_1_0_error_active") is None
+    assert registry.async_get_issue(DOMAIN, "device-one_1_0_connection_offline") is None
 
 
 async def test_removing_device_clears_only_its_repair_issues(hass):
     """Removing one adopted device leaves other devices' issues untouched."""
-    definition = ResourceDefinition(name="Error status", kind="problem")
+    definition = ResourceDefinition(name="Flowmeter replacement", kind="maintenance")
     for device_id in ("device-one", "device-two"):
         async_update_maintenance_issue(
             hass,
             device_id,
             device_id,
-            _snapshot(definition, "error"),
+            _snapshot(
+                definition,
+                "change_required",
+                resource_type_id=_REPLACEMENT_RESOURCE_TYPE_ID,
+            ),
         )
 
     async_clear_maintenance_issues(hass, "device-one")
     registry = ir.async_get(hass)
 
-    assert registry.async_get_issue(DOMAIN, "device-one_1_0_error_active") is None
-    assert registry.async_get_issue(DOMAIN, "device-two_1_0_error_active") is not None
+    assert (
+        registry.async_get_issue(
+            DOMAIN,
+            "device-one_12307_0_flowmeter_replacement",
+        )
+        is None
+    )
+    assert (
+        registry.async_get_issue(
+            DOMAIN,
+            "device-two_12307_0_flowmeter_replacement",
+        )
+        is not None
+    )
 
 
 async def test_missing_queue_issue_is_entry_scoped_and_cleared_on_recovery(hass):

@@ -98,11 +98,21 @@
       "mains_adapter": {
         "name": "Hálózati adapter csatlakoztatva"
       },
-      "refill_empty": {
+      "device_error": {
+        "name": "Eszközhiba"
+      },
+      "refill_warning": {
         "name": "Utántöltési figyelmeztetés",
         "state": {
           "on": "Utántöltési figyelmeztetés",
           "off": "Nincs utántöltési figyelmeztetés"
+        }
+      },
+      "fill_warning": {
+        "name": "Töltési szint figyelmeztetés",
+        "state": {
+          "on": "Töltési szint figyelmeztetés",
+          "off": "Nincs töltési szint figyelmeztetés"
         }
       }
     }

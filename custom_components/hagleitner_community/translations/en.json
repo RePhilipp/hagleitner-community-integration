@@ -154,11 +154,18 @@
       "mains_adapter": {
         "name": "Mains adapter connected"
       },
-      "refill_empty": {
+      "refill_warning": {
         "name": "Refill warning",
         "state": {
           "on": "Refill warning",
           "off": "No refill warning"
+        }
+      },
+      "fill_warning": {
+        "name": "Fill warning",
+        "state": {
+          "on": "Fill warning",
+          "off": "No fill warning"
         }
       },
       "device_error": {

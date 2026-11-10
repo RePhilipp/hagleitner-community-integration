@@ -98,11 +98,21 @@
       "mains_adapter": {
         "name": "Síťový adaptér připojen"
       },
-      "refill_empty": {
+      "device_error": {
+        "name": "Chyba zařízení"
+      },
+      "refill_warning": {
         "name": "Varování doplnění",
         "state": {
           "on": "Upozornění na doplnění",
           "off": "Bez upozornění na doplnění"
+        }
+      },
+      "fill_warning": {
+        "name": "Upozornění na stav náplně",
+        "state": {
+          "on": "Upozornění na stav náplně",
+          "off": "Bez upozornění na stav náplně"
         }
       }
     }

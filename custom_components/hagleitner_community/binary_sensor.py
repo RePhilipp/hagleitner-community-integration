@@ -26,7 +26,11 @@ _PROBLEM_MODE = "resource_problem"
 def _unique_id_suffix(mode: str, definition: ResourceDefinition) -> str:
     """Return the configured unique-ID suffix for an entity mode."""
     if mode == _PROBLEM_MODE:
-        return definition.problem_entity_translation_key or mode
+        return (
+            definition.problem_entity_unique_id_suffix
+            or definition.problem_entity_translation_key
+            or mode
+        )
     return mode
 
 

@@ -12,6 +12,7 @@ from custom_components.hagleitner_community.resource_data import (
     ResourceValueSnapshot,
     SUPPORTED_RESOURCES_BY_EQUIVALENT_ID,
 )
+from custom_components.hagleitner_community.binary_sensor import HagleitnerBinarySensor
 from custom_components.hagleitner_community.sensor import HagleitnerSensor
 
 _BATTERY_DEFINITION = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
@@ -130,3 +131,44 @@ def test_battery_level_uses_home_assistant_battery_icon_pattern():
     assert entity._attr_device_class == SensorDeviceClass.BATTERY
     assert entity._attr_translation_key == "battery_level"
     assert getattr(entity, "_attr_icon", None) is None
+
+
+def test_problem_entities_have_warning_and_ok_icons():
+    """Use each problem icon's MDI check variant when the condition is clear."""
+    icons = json.loads(_ICONS_PATH.read_text())["entity"]["binary_sensor"]
+
+    for equivalent_id, translation_key, expected_icon, expected_ok_icon in (
+        (
+            "4b963ce8-14f4-4f90-03a9-08dac1664f9a",
+            "refill_warning",
+            "mdi:beaker-alert-outline",
+            "mdi:beaker-check-outline",
+        ),
+        (
+            "9c336908-7a04-4adc-8bd7-08dc3d205c10",
+            "fill_warning",
+            "mdi:beaker-alert",
+            "mdi:beaker-check",
+        ),
+        (
+            "9a77375d-964c-451f-03ab-08dac1664f9a",
+            "device_error",
+            "mdi:alert-circle",
+            "mdi:alert-circle-check",
+        ),
+    ):
+        definition = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[equivalent_id]
+        snapshot = _snapshot(definition)
+        entity = HagleitnerBinarySensor(
+            _EntityHub(snapshot),
+            "device",
+            snapshot.key,
+            definition,
+            "resource_problem",
+            None,
+        )
+
+        assert entity._attr_translation_key == translation_key
+        assert icons[translation_key]["default"] == expected_icon
+        assert icons[translation_key]["state"]["off"] == expected_ok_icon
+        assert getattr(entity, "_attr_entity_category", None) is None

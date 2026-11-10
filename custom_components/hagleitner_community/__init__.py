@@ -26,7 +26,7 @@ from .coordinator import (
 from .device import MANUFACTURER, device_model_id
 from .repairs import (
     async_clear_maintenance_issues,
-    async_clear_obsolete_consumable_issues,
+    async_clear_obsolete_issues,
     async_clear_queue_not_found_issue,
     async_create_queue_not_found_issue,
 )
@@ -62,7 +62,7 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up the integration domain."""
     hass.data.setdefault(DOMAIN, {})
     await async_restore_persisted_state(hass)
-    async_clear_obsolete_consumable_issues(hass)
+    async_clear_obsolete_issues(hass)
     return True
 
 

@@ -1,5 +1,25 @@
 {
   "entity": {
+    "binary_sensor": {
+      "refill_warning": {
+        "default": "mdi:beaker-alert-outline",
+        "state": {
+          "off": "mdi:beaker-check-outline"
+        }
+      },
+      "fill_warning": {
+        "default": "mdi:beaker-alert",
+        "state": {
+          "off": "mdi:beaker-check"
+        }
+      },
+      "device_error": {
+        "default": "mdi:alert-circle",
+        "state": {
+          "off": "mdi:alert-circle-check"
+        }
+      }
+    },
     "sensor": {
       "dispense_count": {
         "default": "mdi:numeric"

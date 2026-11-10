@@ -33,8 +33,6 @@ class _IssueState(Enum):
 
 
 _ISSUE_SEVERITIES = {
-    "error_active": ir.IssueSeverity.ERROR,
-    "connection_offline": ir.IssueSeverity.ERROR,
     "flowmeter_replacement": ir.IssueSeverity.WARNING,
     "pump_replacement": ir.IssueSeverity.WARNING,
 }
@@ -102,11 +100,16 @@ def async_clear_maintenance_issues(
 
 
 @callback
-def async_clear_obsolete_consumable_issues(hass: HomeAssistant) -> None:
-    """Remove old Repairs entries for states now exposed as device entities."""
+def async_clear_obsolete_issues(hass: HomeAssistant) -> None:
+    """Remove old issues for conditions now exposed as device entities."""
     registry = ir.async_get(hass)
     obsolete_suffixes = tuple(
-        f"_{issue_key}" for issue_key in _OBSOLETE_CONSUMABLE_ISSUE_KEYS
+        f"_{issue_key}"
+        for issue_key in (
+            *_OBSOLETE_CONSUMABLE_ISSUE_KEYS,
+            "error_active",
+            "connection_offline",
+        )
     )
     for domain, issue_id in tuple(registry.issues):
         if domain == DOMAIN and issue_id.endswith(obsolete_suffixes):
@@ -164,26 +167,6 @@ def _issue_states(
     definition = snapshot.definition
     if definition is None:
         return {}
-
-    if definition.kind == "problem":
-        return {
-            "error_active": _issue_state(snapshot.mapped_value, "error", ("no_error",))
-        }
-
-    if definition.kind == "connection":
-        return {
-            "connection_offline": _issue_state(
-                snapshot.mapped_value,
-                "offline",
-                (
-                    "temporarily_offline",
-                    "online",
-                    "not_connected",
-                    "not_available",
-                    "available",
-                ),
-            )
-        }
 
     if definition.kind == "maintenance":
         if snapshot.resource_type_id != _REPLACEMENT_RESOURCE_TYPE_ID:

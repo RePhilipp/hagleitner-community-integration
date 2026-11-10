@@ -58,19 +58,30 @@ def test_english_translates_all_shipped_entity_names_and_states():
         "metadata_location",
         "metadata_mount_point",
     } <= set(sensor_translations)
-    assert {"mains_adapter", "refill_empty", "device_error"} <= set(
+    assert {
+        "mains_adapter",
+        "refill_warning",
+        "fill_warning",
+        "device_error",
+    } <= set(
         binary_sensor_translations
     )
     assert all(
         binary_sensor_translations[key].get("name")
-        for key in ("mains_adapter", "refill_empty", "device_error")
+        for key in (
+            "mains_adapter",
+            "refill_warning",
+            "fill_warning",
+            "device_error",
+        )
     )
-    # This one entity covers both low/empty refill state and nearly-full fill
-    # status, so its binary state labels must describe a warning, not imply that
-    # refilling is already required or that a full refill is currently OK.
-    assert binary_sensor_translations["refill_empty"]["state"] == {
+    assert binary_sensor_translations["refill_warning"]["state"] == {
         "on": "Refill warning",
         "off": "No refill warning",
+    }
+    assert binary_sensor_translations["fill_warning"]["state"] == {
+        "on": "Fill warning",
+        "off": "No fill warning",
     }
 
 
@@ -92,6 +103,26 @@ def test_german_translates_all_shipped_entity_names_and_states():
             assert set(english_entity.get("state", {})) <= set(
                 german_entity.get("state", {})
             ), key
+
+
+def test_all_locales_translate_both_problem_binary_sensors():
+    """Every shipped locale gives refill and fill warnings distinct labels."""
+    for locale_file in _TRANSLATIONS_PATH.glob("*.json"):
+        binary_sensors = json.loads(locale_file.read_text(encoding="utf-8"))[
+            "entity"
+        ]["binary_sensor"]
+        assert {
+            "refill_warning",
+            "fill_warning",
+            "device_error",
+        } <= set(binary_sensors), locale_file.name
+        for key in ("refill_warning", "fill_warning", "device_error"):
+            assert binary_sensors[key].get("name"), (locale_file.name, key)
+            if key != "device_error":
+                assert set(binary_sensors[key].get("state", {})) == {"on", "off"}, (
+                    locale_file.name,
+                    key,
+                )
 
 
 def test_catalog_backed_resource_names_exist_in_every_locale():
