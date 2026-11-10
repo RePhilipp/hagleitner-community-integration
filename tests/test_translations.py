@@ -74,6 +74,26 @@ def test_english_translates_all_shipped_entity_names_and_states():
     }
 
 
+def test_german_translates_all_shipped_entity_names_and_states():
+    """German covers every shipped entity name and enum state, not just metadata."""
+    translations = json.loads(
+        (_TRANSLATIONS_PATH / "en.json").read_text(encoding="utf-8")
+    )["entity"]
+    german_translations = json.loads(
+        (_TRANSLATIONS_PATH / "de.json").read_text(encoding="utf-8")
+    )["entity"]
+
+    for platform, entities in translations.items():
+        german_entities = german_translations[platform]
+        assert set(entities) <= set(german_entities)
+        for key, english_entity in entities.items():
+            german_entity = german_entities[key]
+            assert german_entity.get("name"), key
+            assert set(english_entity.get("state", {})) <= set(
+                german_entity.get("state", {})
+            ), key
+
+
 def test_exception_translations_cover_user_facing_setup_errors():
     """All translated Home Assistant setup exceptions have English messages."""
     translations = json.loads(

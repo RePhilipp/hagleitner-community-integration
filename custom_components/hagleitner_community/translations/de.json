@@ -75,6 +75,65 @@
   },
   "entity": {
     "sensor": {
+      "dispense_count": {
+        "name": "Ausgabeanzahl"
+      },
+      "refill_count": {
+        "name": "Nachfüllanzahl"
+      },
+      "passage_count": {
+        "name": "Durchgangsanzahl"
+      },
+      "people_count": {
+        "name": "Personenanzahl"
+      },
+      "refill_state": {
+        "name": "Nachfüllstatus",
+        "state": {
+          "full": "Voll",
+          "low": "Niedrig",
+          "empty": "Leer"
+        }
+      },
+      "connection_status": {
+        "name": "Verbindungsstatus",
+        "state": {
+          "offline": "Offline",
+          "temporarily_offline": "Vorübergehend offline",
+          "online": "Online",
+          "not_connected": "Nicht verbunden"
+        }
+      },
+      "fill_status": {
+        "name": "Füllstatus",
+        "state": {
+          "full": "Voll",
+          "nearly_full": "Fast voll",
+          "empty": "Leer"
+        }
+      },
+      "firmware_version": {
+        "name": "Firmwareversion"
+      },
+      "total_delivery_volume": {
+        "name": "Gesamtes Liefervolumen"
+      },
+      "total_dispensed_water_volume": {
+        "name": "Gesamtmenge des ausgegebenen Wassers"
+      },
+      "online_ratio": {
+        "name": "Online-Anteil"
+      },
+      "cover_state": {
+        "name": "Abdeckungsstatus",
+        "state": {
+          "opened": "Geöffnet",
+          "closed": "Geschlossen"
+        }
+      },
+      "number_of_openings": {
+        "name": "Anzahl der Öffnungen"
+      },
       "metadata_customer_name": {
         "name": "Kundenname"
       },
@@ -101,6 +160,9 @@
           "on": "Nachfüllwarnung",
           "off": "Keine Nachfüllwarnung"
         }
+      },
+      "device_error": {
+        "name": "Gerätefehler"
       }
     }
   },
