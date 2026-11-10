@@ -24,6 +24,16 @@
           "connection_string": "The Azure Service Bus connection string from the forwarding rule. Keep it secret."
         }
       },
+      "reconfigure": {
+        "title": "Change the Service Bus queue",
+        "description": "Connect this entry to another Azure Service Bus queue. The stored credentials are checked before the change is saved.",
+        "data": {
+          "queue_name": "Queue name"
+        },
+        "data_description": {
+          "queue_name": "The Service Bus queue name from the forwarding rule."
+        }
+      },
       "confirm": {
         "title": "New {name}",
         "description": "Customer:      {customer_name}\nLocation:      {location_name}\nMount point:   {mount_point}",
@@ -37,7 +47,8 @@
     },
     "abort": {
       "reauth_successful": "Service Bus credentials were updated.",
-      "reauth_entry_not_found": "The configuration entry could not be found."
+      "reauth_entry_not_found": "The configuration entry could not be found.",
+      "reconfigure_not_supported": "Adopted device entries cannot be reconfigured."
     }
   },
   "issues": {
@@ -56,6 +67,10 @@
     "pump_replacement": {
       "title": "{device_name}: replace pump",
       "description": "A time- or volume-based pump replacement threshold has been reached. Replace the pump and reset its change action to clear this task."
+    },
+    "queue_not_found": {
+      "title": "Service Bus queue not found",
+      "description": "The configured queue is missing or its name changed. Verify the queue name in the Hagleitner forwarding rule, then reconfigure this entry to use the correct queue."
     }
   },
   "entity": {

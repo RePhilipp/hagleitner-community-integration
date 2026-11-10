@@ -23,6 +23,16 @@
           "connection_string": "Die Azure-Service-Bus-Verbindungszeichenfolge aus der Weiterleitungsregel. Halte sie geheim."
         }
       },
+      "reconfigure": {
+        "title": "Service-Bus-Warteschlange ändern",
+        "description": "Verbinde diesen Eintrag mit einer anderen Azure-Service-Bus-Warteschlange. Die gespeicherten Zugangsdaten werden vor dem Speichern geprüft.",
+        "data": {
+          "queue_name": "Name der Warteschlange"
+        },
+        "data_description": {
+          "queue_name": "Der Name der Service-Bus-Warteschlange aus der Weiterleitungsregel."
+        }
+      },
       "confirm": {
         "title": "Neues Gerät: {name}",
         "description": "Kunde:          {customer_name}\nStandort:       {location_name}\nMontagepunkt:   {mount_point}",
@@ -37,7 +47,8 @@
     "flow_title": "Neues Gerät: {name}",
     "abort": {
       "reauth_successful": "Die Service-Bus-Zugangsdaten wurden aktualisiert.",
-      "reauth_entry_not_found": "Der Konfigurationseintrag wurde nicht gefunden."
+      "reauth_entry_not_found": "Der Konfigurationseintrag wurde nicht gefunden.",
+      "reconfigure_not_supported": "Übernommene Geräteeinträge können nicht neu konfiguriert werden."
     }
   },
   "issues": {
@@ -56,6 +67,10 @@
     "pump_replacement": {
       "title": "{device_name}: Pumpe ersetzen",
       "description": "Ein zeit- oder volumenabhängiger Austauschgrenzwert für die Pumpe wurde erreicht. Ersetze die Pumpe und setze die Aktion zum Pumpenwechsel zurück, um diese Aufgabe zu löschen."
+    },
+    "queue_not_found": {
+      "title": "Service-Bus-Warteschlange nicht gefunden",
+      "description": "Die konfigurierte Warteschlange fehlt oder ihr Name wurde geändert. Prüfe den Namen in der Hagleitner-Weiterleitungsregel und konfiguriere diesen Eintrag mit der richtigen Warteschlange neu."
     }
   },
   "entity": {

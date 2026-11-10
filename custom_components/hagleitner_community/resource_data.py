@@ -79,18 +79,18 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     "77d144fd-d7a3-42f7-03aa-08dac1664f9a": ResourceDefinition(
         name="Energy supply status",
         kind="battery",
-        entity_category=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=True,
         enum_values={
             0: "ok",
             1: "low",
-            2: "empty",
+            2: "low",
             3: "mains_adapter",
         },
         battery_percent_values={
             0: 100,
             1: 20,
-            2: 0,
+            2: 20,
             3: None,
         },
     ),
@@ -111,7 +111,7 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     "9a77375d-964c-451f-03ab-08dac1664f9a": ResourceDefinition(
         name="Error status",
         kind="problem",
-        entity_category=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=True,
         enum_values={
             0: "no_error",
@@ -124,7 +124,7 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     "7c178f1d-271f-4554-03ac-08dac1664f9a": ResourceDefinition(
         name="Connection status",
         kind="connection",
-        entity_category=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=True,
         enum_values={
             0: "offline",
@@ -156,7 +156,7 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
         name="Firmware version",
         kind="diagnostic",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
     ),
     (28680, 0): ResourceDefinition(
         name="Total delivery volume",
@@ -177,8 +177,8 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
     (45058, 0): ResourceDefinition(
         name="Online ratio",
         kind="measurement",
-        entity_category=None,
-        entity_registry_enabled_default=True,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         unit="percentage",
     ),
     (12289, 0): ResourceDefinition(

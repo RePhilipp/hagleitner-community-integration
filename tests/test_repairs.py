@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+from inspect import signature
+
 from custom_components.hagleitner_community.const import DOMAIN
 from custom_components.hagleitner_community.repairs import (
     async_clear_maintenance_issues,
     async_clear_obsolete_consumable_issues,
+    async_clear_queue_not_found_issue,
+    async_create_queue_not_found_issue,
     async_update_maintenance_issue,
 )
 from custom_components.hagleitner_community.resource_data import (
@@ -161,3 +165,21 @@ async def test_removing_device_clears_only_its_repair_issues(hass):
 
     assert registry.async_get_issue(DOMAIN, "device-one_1_0_error_active") is None
     assert registry.async_get_issue(DOMAIN, "device-two_1_0_error_active") is not None
+
+
+async def test_missing_queue_issue_is_entry_scoped_and_cleared_on_recovery(hass):
+    """The actionable queue repair belongs to its hub and clears after recovery."""
+    config_entry_id = "hub-entry"
+    issue_id = f"queue_not_found_{config_entry_id}"
+
+    async_create_queue_not_found_issue(hass, config_entry_id)
+    issue = ir.async_get(hass).async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    if "config_entry_id" in signature(ir.async_create_issue).parameters:
+        assert issue.config_entry_id == config_entry_id
+    assert issue.translation_key == "queue_not_found"
+    assert issue.severity is ir.IssueSeverity.ERROR
+
+    async_clear_queue_not_found_issue(hass, config_entry_id)
+
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None

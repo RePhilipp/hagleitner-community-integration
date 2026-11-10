@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from inspect import signature
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -12,9 +13,17 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import issue_registry as ir
 
-from custom_components.hagleitner_community import _async_setup_device, async_setup_entry
+from custom_components.hagleitner_community import (
+    _async_setup_device,
+    async_remove_entry,
+    async_setup_entry,
+)
 from custom_components.hagleitner_community.const import DOMAIN
+from custom_components.hagleitner_community.repairs import (
+    async_create_queue_not_found_issue,
+)
 from custom_components.hagleitner_community.service_bus import (
     QueueValidationError,
     QueueValidationFailure,
@@ -81,6 +90,15 @@ async def test_failed_probe_precedes_hub_and_device_mutation(
     assert hass.data[DOMAIN] == {}
     assert "private-connection-string" not in str(raised.value)
     assert "raw SDK" not in str(raised.value)
+    issue = ir.async_get(hass).async_get_issue(
+        DOMAIN, "queue_not_found_hub-entry"
+    )
+    if reason is QueueValidationFailure.QUEUE_NOT_FOUND:
+        assert issue is not None
+        if "config_entry_id" in signature(ir.async_create_issue).parameters:
+            assert issue.config_entry_id == "hub-entry"
+    else:
+        assert issue is None
 
 
 async def test_successful_probe_happens_before_hub_setup(hass, monkeypatch):
@@ -153,11 +171,36 @@ async def test_successful_probe_happens_before_hub_setup(hass, monkeypatch):
             events.append("receiver_task_created")
             return hass.async_create_background_task(coroutine, name)
 
+    async_create_queue_not_found_issue(hass, "hub-entry")
+
     assert await async_setup_entry(hass, Entry())
+    assert (
+        ir.async_get(hass).async_get_issue(DOMAIN, "queue_not_found_hub-entry")
+        is None
+    )
     await hass.async_block_till_done()
 
     assert events[:5] == ["probe", "restore", "rebind", "hub", "receiver_task_created"]
     assert events[5:] == ["receiver", "device_setup"]
+
+
+async def test_removing_hub_clears_its_queue_repair(hass):
+    """A queue repair is cleaned up when its owning hub entry is deleted."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"entry_type": "hub", "queue_name": "queue-a"},
+    )
+    entry.add_to_hass(hass)
+    async_create_queue_not_found_issue(hass, entry.entry_id)
+
+    await async_remove_entry(hass, entry)
+
+    assert (
+        ir.async_get(hass).async_get_issue(
+            DOMAIN, f"queue_not_found_{entry.entry_id}"
+        )
+        is None
+    )
 
 
 async def test_device_setup_does_not_reenter_hub_setup_in_progress(

@@ -130,6 +130,62 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
+        """Change the queue used by an existing hub entry."""
+        entry = self._get_reconfigure_entry()
+        if entry.data.get("entry_type") == "device":
+            return self.async_abort(reason="reconfigure_not_supported")
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            queue_name = user_input["queue_name"].strip()
+            matching_entries = [
+                configured_entry
+                for configured_entry in self.hass.config_entries.async_entries(DOMAIN)
+                if (
+                    configured_entry.entry_id != entry.entry_id
+                    and configured_entry.data.get("entry_type") != "device"
+                    and isinstance(configured_entry.data.get("queue_name"), str)
+                    and configured_entry.data["queue_name"].strip().casefold()
+                    == queue_name.casefold()
+                )
+            ]
+            if matching_entries:
+                errors["base"] = (
+                    "queue_already_configured"
+                    if any(
+                        configured_entry.disabled_by is None
+                        for configured_entry in matching_entries
+                    )
+                    else "queue_already_configured_disabled"
+                )
+            else:
+                try:
+                    await async_validate_queue(
+                        entry.data["connection_string"], queue_name
+                    )
+                except QueueValidationError as error:
+                    errors["base"] = error.reason.value
+                else:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        title=f"Hagleitner Community ({queue_name})",
+                        data_updates={"queue_name": queue_name},
+                    )
+
+        schema = vol.Schema({vol.Required("queue_name"): str})
+        schema = self.add_suggested_values_to_schema(
+            schema,
+            {"queue_name": entry.data.get("queue_name", "")},
+        )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=schema,
+            errors=errors,
+        )
+
     async def async_step_integration_discovery(
         self, discovery_info: dict[str, Any]
     ) -> FlowResult:

@@ -109,6 +109,8 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         self._definition = definition
         self._mode = mode
         self._attr_device_info = device_info(device_id, customer_id)
+        if definition.entity_category is not None:
+            self._attr_entity_category = definition.entity_category
         if mode == "mains_adapter":
             self._attr_translation_key = mode
         elif mode == _PROBLEM_MODE:
@@ -134,7 +136,7 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         if self._mode == "mains_adapter":
             if snapshot.mapped_value == "mains_adapter":
                 return True
-            if snapshot.mapped_value in ("ok", "low", "empty"):
+            if snapshot.mapped_value in ("ok", "low"):
                 return False
             return None
         if self._mode == _PROBLEM_MODE:

@@ -15,6 +15,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 from .coordinator import (
@@ -25,6 +26,8 @@ from .coordinator import (
 from .repairs import (
     async_clear_maintenance_issues,
     async_clear_obsolete_consumable_issues,
+    async_clear_queue_not_found_issue,
+    async_create_queue_not_found_issue,
 )
 from .service_bus import (
     QueueValidationError,
@@ -88,12 +91,15 @@ async def async_setup_entry(
                     "The configured Service Bus queue is not currently available"
                 ) from error
             if error.reason is QueueValidationFailure.QUEUE_NOT_FOUND:
+                async_create_queue_not_found_issue(hass, entry.entry_id)
                 raise ConfigEntryError(
                     "The configured Service Bus queue could not be found"
                 ) from error
             raise ConfigEntryError(
                 "Unable to validate the configured Service Bus queue"
             ) from error
+        else:
+            async_clear_queue_not_found_issue(hass, entry.entry_id)
 
     await async_restore_persisted_state(hass)
     if entry.data.get("entry_type") == "device":
@@ -277,7 +283,6 @@ async def _async_setup_device(
     """Register an adopted device and load its entity platforms."""
     from homeassistant.exceptions import ConfigEntryNotReady
     from homeassistant.helpers import area_registry as ar
-    from homeassistant.helpers import device_registry as dr
 
     hub_entry_id = entry.data["hub_entry_id"]
     hub_entry = hass.config_entries.async_get_entry(hub_entry_id)
@@ -418,6 +423,29 @@ async def async_remove_entry(
     hass: HomeAssistant,
     entry: HagleitnerConfigEntry,
 ) -> None:
-    """Remove repair issues when an adopted device entry is deleted."""
+    """Clean up repair issues when a config entry is removed."""
+    async_clear_queue_not_found_issue(hass, entry.entry_id)
     if entry.data.get("entry_type") == "device":
         async_clear_maintenance_issues(hass, entry.data["device_id"])
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    entry: HagleitnerConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Remove a user's adopted device and its per-device config entry together."""
+    device_id = entry.data.get("device_id")
+    if not (
+        entry.data.get("entry_type") == "device"
+        and isinstance(device_id, str)
+        and device_entry.config_entry_id == entry.entry_id
+        and (DOMAIN, device_id) in device_entry.identifiers
+    ):
+        return False
+
+    # This integration gives each adopted device its own config entry. Remove that
+    # entry on the user's explicit device deletion so it cannot leave an orphaned
+    # adoption that silently suppresses rediscovery on the push-only feed.
+    await hass.config_entries.async_remove(entry.entry_id)
+    return True

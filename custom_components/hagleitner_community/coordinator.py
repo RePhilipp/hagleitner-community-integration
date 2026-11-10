@@ -253,15 +253,17 @@ class HagleitnerHub:
             self._async_record_firmware_version(device_id)
         for snapshot in resource_updates.values():
             self._async_update_maintenance_issue(device_id, snapshot)
-            for listener in tuple(self._resource_listeners.get(device_id, ())):
-                listener(snapshot)
+            for resource_listener in tuple(
+                self._resource_listeners.get(device_id, ())
+            ):
+                resource_listener(snapshot)
 
         if not resource_updates and not metadata_changed:
             return
 
         self._async_schedule_state_save()
-        for listener in tuple(self._state_listeners.get(device_id, ())):
-            listener()
+        for state_listener in tuple(self._state_listeners.get(device_id, ())):
+            state_listener()
 
     def adopt_device(
         self,
@@ -302,6 +304,7 @@ class HagleitnerHub:
             self.device_names.get(device_id, f"Hagleitner {device_id[:8]}"),
             snapshot,
             tuple(self.resources_for_device(device_id)),
+            config_entry_id=device_entry_id,
         )
 
     def _async_record_device_source(self, device_id: str) -> None:
