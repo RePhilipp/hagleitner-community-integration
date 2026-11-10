@@ -10,13 +10,14 @@
         }
       },
       "confirm": {
-        "title": "Nové zariadenie Hagleitner",
-        "description": "Pridať {name} do Home Assistant?\n\n**Umiestnenie HSM:** {location_path}  \n**Miesto montáže HSM:** {mount_point}\n\nZariadenie a jeho entity sa vytvoria až po potvrdení. Pomlčka (—) znamená, že HSM túto hodnotu neposkytlo. Navrhovanú oblasť možno zmeniť.",
+        "title": "Nové zariadenie: {name}",
+        "description": "Zákazník:       {customer_name}\nUmiestnenie:    {location_name}\nMiesto montáže: {mount_point}",
         "data": {
           "area_id": "Navrhovaná oblasť"
         }
       }
-    }
+    },
+    "flow_title": "Nové zariadenie: {name}"
   },
   "issues": {
     "error_active": {

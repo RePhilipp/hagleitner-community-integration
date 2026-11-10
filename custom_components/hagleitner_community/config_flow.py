@@ -24,6 +24,9 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Ask for the queue connection details."""
+        self.context.setdefault(
+            "title_placeholders", {"name": "Hagleitner Community"}
+        )
         errors = {}
         if user_input is not None:
             queue_name = user_input["queue_name"].strip()
@@ -94,8 +97,9 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if key
                 not in {
                     "suggested_area_id",
-                    "hsm_location_path",
-                    "hsm_mount_point",
+                    "customer_name",
+                    "location_name",
+                    "mount_point",
                     "customer_id",
                 }
             }
@@ -128,14 +132,14 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             schema_fields[vol.Optional("area_id")] = selector.AreaSelector()
 
+        placeholders = {
+            "name": self._discovery_info["device_name"],
+            "customer_name": self._discovery_info.get("customer_name", ""),
+            "location_name": self._discovery_info.get("location_name", ""),
+            "mount_point": self._discovery_info.get("mount_point", ""),
+        }
         return self.async_show_form(
             step_id="confirm",
             data_schema=vol.Schema(schema_fields),
-            description_placeholders={
-                "name": self._discovery_info["device_name"],
-                "location_path": self._discovery_info.get(
-                    "hsm_location_path", "—"
-                ),
-                "mount_point": self._discovery_info.get("hsm_mount_point", "—"),
-            },
+            description_placeholders=placeholders,
         )

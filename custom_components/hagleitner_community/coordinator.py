@@ -469,10 +469,11 @@ class HagleitnerHub:
             "device_name": device_display_name(message),
         }
         metadata = self.metadata_for_device(device_id)
+        discovery_data["customer_name"] = metadata.customer_name or ""
+        discovery_data["location_name"] = metadata.location or ""
+        discovery_data["mount_point"] = metadata.mount_point or ""
         if is_valid_customer_id(metadata.customer_id):
             discovery_data["customer_id"] = metadata.customer_id
-        discovery_data["hsm_location_path"] = metadata.location or "—"
-        discovery_data["hsm_mount_point"] = metadata.mount_point or "—"
         has_location_area, suggested_area_id = _suggest_area_from_hsm_location(
             self.hass,
             device_id,

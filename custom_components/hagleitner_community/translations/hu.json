@@ -10,13 +10,14 @@
         }
       },
       "confirm": {
-        "title": "Új Hagleitner-eszköz",
-        "description": "Hozzáadja ezt: {name} a Home Assistanthoz?\n\n**HSM-hely:** {location_path}  \n**HSM-rögzítési pont:** {mount_point}\n\nAz eszköz és az entitásai csak a megerősítés után jönnek létre. A gondolatjel (—) azt jelenti, hogy a HSM nem adott meg ilyen értéket. A javasolt terület módosítható.",
+        "title": "Új eszköz: {name}",
+        "description": "Ügyfél:         {customer_name}\nHelyszín:       {location_name}\nSzerelési pont: {mount_point}",
         "data": {
           "area_id": "Javasolt terület"
         }
       }
-    }
+    },
+    "flow_title": "Új eszköz: {name}"
   },
   "issues": {
     "error_active": {

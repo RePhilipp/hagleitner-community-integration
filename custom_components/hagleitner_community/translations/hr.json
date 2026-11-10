@@ -10,13 +10,14 @@
         }
       },
       "confirm": {
-        "title": "Novi uređaj Hagleitner",
-        "description": "Dodati {name} u Home Assistant?\n\n**Lokacija HSM-a:** {location_path}  \n**Mjesto montaže HSM-a:** {mount_point}\n\nUređaj i njegovi entiteti izradit će se tek nakon potvrde. Crtica (—) znači da HSM nije dostavio tu vrijednost. Predloženo područje možete promijeniti.",
+        "title": "Novi uređaj: {name}",
+        "description": "Korisnik:       {customer_name}\nLokacija:       {location_name}\nMjesto montaže: {mount_point}",
         "data": {
           "area_id": "Predloženo područje"
         }
       }
-    }
+    },
+    "flow_title": "Novi uređaj: {name}"
   },
   "issues": {
     "error_active": {

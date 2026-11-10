@@ -150,10 +150,11 @@ async def test_adoption_form_defaults_and_saves_suggested_area(
     discovery_data = {
         "device_id": "new-device",
         "device_type_id": "device-type",
-        "device_name": "Dispenser",
+        "device_name": "Fragrance dispenser",
         "hub_entry_id": "hub-entry",
-        "hsm_location_path": "HQ / Production",
-        "hsm_mount_point": "Wall",
+        "customer_name": "Test customer",
+        "location_name": "HQ / Production",
+        "mount_point": "Wall",
         "suggested_area_id": area.id,
     }
 
@@ -165,8 +166,13 @@ async def test_adoption_form_defaults_and_saves_suggested_area(
 
     assert form["type"] == "form"
     assert form["step_id"] == "confirm"
-    assert form["description_placeholders"]["location_path"] == "HQ / Production"
-    assert form["description_placeholders"]["mount_point"] == "Wall"
+    assert form["title_placeholders"]["name"] == "Fragrance dispenser"
+    assert form["description_placeholders"] == {
+        "name": "Fragrance dispenser",
+        "customer_name": "Test customer",
+        "location_name": "HQ / Production",
+        "mount_point": "Wall",
+    }
     area_field = next(
         key for key in form["data_schema"].schema if key.schema == "area_id"
     )
@@ -181,5 +187,6 @@ async def test_adoption_form_defaults_and_saves_suggested_area(
     device_entry = result["result"]
     assert device_entry.data["area_id"] == area.id
     assert "suggested_area_id" not in device_entry.data
-    assert "hsm_location_path" not in device_entry.data
-    assert "hsm_mount_point" not in device_entry.data
+    assert "customer_name" not in device_entry.data
+    assert "location_name" not in device_entry.data
+    assert "mount_point" not in device_entry.data

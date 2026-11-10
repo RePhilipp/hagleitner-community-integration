@@ -10,13 +10,14 @@
         }
       },
       "confirm": {
-        "title": "Nova naprava Hagleitner",
-        "description": "Želiš dodati {name} v Home Assistant?\n\n**Lokacija HSM:** {location_path}  \n**Mesto namestitve HSM:** {mount_point}\n\nNaprava in njene entitete bodo ustvarjene šele po potrditvi. Pomišljaj (—) pomeni, da HSM te vrednosti ni posredoval. Predlagano območje lahko spremeniš.",
+        "title": "Nova naprava: {name}",
+        "description": "Stranka:        {customer_name}\nLokacija:       {location_name}\nMesto namestitve: {mount_point}",
         "data": {
           "area_id": "Predlagano območje"
         }
       }
-    }
+    },
+    "flow_title": "Nova naprava: {name}"
   },
   "issues": {
     "error_active": {

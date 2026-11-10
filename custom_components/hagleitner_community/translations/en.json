@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "New {name}",
     "step": {
       "user": {
         "title": "Connect Hagleitner Community",
@@ -10,8 +11,8 @@
         }
       },
       "confirm": {
-        "title": "New Hagleitner device",
-        "description": "Add {name} to Home Assistant?\n\n**HSM location:** {location_path}  \n**HSM mount point:** {mount_point}\n\nThe device and its entities are created only after you confirm. A dash (—) means HSM did not provide that value. The suggested area can be changed.",
+        "title": "New {name}",
+        "description": "Customer:      {customer_name}\nLocation:      {location_name}\nMount point:   {mount_point}",
         "data": {
           "area_id": "Suggested area"
         }

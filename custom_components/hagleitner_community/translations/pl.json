@@ -10,13 +10,14 @@
         }
       },
       "confirm": {
-        "title": "Nowe urządzenie Hagleitner",
-        "description": "Dodać {name} do Home Assistant?\n\n**Lokalizacja HSM:** {location_path}  \n**Miejsce montażu HSM:** {mount_point}\n\nUrządzenie i jego encje zostaną utworzone dopiero po potwierdzeniu. Myślnik (—) oznacza, że HSM nie przekazał tej wartości. Sugerowany obszar można zmienić.",
+        "title": "Nowe urządzenie: {name}",
+        "description": "Klient:         {customer_name}\nLokalizacja:    {location_name}\nMiejsce montażu: {mount_point}",
         "data": {
           "area_id": "Sugerowany obszar"
         }
       }
-    }
+    },
+    "flow_title": "Nowe urządzenie: {name}"
   },
   "issues": {
     "error_active": {
