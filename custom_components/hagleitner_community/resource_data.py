@@ -117,7 +117,7 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     "9a77375d-964c-451f-03ab-08dac1664f9a": ResourceDefinition(
         name="Error status",
         kind="problem",
-        entity_category=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=True,
         enum_values={
             0: "no_error",

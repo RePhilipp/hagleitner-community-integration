@@ -118,7 +118,7 @@ def test_device_health_entities_are_diagnostic_but_usage_is_primary():
     connection_definition = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
         "7c178f1d-271f-4554-03ac-08dac1664f9a"
     ]
-    assert error_definition.entity_category is None
+    assert error_definition.entity_category is EntityCategory.DIAGNOSTIC
     assert connection_definition.entity_category is None
     error_entity = HagleitnerBinarySensor(
         _ResourceHub(),
@@ -128,7 +128,7 @@ def test_device_health_entities_are_diagnostic_but_usage_is_primary():
         "resource_problem",
         None,
     )
-    assert error_entity.entity_category is None
+    assert error_entity.entity_category is EntityCategory.DIAGNOSTIC
     assert error_entity._attr_translation_key == "device_error"
 
     customer_id_sensor = HagleitnerMetadataSensor(

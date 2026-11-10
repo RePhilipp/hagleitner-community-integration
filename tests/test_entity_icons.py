@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import EntityCategory
 
 from custom_components.hagleitner_community.resource_data import (
     ResourceDefinition,
@@ -171,4 +172,4 @@ def test_problem_entities_have_warning_and_ok_icons():
         assert entity._attr_translation_key == translation_key
         assert icons[translation_key]["default"] == expected_icon
         assert icons[translation_key]["state"]["off"] == expected_ok_icon
-        assert getattr(entity, "_attr_entity_category", None) is None
+        assert entity._attr_entity_category is EntityCategory.DIAGNOSTIC

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from homeassistant.const import EntityCategory
 from homeassistant.helpers import entity_registry as er
 import pytest
 
@@ -156,7 +157,7 @@ def test_refill_problem_state_matches_catalog_warning_values(
     assert entity.is_on is expected
     assert entity.entity_registry_visible_default is True
     assert entity.unique_id == f"device-1_{snapshot.key}_refill_empty"
-    assert entity.entity_category is None
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
 
 
 def test_only_unique_conditions_create_binary_entities():

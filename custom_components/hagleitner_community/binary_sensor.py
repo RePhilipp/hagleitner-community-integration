@@ -6,6 +6,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.components.binary_sensor.const import BinarySensorDeviceClass
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -119,6 +120,8 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         self._attr_device_info = device_info(device_id, customer_id)
         if definition.entity_category is not None:
             self._attr_entity_category = definition.entity_category
+        if mode == _PROBLEM_MODE:
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
         if mode == "mains_adapter":
             self._attr_translation_key = mode
         elif mode == _PROBLEM_MODE:
