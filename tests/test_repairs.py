@@ -53,8 +53,9 @@ async def test_consumable_states_do_not_create_repairs(hass):
         ),
         _snapshot(
             ResourceDefinition(name="Fill status", kind="enum"),
-            "full",
+            "empty",
             equivalent_id=_FILL_STATUS_EQUIVALENT_ID,
+            resource_type_id=12293,
         ),
     )
 

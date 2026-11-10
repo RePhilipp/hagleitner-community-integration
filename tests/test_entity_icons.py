@@ -17,6 +17,9 @@ _BATTERY_DEFINITION = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
 _REFILL_STATE_DEFINITION = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
     "4b963ce8-14f4-4f90-03a9-08dac1664f9a"
 ]
+_FILL_STATUS_DEFINITION = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
+    "9c336908-7a04-4adc-8bd7-08dc3d205c10"
+]
 _CONNECTION_DEFINITION = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
     "7c178f1d-271f-4554-03ac-08dac1664f9a"
 ]
@@ -92,6 +95,10 @@ def test_sensor_icons_match_the_resource_meaning():
     assert _sensor(_CONNECTION_DEFINITION, mode="enum")._attr_icon == "mdi:lan-connect"
     assert (
         _sensor(_REFILL_STATE_DEFINITION, mode="enum")._attr_icon
+        == "mdi:package-variant-closed"
+    )
+    assert (
+        _sensor(_FILL_STATUS_DEFINITION, mode="enum")._attr_icon
         == "mdi:package-variant-closed"
     )
     assert _sensor(_OPENING_DEFINITION, mode="enum")._attr_icon == "mdi:package-variant"

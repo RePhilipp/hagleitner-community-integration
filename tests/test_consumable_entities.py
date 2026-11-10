@@ -6,6 +6,7 @@ from homeassistant.helpers import entity_registry as er
 import pytest
 
 from custom_components.hagleitner_community.binary_sensor import (
+    HagleitnerBinarySensor,
     _binary_modes,
     async_setup_entry as async_setup_binary_entry,
 )
@@ -38,13 +39,13 @@ def _resource_snapshot(
 ) -> ResourceValueSnapshot:
     """Build a resource snapshot for entity-mode tests."""
     return ResourceValueSnapshot(
-        key="12290:0",
+        key="12293:0" if equivalent_id == _FILL_STATUS_EQUIVALENT_ID else "12290:0",
         logged_at=None,
-        resource_type_id=12290,
+        resource_type_id=12293 if equivalent_id == _FILL_STATUS_EQUIVALENT_ID else 12290,
         instance_number=0,
         equivalent_id=equivalent_id,
         raw_value=0,
-        mapped_value="empty",
+        mapped_value=mapped_value,
         raw_resource={},
         definition=definition,
         device_type_names=frozenset(),
@@ -56,8 +57,62 @@ def _resource_snapshot(
     [_REFILL_STATE_EQUIVALENT_ID, _FILL_STATUS_EQUIVALENT_ID],
 )
 def test_consumable_states_do_not_create_problem_entities(equivalent_id):
-    """Refill/fill enum states do not produce duplicate binary sensors."""
-    assert _binary_modes(_snapshot(equivalent_id)) == ()
+    """Consumable enums each derive one problem binary sensor for Maintenance."""
+    modes = _binary_modes(_snapshot(equivalent_id))
+    assert modes == ("refill_empty",)
+
+
+def test_fill_status_resource_is_a_mapped_enum_sensor():
+    """Expose fill level as an enum sensor with catalog-correct values."""
+    definition = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[_FILL_STATUS_EQUIVALENT_ID]
+    assert definition.kind == "enum"
+    assert definition.enum_values == {
+        0: "full",
+        1: "nearly_full",
+        2: "empty",
+    }
+
+
+@pytest.mark.parametrize(
+    ("equivalent_id", "mapped_value", "expected"),
+    [
+        (_REFILL_STATE_EQUIVALENT_ID, "full", False),
+        (_REFILL_STATE_EQUIVALENT_ID, "low", True),
+        (_REFILL_STATE_EQUIVALENT_ID, "empty", True),
+        (_FILL_STATUS_EQUIVALENT_ID, "full", False),
+        (_FILL_STATUS_EQUIVALENT_ID, "nearly_full", True),
+        (_FILL_STATUS_EQUIVALENT_ID, "empty", True),
+    ],
+)
+def test_refill_problem_state_matches_catalog_warning_values(
+    equivalent_id, mapped_value, expected
+):
+    """Set the Maintenance problem state from each enum's warning values."""
+    snapshot = _resource_snapshot(
+        SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[equivalent_id],
+        equivalent_id,
+        mapped_value,
+    )
+
+    class SnapshotHub:
+        """Return the provided snapshot to the entity."""
+
+        @staticmethod
+        def value_for_resource(_device_id, _resource_key):
+            return snapshot
+
+    entity = HagleitnerBinarySensor(
+        SnapshotHub(),
+        "device-1",
+        snapshot.key,
+        snapshot.definition,
+        "refill_empty",
+        None,
+    )
+
+    assert entity.device_class == "problem"
+    assert entity.is_on is expected
+    assert entity.entity_registry_visible_default is True
 
 
 def test_only_unique_conditions_create_binary_entities():

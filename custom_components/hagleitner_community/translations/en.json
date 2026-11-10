@@ -57,6 +57,13 @@
     "binary_sensor": {
       "mains_adapter": {
         "name": "Mains adapter connected"
+      },
+      "refill_empty": {
+        "name": "Refill warning",
+        "state": {
+          "on": "Refill needed",
+          "off": "Refill OK"
+        }
       }
     }
   },

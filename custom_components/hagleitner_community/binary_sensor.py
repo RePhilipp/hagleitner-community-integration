@@ -21,6 +21,9 @@ from .resource_data import (
     source_timestamp,
 )
 
+_FILL_STATUS_EQUIVALENT_ID = "9c336908-7a04-4adc-8bd7-08dc3d205c10"
+_REFILL_STATE_EQUIVALENT_ID = "4b963ce8-14f4-4f90-03a9-08dac1664f9a"
+_REFILL_PROBLEM_SUFFIX = "_refill_empty"
 _LEGACY_UNIQUE_ID_SUFFIXES = {"mains_adapter": "battery_charging"}
 _OBSOLETE_BINARY_SENSOR_SUFFIXES = (
     "_battery",
@@ -99,19 +102,30 @@ def _remove_obsolete_binary_sensors(
             entity.platform == DOMAIN
             and entity.domain == "binary_sensor"
             and entity.unique_id.startswith(device_prefix)
-            and entity.unique_id.endswith(_OBSOLETE_BINARY_SENSOR_SUFFIXES)
+            and (
+                entity.unique_id.endswith(_OBSOLETE_BINARY_SENSOR_SUFFIXES)
+                or entity.unique_id.endswith(_REFILL_PROBLEM_SUFFIX)
+            )
         ):
             registry.async_remove(entity.entity_id)
 
 
 def _binary_modes(snapshot: ResourceValueSnapshot) -> tuple[str, ...]:
-    """Return the binary-sensor meanings for one supported resource."""
+    """Return binary sensors derived from supported resource values."""
     definition = snapshot.definition
     if definition is None:
         return ()
     if definition.kind == "battery":
         if snapshot.mapped_value == "mains_adapter":
             return ("mains_adapter",)
+    if (
+        snapshot.equivalent_id in (
+            _FILL_STATUS_EQUIVALENT_ID,
+            _REFILL_STATE_EQUIVALENT_ID,
+        )
+        and definition.kind == "enum"
+    ):
+        return ("refill_empty",)
     return ()
 
 
@@ -139,6 +153,10 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         self._attr_device_info = device_info(device_id, customer_id)
         if mode == "mains_adapter":
             self._attr_translation_key = mode
+        elif mode == "refill_empty":
+            # Use the same entity-description translation pattern as HA's
+            # diagnostic problem sensors, e.g. Shelly overtemperature.
+            self._attr_translation_key = mode
         else:
             self._attr_name = definition.name
         self._attr_unique_id = (
@@ -146,10 +164,12 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         )
         if mode == "mains_adapter":
             self._attr_device_class = BinarySensorDeviceClass.PLUG
+        elif mode == "refill_empty":
+            self._attr_device_class = BinarySensorDeviceClass.PROBLEM
 
     @property
     def is_on(self) -> bool | None:
-        """Return whether the mains adapter is connected."""
+        """Return the state represented by this binary sensor."""
         snapshot = self._hub.value_for_resource(self._device_id, self._resource_key)
         if snapshot is None:
             return None
@@ -158,6 +178,16 @@ class HagleitnerBinarySensor(BinarySensorEntity):
             if snapshot.mapped_value == "mains_adapter":
                 return True
             if snapshot.mapped_value in ("ok", "low", "empty"):
+                return False
+            return None
+        if self._mode == "refill_empty":
+            if snapshot.equivalent_id == _REFILL_STATE_EQUIVALENT_ID:
+                warning_values = ("low", "empty")
+            else:
+                warning_values = ("nearly_full", "empty")
+            if snapshot.mapped_value in warning_values:
+                return True
+            if snapshot.mapped_value == "full":
                 return False
             return None
         return None

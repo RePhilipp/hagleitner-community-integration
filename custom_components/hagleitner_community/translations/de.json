@@ -57,6 +57,13 @@
     "binary_sensor": {
       "mains_adapter": {
         "name": "Netzadapter angeschlossen"
+      },
+      "refill_empty": {
+        "name": "Nachfüllwarnung",
+        "state": {
+          "on": "Nachfüllung erforderlich",
+          "off": "Nachfüllung in Ordnung"
+        }
       }
     }
   },

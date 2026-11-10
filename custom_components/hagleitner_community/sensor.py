@@ -175,6 +175,8 @@ class HagleitnerSensor(SensorEntity):
             self._attr_icon = "mdi:package-variant"
         elif mode == "enum" and definition.name == "Refill state":
             self._attr_icon = "mdi:package-variant-closed"
+        elif mode == "enum" and definition.name == "Fill status":
+            self._attr_icon = "mdi:package-variant-closed"
         elif mode == "enum" or (
             mode == "counter" and definition.device_class is None
         ):
