@@ -23,6 +23,7 @@ from .coordinator import (
     HagleitnerHub,
     async_restore_persisted_state,
 )
+from .device import MANUFACTURER, device_model_id
 from .repairs import (
     async_clear_maintenance_issues,
     async_clear_obsolete_consumable_issues,
@@ -45,16 +46,15 @@ _DEVICE_SETUP_TASKS = "_device_setup_tasks"
 
 
 def _device_model(device_data: Mapping[str, Any]) -> str | None:
-    """Return a readable model name without exposing a device type UUID."""
-    for key in ("device_type_name", "device_name"):
-        value = device_data.get(key)
-        if not isinstance(value, str) or not value.strip():
-            continue
-        value = value.strip()
-        try:
-            UUID(value)
-        except ValueError:
-            return value
+    """Return the translated device type name, never the display name or UUID."""
+    value = device_data.get("device_type_name")
+    if not isinstance(value, str) or not value.strip():
+        return None
+    value = value.strip()
+    try:
+        UUID(value)
+    except ValueError:
+        return value
     return None
 
 
@@ -313,11 +313,13 @@ async def _async_setup_device(
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers=identifiers,
-        manufacturer="Hagleitner",
+        manufacturer=MANUFACTURER,
         model=_device_model(entry.data),
+        model_id=device_model_id(entry.data.get("device_type_id")),
         sw_version=hub.firmware_version_for_device(device_id),
         name=entry.data["device_name"],
     )
+    hub.async_update_device_links()
     area_id = entry.data.get("area_id")
     if not existing_devices and isinstance(area_id, str):
         if ar.async_get(hass).async_get_area(area_id) is not None:

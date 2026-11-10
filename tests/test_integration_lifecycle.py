@@ -37,7 +37,7 @@ def test_device_model_never_uses_uuid_or_blank_metadata():
             "device_type_name": "d15a2a06-7a04-4a7b-8f29-815d75c1da2f",
             "device_name": "Readable dispenser",
         }
-    ) == "Readable dispenser"
+    ) is None
 
 
 def test_orphaned_devices_rebind_only_to_a_known_matching_hub(hass):
@@ -171,6 +171,10 @@ async def test_device_setup_retries_unloaded_hub_before_registering(hass, monkey
         def firmware_version_for_device(_device_id):
             return None
 
+        @staticmethod
+        def async_update_device_links():
+            pass
+
     hub = Hub()
 
     async def load_hub(_entry_id):
@@ -229,6 +233,10 @@ async def test_new_device_uses_area_suggestion_only_while_area_exists(
         @staticmethod
         def firmware_version_for_device(_device_id):
             return None
+
+        @staticmethod
+        def async_update_device_links():
+            pass
 
     hub_entry.runtime_data = Hub()
 

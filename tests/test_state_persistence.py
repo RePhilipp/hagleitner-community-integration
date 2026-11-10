@@ -235,6 +235,8 @@ async def test_last_known_resource_and_metadata_values_survive_restart(hass):
                     {"languageTag": "en", "value": "Gateway Longrange"}
                 ],
             },
+            "componentInfo": {"networkId": "gateway-component-network"},
+            "gateway": {"networkId": "upstream-gateway-network"},
             "customerInfo": {"customerId": 123, "name1": "Example customer"},
             "locationInfo": {
                 "locations": [
@@ -281,6 +283,9 @@ async def test_last_known_resource_and_metadata_values_survive_restart(hass):
     hass.data[DOMAIN] = {}
     await async_restore_persisted_state(hass)
     restored_hub = HagleitnerHub(hass, hub_entry, logging.getLogger(__name__))
+    assert restored_hub.component_network_ids[device_id] == "gateway-component-network"
+    assert restored_hub.gateway_network_ids[device_id] == "upstream-gateway-network"
+    restored_hub.async_set_receiver_available(True)
     hub_entry.runtime_data = restored_hub
     device_entry.runtime_data = restored_hub
     restored_hub.adopt_device(device_id, device_entry.entry_id, "Gateway")
@@ -307,7 +312,7 @@ async def test_last_known_resource_and_metadata_values_survive_restart(hass):
         if isinstance(entity, HagleitnerBinarySensor)
     )
 
-    assert connection_sensor.native_value == "available"
+    assert connection_sensor.native_value == "online"
     assert connection_sensor.available is True
     assert connection_sensor.extra_state_attributes == {
         "last_reading_at": "2026-11-03T17:00:00Z"

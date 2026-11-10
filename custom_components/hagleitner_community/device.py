@@ -3,12 +3,25 @@
 from __future__ import annotations
 
 from urllib.parse import urlencode
+from uuid import UUID
 
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
 
+MANUFACTURER = "HAGLEITNER Hygiene International GmbH"
 _HSM_DEVICE_LOCATIONS_URL = "https://hsm.hygieneportal.com/devices/locations"
+
+
+def device_model_id(device_type_id: object) -> str | None:
+    """Return a normalized model ID only for a valid device-type GUID."""
+    if not isinstance(device_type_id, str) or not device_type_id.strip():
+        return None
+    value = device_type_id.strip()
+    try:
+        return str(UUID(value))
+    except ValueError:
+        return None
 
 
 def is_valid_customer_id(customer_id: object) -> bool:

@@ -7,6 +7,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
+from uuid import UUID
 
 from homeassistant.const import EntityCategory
 
@@ -120,8 +121,6 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
             0: "no_error",
             1: "error",
         },
-        problem_entity_on_values=("error",),
-        problem_entity_translation_key="device_error",
     ),
     "7c178f1d-271f-4554-03ac-08dac1664f9a": ResourceDefinition(
         name="Connection status",
@@ -335,6 +334,38 @@ def device_identity(message: dict[str, Any]) -> tuple[str, str]:
     return device_id, str(device_type_id).lower()
 
 
+def device_type_name(message: dict[str, Any]) -> str | None:
+    """Return the English translated device type name, when supplied."""
+    device_info = _field(message, "deviceInfo", "DeviceInfo", default={}) or {}
+    if not isinstance(device_info, dict):
+        return None
+    translations = _field(
+        device_info,
+        "deviceTypeNameTranslations",
+        "DeviceTypeNameTranslations",
+        default=[],
+    )
+    if not isinstance(translations, list):
+        return None
+    for translation in translations:
+        if not isinstance(translation, dict):
+            continue
+        language_tag = _field(translation, "languageTag", "LanguageTag", default="")
+        value = _field(translation, "value", "Value")
+        if (
+            isinstance(language_tag, str)
+            and language_tag.casefold() == "en"
+            and isinstance(value, str)
+            and value.strip()
+        ):
+            value = value.strip()
+            try:
+                UUID(value)
+            except ValueError:
+                return value
+    return None
+
+
 def log_resource_values(message: dict[str, Any], logger: logging.Logger) -> None:
     """Log raw and normalized values for every resource in a message."""
     device_id, device_type_id = device_identity(message)
@@ -532,25 +563,7 @@ def restore_resource_snapshot(data: Any) -> ResourceValueSnapshot | None:
 def device_display_name(message: dict[str, Any]) -> str:
     """Return the translated device type with its known mount point."""
     device_id, _ = device_identity(message)
-    device_info = _field(message, "deviceInfo", "DeviceInfo", default={}) or {}
-    translations = (
-        _field(
-            device_info,
-            "deviceTypeNameTranslations",
-            "DeviceTypeNameTranslations",
-            default=[],
-        )
-        or []
-    )
-    device_type_name = None
-    for translation in translations:
-        if str(_field(translation, "languageTag", "LanguageTag", default="")).casefold() == "en":
-            value = _field(translation, "value", "Value")
-            if isinstance(value, str) and value.strip():
-                device_type_name = value.strip()
-                break
-
-    display_name = device_type_name or f"Hagleitner {device_id[:8]}"
+    display_name = device_type_name(message) or f"Hagleitner {device_id[:8]}"
     mount_point = parse_device_metadata(message).mount_point
     if mount_point:
         return f"{display_name} {mount_point}"

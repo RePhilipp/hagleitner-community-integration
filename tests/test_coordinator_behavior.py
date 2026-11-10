@@ -69,6 +69,8 @@ async def test_restore_filters_invalid_persisted_resources_and_metadata(
                     "mount_point": 17,
                     "innermost_location": "Room",
                 },
+                "component_network_id": "network-a",
+                "gateway_network_id": "network-gateway",
             },
             "empty-device": {
                 "resources": [],
@@ -108,6 +110,8 @@ async def test_restore_filters_invalid_persisted_resources_and_metadata(
     assert shared["device_metadata"]["device-1"].customer_id is None
     assert shared["device_metadata"]["device-1"].location == "Building / Room"
     assert shared["device_metadata"]["device-1"].mount_point is None
+    assert shared["component_network_ids"]["device-1"] == "network-a"
+    assert shared["gateway_network_ids"]["device-1"] == "network-gateway"
     assert "empty-device" not in shared["device_metadata"]
     assert len(stores) == 1
     assert stores[0].load_count == 1
@@ -158,6 +162,9 @@ async def test_discovery_throttles_repeats_and_suggests_exact_hsm_room(
         "deviceInfo": {
             "deviceId": "device-1",
             "deviceTypeId": "TYPE-1",
+            "deviceTypeNameTranslations": [
+                {"languageTag": "en", "value": "Foam dispenser"}
+            ],
         },
         "customerInfo": {"customerId": 123, "name1": "Example"},
         "locationInfo": {
@@ -180,7 +187,8 @@ async def test_discovery_throttles_repeats_and_suggests_exact_hsm_room(
         "hub_entry_id": entry.entry_id,
         "device_id": "device-1",
         "device_type_id": "type-1",
-        "device_name": "Hagleitner device-1 Wall",
+        "device_name": "Foam dispenser Wall",
+        "device_type_name": "Foam dispenser",
         "customer_name": "Example",
         "location_name": "Building 2 / EG / WC",
         "mount_point": "Wall",

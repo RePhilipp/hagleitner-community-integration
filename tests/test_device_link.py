@@ -53,6 +53,7 @@ async def test_device_discovery_persists_valid_customer_id(
             "hub_entry_id": "hub-entry",
             "device_id": "device-123",
             "device_type_id": "type-123",
+            "device_type_name": "Soap dispenser",
             "device_name": "Dispenser",
             "customer_id": 456,
         },
@@ -67,6 +68,7 @@ async def test_device_discovery_persists_valid_customer_id(
     device_entry = result["result"]
     assert device_entry.unique_id == "device-123"
     assert device_entry.data["customer_id"] == 456
+    assert device_entry.data["device_type_name"] == "Soap dispenser"
 
     class EmptyHub:
         """Represent a restarted hub before it receives a new message."""
@@ -222,3 +224,50 @@ async def test_existing_customer_id_is_not_overwritten_by_missing_metadata(hass)
         "https://hsm.hygieneportal.com/devices/locations"
         f"?customerId=123&device={device_id}"
     )
+
+
+async def test_device_type_message_updates_model_and_model_id(hass):
+    """A clean translated device type fills model fields for existing entries."""
+    hass.data[DOMAIN] = {}
+    hub_entry = MockConfigEntry(domain=DOMAIN, data={"entry_type": "hub"})
+    hub_entry.add_to_hass(hass)
+    device_id = "device-model"
+    device_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "entry_type": "device",
+            "device_id": device_id,
+            "hub_entry_id": hub_entry.entry_id,
+            "hub_entry_ids": [hub_entry.entry_id],
+            "device_type_id": "123e4567-e89b-12d3-a456-426614174002",
+            "device_name": "Soap dispenser Wall",
+        },
+    )
+    device_entry.add_to_hass(hass)
+    registry = dr.async_get(hass)
+    registered_device = registry.async_get_or_create(
+        config_entry_id=device_entry.entry_id,
+        identifiers={(DOMAIN, device_id)},
+        manufacturer="Hagleitner",
+        model="Soap dispenser Wall",
+    )
+    hub = HagleitnerHub(hass, hub_entry, logging.getLogger(__name__))
+    hub.adopt_device(device_id, device_entry.entry_id, device_entry.title)
+
+    await hub.async_handle_message(
+        {
+            "deviceInfo": {
+                "deviceId": device_id,
+                "deviceTypeId": "123e4567-e89b-12d3-a456-426614174002",
+                "deviceTypeNameTranslations": [
+                    {"languageTag": "en", "value": "Soap dispenser"}
+                ],
+            }
+        }
+    )
+
+    updated = registry.async_get(registered_device.id)
+    assert updated is not None
+    assert updated.model == "Soap dispenser"
+    assert updated.model_id == "123e4567-e89b-12d3-a456-426614174002"
+    assert device_entry.data["device_type_name"] == "Soap dispenser"
