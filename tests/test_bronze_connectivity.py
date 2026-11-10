@@ -32,18 +32,42 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("reason", "expected_error"),
+    ("reason", "expected_error", "translation_key"),
     [
-        (QueueValidationFailure.INVALID_AUTH, ConfigEntryAuthFailed),
-        (QueueValidationFailure.INVALID_CONNECTION_STRING, ConfigEntryAuthFailed),
-        (QueueValidationFailure.QUEUE_NOT_FOUND, ConfigEntryError),
-        (QueueValidationFailure.CANNOT_CONNECT, ConfigEntryNotReady),
-        (QueueValidationFailure.INVALID_QUEUE, ConfigEntryError),
-        (QueueValidationFailure.UNKNOWN, ConfigEntryError),
+        (
+            QueueValidationFailure.INVALID_AUTH,
+            ConfigEntryAuthFailed,
+            "service_bus_credentials_invalid",
+        ),
+        (
+            QueueValidationFailure.INVALID_CONNECTION_STRING,
+            ConfigEntryAuthFailed,
+            "service_bus_credentials_invalid",
+        ),
+        (
+            QueueValidationFailure.QUEUE_NOT_FOUND,
+            ConfigEntryError,
+            "service_bus_queue_not_found",
+        ),
+        (
+            QueueValidationFailure.CANNOT_CONNECT,
+            ConfigEntryNotReady,
+            "service_bus_queue_unavailable",
+        ),
+        (
+            QueueValidationFailure.INVALID_QUEUE,
+            ConfigEntryError,
+            "service_bus_queue_validation_failed",
+        ),
+        (
+            QueueValidationFailure.UNKNOWN,
+            ConfigEntryError,
+            "service_bus_queue_validation_failed",
+        ),
     ],
 )
 async def test_failed_probe_precedes_hub_and_device_mutation(
-    hass, monkeypatch, reason, expected_error
+    hass, monkeypatch, reason, expected_error, translation_key
 ):
     """No setup, registration, or background task begins until validation passes."""
     events = []
@@ -88,6 +112,8 @@ async def test_failed_probe_precedes_hub_and_device_mutation(
 
     assert events == ["probe"]
     assert hass.data[DOMAIN] == {}
+    assert raised.value.translation_domain == DOMAIN
+    assert raised.value.translation_key == translation_key
     assert "private-connection-string" not in str(raised.value)
     assert "raw SDK" not in str(raised.value)
     issue = ir.async_get(hass).async_get_issue(

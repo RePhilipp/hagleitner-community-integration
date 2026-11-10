@@ -80,9 +80,7 @@ def test_catalog_low_energy_values_are_reported_as_twenty_percent(raw_value):
 
     assert snapshot.mapped_value == "low"
     assert battery_percentage(snapshot) == 20
-    assert _sensor_modes(_BATTERY_DEFINITION, snapshot) == (
-        ("battery_level", None),
-    )
+    assert _sensor_modes(_BATTERY_DEFINITION, snapshot) == ("battery_level",)
     assert _binary_modes(snapshot) == ()
 
     level_entity = HagleitnerSensor(
@@ -92,7 +90,6 @@ def test_catalog_low_energy_values_are_reported_as_twenty_percent(raw_value):
         _BATTERY_DEFINITION,
         frozenset(),
         "battery_level",
-        None,
         None,
     )
     assert level_entity.native_value == 20
@@ -112,7 +109,6 @@ def test_normal_battery_is_reported_as_one_hundred_percent():
         _BATTERY_DEFINITION,
         frozenset(),
         "battery_level",
-        None,
         None,
     )
 

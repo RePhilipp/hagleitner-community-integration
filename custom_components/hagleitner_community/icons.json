@@ -1,0 +1,51 @@
+{
+  "entity": {
+    "sensor": {
+      "dispense_count": {
+        "default": "mdi:counter"
+      },
+      "refill_count": {
+        "default": "mdi:counter"
+      },
+      "passage_count": {
+        "default": "mdi:counter"
+      },
+      "people_count": {
+        "default": "mdi:counter"
+      },
+      "refill_state": {
+        "default": "mdi:package-variant-closed"
+      },
+      "connection_status": {
+        "default": "mdi:lan-connect"
+      },
+      "fill_status": {
+        "default": "mdi:package-variant-closed"
+      },
+      "firmware_version": {
+        "default": "mdi:chip"
+      },
+      "online_ratio": {
+        "default": "mdi:percent"
+      },
+      "cover_state": {
+        "default": "mdi:package-variant"
+      },
+      "number_of_openings": {
+        "default": "mdi:counter"
+      },
+      "metadata_customer_name": {
+        "default": "mdi:account"
+      },
+      "metadata_customer_id": {
+        "default": "mdi:identifier"
+      },
+      "metadata_location": {
+        "default": "mdi:map-marker"
+      },
+      "metadata_mount_point": {
+        "default": "mdi:map-marker-radius"
+      }
+    }
+  }
+}

@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import HagleitnerConfigEntry, HagleitnerHub
 from .device import device_info
 from .resource_data import (
@@ -39,7 +40,10 @@ async def async_setup_entry(
 
     hub = getattr(entry, "runtime_data", None)
     if hub is None:
-        raise ConfigEntryNotReady("Waiting for the Hagleitner queue connection")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="waiting_for_queue_connection",
+        )
 
     customer_id = entry.data.get("customer_id")
     added_ids: set[str] = set()
@@ -114,11 +118,8 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         if mode == "mains_adapter":
             self._attr_translation_key = mode
         elif mode == _PROBLEM_MODE:
-            self._attr_name = definition.problem_entity_name or definition.name
             if definition.problem_entity_translation_key:
                 self._attr_translation_key = definition.problem_entity_translation_key
-        else:
-            self._attr_name = definition.name
         mode_suffix = _unique_id_suffix(mode, definition)
         self._attr_unique_id = f"{device_id}_{resource_key}_{mode_suffix}"
         if mode == "mains_adapter":

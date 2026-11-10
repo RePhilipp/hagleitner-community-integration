@@ -19,12 +19,12 @@ class ResourceDefinition:
 
     name: str
     kind: str
+    entity_translation_key: str | None = None
     device_class: str | None = None
     unit: str | None = None
     enum_values: dict[int, Any] = field(default_factory=dict)
     battery_percent_values: dict[int, int | None] = field(default_factory=dict)
     problem_entity_on_values: tuple[str, ...] = ()
-    problem_entity_name: str | None = None
     problem_entity_translation_key: str | None = None
     entity_category: EntityCategory | None = None
     entity_registry_enabled_default: bool = True
@@ -61,18 +61,21 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     "84b96502-7738-43fb-f3dd-08dace26c91e": ResourceDefinition(
         name="Dispense count",
         kind="counter",
+        entity_translation_key="dispense_count",
         entity_category=None,
         entity_registry_enabled_default=True,
     ),
     "491d2cd9-92a0-4107-f3de-08dace26c91e": ResourceDefinition(
         name="Refill count",
         kind="counter",
+        entity_translation_key="refill_count",
         entity_category=None,
         entity_registry_enabled_default=True,
     ),
     "f8cdaa9a-4633-4fd4-1d0d-08de5e8412d5": ResourceDefinition(
         name="Passage count",
         kind="counter",
+        entity_translation_key="passage_count",
         entity_category=None,
         entity_registry_enabled_default=True,
     ),
@@ -97,6 +100,7 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     REFILL_STATE_EQUIVALENT_ID: ResourceDefinition(
         name="Refill state",
         kind="enum",
+        entity_translation_key="refill_state",
         entity_category=None,
         entity_registry_enabled_default=True,
         enum_values={
@@ -105,7 +109,6 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
             2: "empty",
         },
         problem_entity_on_values=("low", "empty"),
-        problem_entity_name="Refill warning",
         problem_entity_translation_key="refill_empty",
     ),
     "9a77375d-964c-451f-03ab-08dac1664f9a": ResourceDefinition(
@@ -118,12 +121,12 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
             1: "error",
         },
         problem_entity_on_values=("error",),
-        problem_entity_name="Device error",
         problem_entity_translation_key="device_error",
     ),
     "7c178f1d-271f-4554-03ac-08dac1664f9a": ResourceDefinition(
         name="Connection status",
         kind="connection",
+        entity_translation_key="connection_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=True,
         enum_values={
@@ -136,6 +139,7 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     "9c336908-7a04-4adc-8bd7-08dc3d205c10": ResourceDefinition(
         name="Fill status",
         kind="enum",
+        entity_translation_key="fill_status",
         entity_category=None,
         entity_registry_enabled_default=True,
         enum_values={
@@ -144,7 +148,6 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
             2: "empty",
         },
         problem_entity_on_values=("nearly_full", "empty"),
-        problem_entity_name="Refill warning",
         problem_entity_translation_key="refill_empty",
     ),
 }
@@ -155,12 +158,14 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
     (3, 0): ResourceDefinition(
         name="Firmware version",
         kind="diagnostic",
+        entity_translation_key="firmware_version",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     (28680, 0): ResourceDefinition(
         name="Total delivery volume",
         kind="counter",
+        entity_translation_key="total_delivery_volume",
         entity_category=None,
         entity_registry_enabled_default=True,
         device_class="volume",
@@ -169,6 +174,7 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
     (28682, 0): ResourceDefinition(
         name="Total dispensed water volume",
         kind="counter",
+        entity_translation_key="total_dispensed_water_volume",
         entity_category=None,
         entity_registry_enabled_default=True,
         device_class="volume",
@@ -177,6 +183,7 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
     (45058, 0): ResourceDefinition(
         name="Online ratio",
         kind="measurement",
+        entity_translation_key="online_ratio",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         unit="percentage",
@@ -184,6 +191,7 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
     (12289, 0): ResourceDefinition(
         name="Cover state",
         kind="opening",
+        entity_translation_key="cover_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         enum_values={
@@ -194,18 +202,21 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
     (20486, 0): ResourceDefinition(
         name="Number of openings",
         kind="counter",
+        entity_translation_key="number_of_openings",
         entity_category=None,
         entity_registry_enabled_default=True,
     ),
     (20485, 0): ResourceDefinition(
         name="Passage count",
         kind="counter",
+        entity_translation_key="passage_count",
         entity_category=None,
         entity_registry_enabled_default=True,
     ),
     (20485, 1): ResourceDefinition(
         name="People count",
         kind="counter",
+        entity_translation_key="people_count",
         entity_category=None,
         entity_registry_enabled_default=True,
     ),
@@ -552,42 +563,6 @@ def enum_options(
 ) -> list[str]:
     """Return allowed HA enum states for the device type."""
     return list(dict.fromkeys(definition.enum_values.values()))
-
-
-def device_type_icon(device_type_names: frozenset[str]) -> str:
-    """Choose a built-in MDI icon from translated Hagleitner device names."""
-    names = " ".join(device_type_names)
-    if "gateway" in names:
-        return "mdi:router-wireless"
-    if "dishwash" in names:
-        return "mdi:dishwasher"
-    if "counter" in names or "passage" in names:
-        return "mdi:account-group"
-    if any(term in names for term in ("waste bin", "sanitary waste", "paperbox")):
-        return "mdi:trash-can"
-    if "toilet seat" in names or "toilet paper" in names or "tissue" in names:
-        return "mdi:toilet"
-    if "wet wipe" in names:
-        return "mdi:package-variant"
-    if "towel" in names or "sense towel" in names:
-        return "mdi:paper-roll"
-    if any(term in names for term in ("fragrance", "freshair")):
-        return "mdi:air-purifier"
-    if "sunscreen" in names or any(
-        term in names for term in ("skincare", "moistcare", "cream", "lotion")
-    ):
-        return "mdi:lotion"
-    if "shower gel" in names:
-        return "mdi:shower"
-    if any(term in names for term in ("disinfect", "sanitizer", "gel")):
-        return "mdi:hand-sanitizer"
-    if "foam" in names or "soap" in names:
-        return "mdi:soap"
-    if "flowmeter" in names or "level unit" in names:
-        return "mdi:gauge"
-    if any(term in names for term in ("dosing", "integral", "industrial")):
-        return "mdi:water-pump"
-    return "mdi:devices"
 
 
 def battery_percentage(

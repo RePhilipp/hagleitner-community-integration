@@ -34,6 +34,7 @@ def _connection_snapshot(status: str) -> ResourceValueSnapshot:
         definition=ResourceDefinition(
             name="Connection status",
             kind="connection",
+            entity_translation_key="connection_status",
             enum_values={
                 0: "offline",
                 1: "temporarily_offline",
@@ -73,7 +74,11 @@ def test_only_non_connection_entities_are_unavailable_for_exact_offline(hass):
     hub.latest_values["device-1"] = {
         "connection-status": _connection_snapshot("offline")
     }
-    counter_definition = ResourceDefinition(name="Dispense count", kind="counter")
+    counter_definition = ResourceDefinition(
+        name="Dispense count",
+        kind="counter",
+        entity_translation_key="dispense_count",
+    )
     connection_definition = _connection_snapshot("offline").definition
     assert connection_definition is not None
     problem_definition = ResourceDefinition(
@@ -81,7 +86,7 @@ def test_only_non_connection_entities_are_unavailable_for_exact_offline(hass):
         kind="problem",
         enum_values={0: "ok", 1: "error"},
         problem_entity_on_values=("error",),
-        problem_entity_name="Device error",
+        problem_entity_translation_key="device_error",
     )
 
     value_sensor = HagleitnerSensor(
@@ -91,7 +96,6 @@ def test_only_non_connection_entities_are_unavailable_for_exact_offline(hass):
         counter_definition,
         frozenset(),
         "counter",
-        "Dispense count",
         None,
     )
     connection_sensor = HagleitnerSensor(
@@ -101,7 +105,6 @@ def test_only_non_connection_entities_are_unavailable_for_exact_offline(hass):
         connection_definition,
         frozenset(),
         "enum",
-        "Connection status",
         None,
     )
     metadata_sensor = HagleitnerMetadataSensor(

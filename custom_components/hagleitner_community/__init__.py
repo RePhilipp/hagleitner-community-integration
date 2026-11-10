@@ -82,21 +82,25 @@ async def async_setup_entry(
                 QueueValidationFailure.INVALID_CONNECTION_STRING,
             }:
                 raise ConfigEntryAuthFailed(
-                    "Service Bus credentials need to be updated"
+                    translation_domain=DOMAIN,
+                    translation_key="service_bus_credentials_invalid",
                 ) from error
             if error.reason in {
                 QueueValidationFailure.CANNOT_CONNECT,
             }:
                 raise ConfigEntryNotReady(
-                    "The configured Service Bus queue is not currently available"
+                    translation_domain=DOMAIN,
+                    translation_key="service_bus_queue_unavailable",
                 ) from error
             if error.reason is QueueValidationFailure.QUEUE_NOT_FOUND:
                 async_create_queue_not_found_issue(hass, entry.entry_id)
                 raise ConfigEntryError(
-                    "The configured Service Bus queue could not be found"
+                    translation_domain=DOMAIN,
+                    translation_key="service_bus_queue_not_found",
                 ) from error
             raise ConfigEntryError(
-                "Unable to validate the configured Service Bus queue"
+                translation_domain=DOMAIN,
+                translation_key="service_bus_queue_validation_failed",
             ) from error
         else:
             async_clear_queue_not_found_issue(hass, entry.entry_id)
@@ -294,7 +298,10 @@ async def _async_setup_device(
             await hass.config_entries.async_setup(hub_entry_id)
             hub = getattr(hub_entry, "runtime_data", None)
     if hub is None:
-        raise ConfigEntryNotReady("Waiting for the Hagleitner queue connection")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="waiting_for_queue_connection",
+        )
 
     entry.runtime_data = hub
     device_id = entry.data["device_id"]

@@ -72,7 +72,6 @@ def test_fill_status_resource_is_a_mapped_enum_sensor():
         2: "empty",
     }
     assert definition.problem_entity_on_values == ("nearly_full", "empty")
-    assert definition.problem_entity_name == "Refill warning"
     assert definition.problem_entity_translation_key == "refill_empty"
 
 

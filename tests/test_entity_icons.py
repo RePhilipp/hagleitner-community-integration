@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from homeassistant.components.sensor import SensorDeviceClass
 
 from custom_components.hagleitner_community.resource_data import (
@@ -26,7 +29,14 @@ _CONNECTION_DEFINITION = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
 _OPENING_DEFINITION = ResourceDefinition(
     name="Cover state",
     kind="opening",
+    entity_translation_key="cover_state",
     enum_values={0: "opened", 1: "closed"},
+)
+_ICONS_PATH = (
+    Path(__file__).parents[1]
+    / "custom_components"
+    / "hagleitner_community"
+    / "icons.json"
 )
 
 
@@ -75,33 +85,34 @@ def _sensor(
         definition,
         snapshot.device_type_names,
         mode,
-        definition.name,
         None,
     )
 
 
-def test_sensor_icons_match_the_resource_meaning():
-    """Avoid product-type icons for counts and status enums."""
-    for equivalent_id, expected_icon in (
-        ("84b96502-7738-43fb-f3dd-08dace26c91e", "mdi:counter"),
-        ("491d2cd9-92a0-4107-f3de-08dace26c91e", "mdi:counter"),
+def test_sensor_icons_are_defined_by_entity_translation_key():
+    """Keep custom icons in icons.json instead of entity state attributes."""
+    icons = json.loads(_ICONS_PATH.read_text())["entity"]["sensor"]
+    for equivalent_id, expected_key, expected_icon in (
+        ("84b96502-7738-43fb-f3dd-08dace26c91e", "dispense_count", "mdi:counter"),
+        ("491d2cd9-92a0-4107-f3de-08dace26c91e", "refill_count", "mdi:counter"),
     ):
         entity = _sensor(
             SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[equivalent_id],
             mode="counter",
         )
-        assert entity._attr_icon == expected_icon
+        assert entity._attr_translation_key == expected_key
+        assert icons[expected_key]["default"] == expected_icon
 
-    assert _sensor(_CONNECTION_DEFINITION, mode="enum")._attr_icon == "mdi:lan-connect"
-    assert (
-        _sensor(_REFILL_STATE_DEFINITION, mode="enum")._attr_icon
-        == "mdi:package-variant-closed"
-    )
-    assert (
-        _sensor(_FILL_STATUS_DEFINITION, mode="enum")._attr_icon
-        == "mdi:package-variant-closed"
-    )
-    assert _sensor(_OPENING_DEFINITION, mode="enum")._attr_icon == "mdi:package-variant"
+    for definition, expected_key, expected_icon in (
+        (_CONNECTION_DEFINITION, "connection_status", "mdi:lan-connect"),
+        (_REFILL_STATE_DEFINITION, "refill_state", "mdi:package-variant-closed"),
+        (_FILL_STATUS_DEFINITION, "fill_status", "mdi:package-variant-closed"),
+        (_OPENING_DEFINITION, "cover_state", "mdi:package-variant"),
+    ):
+        entity = _sensor(definition, mode="enum")
+        assert entity._attr_translation_key == expected_key
+        assert icons[expected_key]["default"] == expected_icon
+        assert getattr(entity, "_attr_icon", None) is None
 
 
 def test_battery_level_uses_home_assistant_battery_icon_pattern():
@@ -109,4 +120,5 @@ def test_battery_level_uses_home_assistant_battery_icon_pattern():
     entity = _sensor(_BATTERY_DEFINITION, mode="battery_level")
 
     assert entity._attr_device_class == SensorDeviceClass.BATTERY
+    assert entity._attr_translation_key == "battery_level"
     assert getattr(entity, "_attr_icon", None) is None

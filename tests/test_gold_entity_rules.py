@@ -160,7 +160,11 @@ async def test_resource_entities_are_added_when_reported_after_platform_setup(
     hub.publish(
         _snapshot(
             "new-counter",
-            ResourceDefinition(name="Dispense count", kind="counter"),
+            ResourceDefinition(
+                name="Dispense count",
+                kind="counter",
+                entity_translation_key="dispense_count",
+            ),
             "1",
         )
     )
@@ -170,6 +174,7 @@ async def test_resource_entities_are_added_when_reported_after_platform_setup(
             ResourceDefinition(
                 name="Device error",
                 kind="enum",
+                problem_entity_translation_key="device_error",
                 enum_values={0: "ok", 1: "error"},
                 problem_entity_on_values=("error",),
             ),

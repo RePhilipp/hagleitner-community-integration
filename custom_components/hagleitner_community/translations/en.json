@@ -75,6 +75,65 @@
   },
   "entity": {
     "sensor": {
+      "dispense_count": {
+        "name": "Dispense count"
+      },
+      "refill_count": {
+        "name": "Refill count"
+      },
+      "passage_count": {
+        "name": "Passage count"
+      },
+      "people_count": {
+        "name": "People count"
+      },
+      "refill_state": {
+        "name": "Refill state",
+        "state": {
+          "full": "Full",
+          "low": "Low",
+          "empty": "Empty"
+        }
+      },
+      "connection_status": {
+        "name": "Connection status",
+        "state": {
+          "offline": "Offline",
+          "temporarily_offline": "Temporarily offline",
+          "online": "Online",
+          "not_connected": "Not connected"
+        }
+      },
+      "fill_status": {
+        "name": "Fill status",
+        "state": {
+          "full": "Full",
+          "nearly_full": "Nearly full",
+          "empty": "Empty"
+        }
+      },
+      "firmware_version": {
+        "name": "Firmware version"
+      },
+      "total_delivery_volume": {
+        "name": "Total delivery volume"
+      },
+      "total_dispensed_water_volume": {
+        "name": "Total dispensed water volume"
+      },
+      "online_ratio": {
+        "name": "Online ratio"
+      },
+      "cover_state": {
+        "name": "Cover state",
+        "state": {
+          "opened": "Open",
+          "closed": "Closed"
+        }
+      },
+      "number_of_openings": {
+        "name": "Number of openings"
+      },
       "metadata_customer_name": {
         "name": "Customer name"
       },
@@ -101,7 +160,27 @@
           "on": "Refill needed",
           "off": "Refill OK"
         }
+      },
+      "device_error": {
+        "name": "Device error"
       }
+    }
+  },
+  "exceptions": {
+    "service_bus_credentials_invalid": {
+      "message": "The Service Bus connection string is invalid, or the credentials do not have permission to access this queue."
+    },
+    "service_bus_queue_unavailable": {
+      "message": "The configured Service Bus queue is not currently available."
+    },
+    "service_bus_queue_not_found": {
+      "message": "The configured Service Bus queue could not be found."
+    },
+    "service_bus_queue_validation_failed": {
+      "message": "Unable to validate the configured Service Bus queue."
+    },
+    "waiting_for_queue_connection": {
+      "message": "Waiting for the Hagleitner queue connection."
     }
   },
   "error": {
