@@ -13,6 +13,16 @@
           "queue_name": "A Service Bus-sor neve ugyanabból a továbbítási szabályból."
         }
       },
+      "reauth_confirm": {
+        "title": "Service Bus hitelesítő adatainak frissítése",
+        "description": "Adjon meg új hitelesítő adatokat a konfigurált sorhoz.",
+        "data": {
+          "connection_string": "A sor kapcsolati karakterlánca"
+        },
+        "data_description": {
+          "connection_string": "A továbbítási szabály Azure Service Bus kapcsolati karakterlánca. Tartsa titokban."
+        }
+      },
       "confirm": {
         "title": "Új eszköz: {name}",
         "description": "Ügyfél:         {customer_name}\nHelyszín:       {location_name}\nSzerelési pont: {mount_point}",
@@ -24,7 +34,11 @@
         }
       }
     },
-    "flow_title": "Új eszköz: {name}"
+    "flow_title": "Új eszköz: {name}",
+    "abort": {
+      "reauth_successful": "A Service Bus hitelesítő adatai frissültek.",
+      "reauth_entry_not_found": "A konfigurációs bejegyzés nem található."
+    }
   },
   "issues": {
     "error_active": {
@@ -77,6 +91,12 @@
   },
   "error": {
     "queue_already_configured": "Ez a sor már hozzá van adva.",
-    "queue_already_configured_disabled": "Ez a sor már hozzá van adva, de le van tiltva. Újabb hozzáadása helyett engedélyezze a meglévő bejegyzést."
+    "queue_already_configured_disabled": "Ez a sor már hozzá van adva, de le van tiltva. Újabb hozzáadása helyett engedélyezze a meglévő bejegyzést.",
+    "invalid_connection_string": "A kapcsolati karakterlánc érvénytelen. Ellenőrizze, majd próbálja újra.",
+    "invalid_queue": "Adjon meg érvényes sornevet.",
+    "invalid_auth": "A Service Bus elutasította a hitelesítő adatokat, vagy azoknak nincs jogosultságuk a sor eléréséhez.",
+    "queue_not_found": "A sor nem található. Ellenőrizze a nevét, majd próbálja újra.",
+    "cannot_connect": "Nem sikerült csatlakozni az Azure Service Bushoz. Ellenőrizze a kapcsolatot, majd próbálja újra.",
+    "unknown": "Nem sikerült ellenőrizni a sort. Ellenőrizze az adatokat, majd próbálja újra."
   }
 }

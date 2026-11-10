@@ -13,6 +13,16 @@
           "queue_name": "Naziv reda Service Bus iz istog pravila prosljeđivanja."
         }
       },
+      "reauth_confirm": {
+        "title": "Ažuriraj vjerodajnice za Service Bus",
+        "description": "Unesite nove vjerodajnice za konfigurirani red čekanja.",
+        "data": {
+          "connection_string": "Niz za povezivanje reda čekanja"
+        },
+        "data_description": {
+          "connection_string": "Niz za povezivanje Azure Service Bus iz pravila prosljeđivanja. Čuvajte ga kao tajnu."
+        }
+      },
       "confirm": {
         "title": "Novi uređaj: {name}",
         "description": "Korisnik:       {customer_name}\nLokacija:       {location_name}\nMjesto montaže: {mount_point}",
@@ -24,7 +34,11 @@
         }
       }
     },
-    "flow_title": "Novi uređaj: {name}"
+    "flow_title": "Novi uređaj: {name}",
+    "abort": {
+      "reauth_successful": "Vjerodajnice za Service Bus ažurirane su.",
+      "reauth_entry_not_found": "Unos konfiguracije nije pronađen."
+    }
   },
   "issues": {
     "error_active": {
@@ -77,6 +91,12 @@
   },
   "error": {
     "queue_already_configured": "Ovaj je red čekanja već dodan.",
-    "queue_already_configured_disabled": "Ovaj je red čekanja već dodan, ali je onemogućen. Omogućite postojeći unos umjesto dodavanja novoga."
+    "queue_already_configured_disabled": "Ovaj je red čekanja već dodan, ali je onemogućen. Omogućite postojeći unos umjesto dodavanja novoga.",
+    "invalid_connection_string": "Niz za povezivanje nije valjan. Provjerite ga i pokušajte ponovno.",
+    "invalid_queue": "Unesite valjan naziv reda čekanja.",
+    "invalid_auth": "Service Bus odbio je vjerodajnice ili one nemaju dopuštenje za pristup ovom redu čekanja.",
+    "queue_not_found": "Red čekanja nije pronađen. Provjerite naziv i pokušajte ponovno.",
+    "cannot_connect": "Nije se moguće povezati s Azure Service Busom. Provjerite vezu i pokušajte ponovno.",
+    "unknown": "Nije moguće provjeriti red čekanja. Provjerite podatke i pokušajte ponovno."
   }
 }

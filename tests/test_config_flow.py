@@ -2,19 +2,30 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import (
-    ConfigEntryDisabler,
-    SOURCE_INTEGRATION_DISCOVERY,
-    SOURCE_USER,
-)
-import pytest
+import asyncio
 
-from custom_components.hagleitner_community.const import DOMAIN
+import pytest
+from homeassistant.config_entries import (
+    SOURCE_INTEGRATION_DISCOVERY,
+    SOURCE_REAUTH,
+    SOURCE_USER,
+    ConfigEntryDisabler,
+)
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.hagleitner_community import config_flow
+from custom_components.hagleitner_community.const import DOMAIN
+from custom_components.hagleitner_community.service_bus import (
+    QueueValidationError,
+    QueueValidationFailure,
+)
 
-async def test_user_flow_creates_hub_entry(hass, enable_custom_integrations):
+
+async def test_user_flow_creates_hub_entry(
+    hass, enable_custom_integrations, monkeypatch
+):
     """The user flow stores the normalized queue connection details."""
+    monkeypatch.setattr(config_flow, "async_validate_queue", _validate_ok)
     form = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -53,8 +64,10 @@ async def test_duplicate_queue_error_recovers(
     enable_custom_integrations,
     disabled_by,
     expected_error,
+    monkeypatch,
 ):
     """A duplicate queue is rejected, and the same flow can then succeed."""
+    monkeypatch.setattr(config_flow, "async_validate_queue", _validate_ok)
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         data={"entry_type": "hub", "queue_name": "queue-a"},
@@ -88,6 +101,120 @@ async def test_duplicate_queue_error_recovers(
     assert recovered_result["type"] == "create_entry"
     assert recovered_result["data"]["queue_name"] == "queue-b"
     assert recovered_result["result"].unique_id is None
+
+
+@pytest.mark.parametrize(
+    "reason",
+    [
+        QueueValidationFailure.INVALID_CONNECTION_STRING,
+        QueueValidationFailure.INVALID_QUEUE,
+        QueueValidationFailure.INVALID_AUTH,
+        QueueValidationFailure.QUEUE_NOT_FOUND,
+        QueueValidationFailure.CANNOT_CONNECT,
+        QueueValidationFailure.UNKNOWN,
+    ],
+)
+async def test_user_flow_does_not_create_entry_when_probe_fails(
+    hass, enable_custom_integrations, monkeypatch, reason
+):
+    """Probe failures render a generic error and do not create a config entry."""
+
+    async def fail_probe(*_args):
+        raise QueueValidationError(reason)
+
+    monkeypatch.setattr(config_flow, "async_validate_queue", fail_probe)
+    form = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"],
+        user_input={
+            "connection_string": "Endpoint=sb://example/;SharedAccessKey=secret",
+            "queue_name": "queue-a",
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": reason.value}
+    assert hass.config_entries.async_entries(DOMAIN) == []
+
+
+async def test_reauth_replaces_credentials_after_successful_probe(
+    hass, enable_custom_integrations, monkeypatch
+):
+    """Reauth validates a replacement secret and preserves the queue name."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "entry_type": "hub",
+            "connection_string": "old-secret",
+            "queue_name": "queue-a",
+        },
+    )
+    entry.add_to_hass(hass)
+    validated = []
+
+    async def validate(connection_string, queue_name):
+        validated.append((connection_string, queue_name))
+
+    monkeypatch.setattr(config_flow, "async_validate_queue", validate)
+    monkeypatch.setattr(
+        hass.config_entries,
+        "async_reload",
+        lambda _entry_id: asyncio.sleep(0, result=True),
+    )
+
+    form = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+    )
+    assert form["type"] == "form"
+    assert form["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"],
+        user_input={"connection_string": "new-secret"},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "reauth_successful"
+    assert validated == [("new-secret", "queue-a")]
+    assert entry.data["connection_string"] == "new-secret"
+    assert entry.data["queue_name"] == "queue-a"
+
+
+async def test_reauth_keeps_existing_credentials_when_probe_fails(
+    hass, enable_custom_integrations, monkeypatch
+):
+    """A failed reauth attempt leaves stored credentials untouched."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "entry_type": "hub",
+            "connection_string": "old-secret",
+            "queue_name": "queue-a",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    async def fail_probe(*_args):
+        raise QueueValidationError(QueueValidationFailure.INVALID_AUTH)
+
+    monkeypatch.setattr(config_flow, "async_validate_queue", fail_probe)
+    form = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"],
+        user_input={"connection_string": "rejected-secret"},
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "invalid_auth"}
+    assert entry.data["connection_string"] == "old-secret"
 
 
 async def test_device_discovery_aborts_for_existing_unique_id(
@@ -167,3 +294,7 @@ async def test_confirm_without_discovery_data_aborts(
 
     assert result["type"] == "abort"
     assert result["reason"] == "missing_discovery_info"
+
+
+async def _validate_ok(*_args):
+    """Stand in for a successful external Service Bus probe."""

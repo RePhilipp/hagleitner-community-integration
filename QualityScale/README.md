@@ -27,35 +27,35 @@ Baseline requirements for every integration (20 rules).
 - [x] [`entity-unique-id`](https://contributors.home-assistant.io/core/quality-scale/entity-unique-id/) — Met: entity IDs include device/resource identity and are tested ([`test_cover_presentation.py`](../tests/test_cover_presentation.py), [`test_consumable_entities.py`](../tests/test_consumable_entities.py)).
 - [x] [`has-entity-name`](https://contributors.home-assistant.io/core/quality-scale/has-entity-name/) — Met: sensor and binary-sensor entities set `has_entity_name` ([`sensor.py`](../custom_components/hagleitner_community/sensor.py), [`binary_sensor.py`](../custom_components/hagleitner_community/binary_sensor.py)).
 - [ ] [`runtime-data`](https://contributors.home-assistant.io/core/quality-scale/runtime-data/) — Pending: move per-entry hub state from `hass.data` to `ConfigEntry.runtime_data` while preserving shared hub/device lifecycle.
-- [ ] [`test-before-configure`](https://contributors.home-assistant.io/core/quality-scale/test-before-configure/) — Test the connection before creating the config entry.
-- [ ] [`test-before-setup`](https://contributors.home-assistant.io/core/quality-scale/test-before-setup/) — Check during setup that the integration works and raise the appropriate exception if not.
+- [x] [`test-before-configure`](https://contributors.home-assistant.io/core/quality-scale/test-before-configure/) — Met: the flow validates queue access before creating an entry ([`config_flow.py`](../custom_components/hagleitner_community/config_flow.py), [`test_bronze_connectivity.py`](../tests/test_bronze_connectivity.py)).
+- [x] [`test-before-setup`](https://contributors.home-assistant.io/core/quality-scale/test-before-setup/) — Met: hub setup validates the queue before registering the hub and maps failures to Home Assistant setup errors ([`__init__.py`](../custom_components/hagleitner_community/__init__.py), [`test_bronze_connectivity.py`](../tests/test_bronze_connectivity.py)).
 - [x] [`unique-config-entry`](https://contributors.home-assistant.io/core/quality-scale/unique-config-entry/) — Met: duplicate queues and discovered devices are rejected ([`config_flow.py`](../custom_components/hagleitner_community/config_flow.py), [`test_config_flow.py`](../tests/test_config_flow.py)).
 
 ## Silver
 
 Reliability, error handling, reauthentication, and ownership (10 additional rules).
 
-- [ ] [`action-exceptions`](https://contributors.home-assistant.io/core/quality-scale/action-exceptions/) — Raise `ServiceValidationError` or `HomeAssistantError` when actions fail.
-- [ ] [`config-entry-unloading`](https://contributors.home-assistant.io/core/quality-scale/config-entry-unloading/) — Support unloading and reloading the config entry without restarting Home Assistant.
-- [ ] [`docs-configuration-parameters`](https://contributors.home-assistant.io/core/quality-scale/docs-configuration-parameters/) — Document every option-flow parameter.
-- [ ] [`docs-installation-parameters`](https://contributors.home-assistant.io/core/quality-scale/docs-installation-parameters/) — Document every parameter requested during setup.
-- [ ] [`entity-unavailable`](https://contributors.home-assistant.io/core/quality-scale/entity-unavailable/) — Mark entities unavailable when the device or service cannot be reached.
-- [ ] [`integration-owner`](https://contributors.home-assistant.io/core/quality-scale/integration-owner/) — Have at least one integration owner.
-- [ ] [`log-when-unavailable`](https://contributors.home-assistant.io/core/quality-scale/log-when-unavailable/) — Log once when the connection is lost and once when it returns.
-- [ ] [`parallel-updates`](https://contributors.home-assistant.io/core/quality-scale/parallel-updates/) — Set `PARALLEL_UPDATES` on every entity platform.
-- [ ] [`reauthentication-flow`](https://contributors.home-assistant.io/core/quality-scale/reauthentication-flow/) — Let users enter new credentials without removing the integration.
-- [ ] [`test-coverage`](https://contributors.home-assistant.io/core/quality-scale/test-coverage/) — Achieve more than 95% test coverage for every integration module.
+- [x] [`action-exceptions`](https://contributors.home-assistant.io/core/quality-scale/action-exceptions/) — Exempt: the integration has no custom actions or writable platforms.
+- [x] [`config-entry-unloading`](https://contributors.home-assistant.io/core/quality-scale/config-entry-unloading/) — Met: entries unload platforms/listeners and stop the hub receiver ([`__init__.py`](../custom_components/hagleitner_community/__init__.py), [`coordinator.py`](../custom_components/hagleitner_community/coordinator.py)).
+- [x] [`docs-configuration-parameters`](https://contributors.home-assistant.io/core/quality-scale/docs-configuration-parameters/) — Exempt: this integration has no options flow.
+- [ ] [`docs-installation-parameters`](https://contributors.home-assistant.io/core/quality-scale/docs-installation-parameters/) — Pending: repository README explains setup fields; the required Home Assistant integration-page documentation is not published.
+- [ ] [`entity-unavailable`](https://contributors.home-assistant.io/core/quality-scale/entity-unavailable/) — Pending: queue loss marks entities unavailable, but device-reported offline status does not yet affect other device entities.
+- [x] [`integration-owner`](https://contributors.home-assistant.io/core/quality-scale/integration-owner/) — Met for this custom integration: the manifest names `@RePhilipp` as a code owner ([`manifest.json`](../custom_components/hagleitner_community/manifest.json)).
+- [ ] [`log-when-unavailable`](https://contributors.home-assistant.io/core/quality-scale/log-when-unavailable/) — Pending: receiver retry failures currently log on each attempt rather than once per outage/recovery.
+- [x] [`parallel-updates`](https://contributors.home-assistant.io/core/quality-scale/parallel-updates/) — Met: both push-based entity platforms set `PARALLEL_UPDATES = 0` ([`sensor.py`](../custom_components/hagleitner_community/sensor.py), [`binary_sensor.py`](../custom_components/hagleitner_community/binary_sensor.py), [`test_quality_scale_platforms.py`](../tests/test_quality_scale_platforms.py)).
+- [x] [`reauthentication-flow`](https://contributors.home-assistant.io/core/quality-scale/reauthentication-flow/) — Met: users can validate and replace Service Bus credentials without removing the entry ([`config_flow.py`](../custom_components/hagleitner_community/config_flow.py), [`test_config_flow.py`](../tests/test_config_flow.py)).
+- [ ] [`test-coverage`](https://contributors.home-assistant.io/core/quality-scale/test-coverage/) — Pending: measured coverage was 69%; every integration module must exceed 95%.
 
 ## Gold
 
 Discovery, devices, translations, and user-facing documentation (21 additional rules).
 
-- [ ] [`devices`](https://contributors.home-assistant.io/core/quality-scale/devices/) — Group entities into devices and provide complete device information.
-- [ ] [`diagnostics`](https://contributors.home-assistant.io/core/quality-scale/diagnostics/) — Let users download diagnostics with sensitive data redacted.
-- [ ] [`discovery`](https://contributors.home-assistant.io/core/quality-scale/discovery/) — Discover devices so users do not have to look them up.
-- [ ] [`discovery-update-info`](https://contributors.home-assistant.io/core/quality-scale/discovery-update-info/) — Update a known device's address when discovery detects a change.
-- [ ] [`docs-data-update`](https://contributors.home-assistant.io/core/quality-scale/docs-data-update/) — Explain how and how often data is updated.
-- [ ] [`docs-examples`](https://contributors.home-assistant.io/core/quality-scale/docs-examples/) — Provide automation examples or blueprints.
+- [ ] [`devices`](https://contributors.home-assistant.io/core/quality-scale/devices/) — Decision pending: device registry data is present, but confirm whether reported firmware should populate `sw_version`.
+- [x] [`diagnostics`](https://contributors.home-assistant.io/core/quality-scale/diagnostics/) — Met: diagnostics redact identifiers, credentials, queue names, and raw payloads ([`diagnostics.py`](../custom_components/hagleitner_community/diagnostics.py), [`test_diagnostics.py`](../tests/test_diagnostics.py)).
+- [x] [`discovery`](https://contributors.home-assistant.io/core/quality-scale/discovery/) — Met: incoming queue messages start a confirmation flow for new devices ([`coordinator.py`](../custom_components/hagleitner_community/coordinator.py), [`config_flow.py`](../custom_components/hagleitner_community/config_flow.py), [`test_config_flow.py`](../tests/test_config_flow.py)).
+- [ ] [`discovery-update-info`](https://contributors.home-assistant.io/core/quality-scale/discovery-update-info/) — Decision pending: discovery has no per-device network address to refresh; confirm whether this is exempt.
+- [ ] [`docs-data-update`](https://contributors.home-assistant.io/core/quality-scale/docs-data-update/) — Pending: README explains push updates and unknown reporting frequency; required Home Assistant integration-page content is not published.
+- [ ] [`docs-examples`](https://contributors.home-assistant.io/core/quality-scale/docs-examples/) — Pending: README includes a refill-warning automation example; required Home Assistant integration-page content is not published.
 - [ ] [`docs-known-limitations`](https://contributors.home-assistant.io/core/quality-scale/docs-known-limitations/) — List known limitations.
 - [ ] [`docs-supported-devices`](https://contributors.home-assistant.io/core/quality-scale/docs-supported-devices/) — List known supported and unsupported devices.
 - [ ] [`docs-supported-functions`](https://contributors.home-assistant.io/core/quality-scale/docs-supported-functions/) — Describe the entities and functionality provided.

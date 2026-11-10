@@ -26,19 +26,7 @@ async def async_get_config_entry_diagnostics(
     if entry.data.get("entry_type") == "device":
         device_id = entry.data.get("device_id")
         device_ids = [device_id] if isinstance(device_id, str) else []
-        queue_name = entry.data.get("hub_queue_name")
-        if not isinstance(queue_name, str):
-            hub_entry_id = entry.data.get("hub_entry_id")
-            hub_entry = (
-                hass.config_entries.async_get_entry(hub_entry_id)
-                if isinstance(hub_entry_id, str)
-                else None
-            )
-            queue_name = (
-                hub_entry.data.get("queue_name") if hub_entry is not None else None
-            )
     else:
-        queue_name = entry.data.get("queue_name")
         device_ids = [
             device_id
             for device_id, source_ids in device_sources.items()
@@ -71,8 +59,6 @@ async def async_get_config_entry_diagnostics(
         "device_count": len(device_ids),
         "devices": devices,
     }
-    if isinstance(queue_name, str):
-        diagnostics["queue_name"] = queue_name
     return diagnostics
 
 

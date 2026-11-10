@@ -5,13 +5,16 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import DOMAIN
 from .device import is_valid_customer_id
+from .service_bus import (
+    QueueValidationError,
+    async_validate_queue,
+)
 
 
 class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -19,6 +22,7 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     _discovery_info: dict[str, Any] | None = None
+    _reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -47,14 +51,21 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 errors["base"] = error
             else:
-                return self.async_create_entry(
-                    title=f"Hagleitner Community ({queue_name})",
-                    data={
-                        "entry_type": "hub",
-                        **user_input,
-                        "queue_name": queue_name,
-                    },
-                )
+                try:
+                    await async_validate_queue(
+                        user_input["connection_string"], queue_name
+                    )
+                except QueueValidationError as error:
+                    errors["base"] = error.reason.value
+                else:
+                    return self.async_create_entry(
+                        title=f"Hagleitner Community ({queue_name})",
+                        data={
+                            "entry_type": "hub",
+                            **user_input,
+                            "queue_name": queue_name,
+                        },
+                    )
 
         return self.async_show_form(
             step_id="user",
@@ -66,6 +77,54 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                     ),
                     vol.Required("queue_name"): str,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> FlowResult:
+        """Start credential replacement for an existing hub entry."""
+        del entry_data
+        entry_id = self.context.get("entry_id")
+        if entry_id is None:
+            return self.async_abort(reason="reauth_entry_not_found")
+        self._reauth_entry = self.hass.config_entries.async_get_entry(entry_id)
+        if self._reauth_entry is None:
+            return self.async_abort(reason="reauth_entry_not_found")
+        self.context["title_placeholders"] = {"name": self._reauth_entry.title}
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
+        """Validate and save replacement queue credentials."""
+        if self._reauth_entry is None:
+            return self.async_abort(reason="reauth_entry_not_found")
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                await async_validate_queue(
+                    user_input["connection_string"],
+                    self._reauth_entry.data["queue_name"],
+                )
+            except QueueValidationError as error:
+                errors["base"] = error.reason.value
+            else:
+                return self.async_update_reload_and_abort(
+                    self._reauth_entry,
+                    data_updates={"connection_string": user_input["connection_string"]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("connection_string"): selector.TextSelector(
+                        selector.TextSelectorConfig(
+                            type=selector.TextSelectorType.PASSWORD
+                        )
+                    )
                 }
             ),
             errors=errors,

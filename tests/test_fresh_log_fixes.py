@@ -138,6 +138,9 @@ async def test_hub_receiver_uses_config_entry_background_task(hass, monkeypatch)
         async def async_handle_message(self, _message):
             pass
 
+        def async_set_receiver_available(self, _available):
+            pass
+
     hub = Hub()
 
     async def run_receiver(*_args):
@@ -150,6 +153,10 @@ async def test_hub_receiver_uses_config_entry_background_task(hass, monkeypatch)
     monkeypatch.setattr(
         "custom_components.hagleitner_community._async_rebind_orphaned_devices",
         lambda *_args: None,
+    )
+    monkeypatch.setattr(
+        "custom_components.hagleitner_community.async_validate_queue",
+        lambda *_args: asyncio.sleep(0),
     )
     monkeypatch.setattr(
         "custom_components.hagleitner_community.HagleitnerHub",

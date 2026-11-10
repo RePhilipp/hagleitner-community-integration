@@ -28,6 +28,7 @@ from .resource_data import (
     source_timestamp,
 )
 
+PARALLEL_UPDATES = 0
 _OBSOLETE_BATTERY_STATUS_NAME = "Energy supply status"
 
 

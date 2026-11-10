@@ -6,10 +6,14 @@ import asyncio
 import logging
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
 import custom_components.hagleitner_community as integration
 from custom_components.hagleitner_community import async_setup
 from custom_components.hagleitner_community.binary_sensor import (
     HagleitnerBinarySensor,
+)
+from custom_components.hagleitner_community.binary_sensor import (
     async_setup_entry as async_setup_binary_entry,
 )
 from custom_components.hagleitner_community.const import DOMAIN
@@ -22,7 +26,6 @@ from custom_components.hagleitner_community.sensor import (
     HagleitnerSensor,
     async_setup_entry,
 )
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 _CONNECTION_STATUS_EQUIVALENT_ID = "7c178f1d-271f-4554-03ac-08dac1664f9a"
 _BATTERY_STATUS_EQUIVALENT_ID = "77d144fd-d7a3-42f7-03aa-08dac1664f9a"
@@ -37,6 +40,11 @@ async def test_config_entry_setup_initializes_persisted_state(hass, monkeypatch)
         await asyncio.sleep(0)
 
     monkeypatch.setattr(integration, "run_receiver", idle_receiver)
+    monkeypatch.setattr(
+        integration,
+        "async_validate_queue",
+        lambda *_args: asyncio.sleep(0),
+    )
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={

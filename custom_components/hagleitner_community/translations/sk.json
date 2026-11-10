@@ -13,6 +13,16 @@
           "queue_name": "Názov frontu Service Bus z rovnakého pravidla presmerovania."
         }
       },
+      "reauth_confirm": {
+        "title": "Aktualizovať prihlasovacie údaje Service Bus",
+        "description": "Zadajte nové prihlasovacie údaje pre nakonfigurovaný front.",
+        "data": {
+          "connection_string": "Pripojovací reťazec frontu"
+        },
+        "data_description": {
+          "connection_string": "Pripojovací reťazec Azure Service Bus z pravidla presmerovania. Uchovávajte ho v tajnosti."
+        }
+      },
       "confirm": {
         "title": "Nové zariadenie: {name}",
         "description": "Zákazník:       {customer_name}\nUmiestnenie:    {location_name}\nMiesto montáže: {mount_point}",
@@ -24,7 +34,11 @@
         }
       }
     },
-    "flow_title": "Nové zariadenie: {name}"
+    "flow_title": "Nové zariadenie: {name}",
+    "abort": {
+      "reauth_successful": "Prihlasovacie údaje Service Bus boli aktualizované.",
+      "reauth_entry_not_found": "Konfiguračná položka sa nenašla."
+    }
   },
   "issues": {
     "error_active": {
@@ -77,6 +91,12 @@
   },
   "error": {
     "queue_already_configured": "Tento front už bol pridaný.",
-    "queue_already_configured_disabled": "Tento front už bol pridaný, ale je zakázaný. Namiesto pridania ďalšieho povoľte existujúcu položku."
+    "queue_already_configured_disabled": "Tento front už bol pridaný, ale je zakázaný. Namiesto pridania ďalšieho povoľte existujúcu položku.",
+    "invalid_connection_string": "Pripojovací reťazec nie je platný. Skontrolujte ho a skúste to znova.",
+    "invalid_queue": "Zadajte platný názov frontu.",
+    "invalid_auth": "Service Bus odmietol prihlasovacie údaje alebo nemajú oprávnenie na prístup k tomuto frontu.",
+    "queue_not_found": "Front sa nenašiel. Skontrolujte jeho názov a skúste to znova.",
+    "cannot_connect": "Nedá sa pripojiť k Azure Service Bus. Skontrolujte pripojenie a skúste to znova.",
+    "unknown": "Front sa nepodarilo overiť. Skontrolujte údaje a skúste to znova."
   }
 }

@@ -13,6 +13,16 @@
           "queue_name": "Název fronty Service Bus ze stejného pravidla předávání."
         }
       },
+      "reauth_confirm": {
+        "title": "Aktualizovat přihlašovací údaje Service Bus",
+        "description": "Zadejte nové přihlašovací údaje pro nakonfigurovanou frontu.",
+        "data": {
+          "connection_string": "Připojovací řetězec fronty"
+        },
+        "data_description": {
+          "connection_string": "Připojovací řetězec Azure Service Bus z pravidla předávání. Uchovávejte jej v tajnosti."
+        }
+      },
       "confirm": {
         "title": "Nové zařízení: {name}",
         "description": "Zákazník:       {customer_name}\nUmístění:       {location_name}\nMísto montáže:  {mount_point}",
@@ -24,7 +34,11 @@
         }
       }
     },
-    "flow_title": "Nové zařízení: {name}"
+    "flow_title": "Nové zařízení: {name}",
+    "abort": {
+      "reauth_successful": "Přihlašovací údaje Service Bus byly aktualizovány.",
+      "reauth_entry_not_found": "Konfigurační položku se nepodařilo najít."
+    }
   },
   "issues": {
     "error_active": {
@@ -77,6 +91,12 @@
   },
   "error": {
     "queue_already_configured": "Tato fronta již byla přidána.",
-    "queue_already_configured_disabled": "Tato fronta již byla přidána, ale je zakázána. Místo přidání další povolte stávající položku."
+    "queue_already_configured_disabled": "Tato fronta již byla přidána, ale je zakázána. Místo přidání další povolte stávající položku.",
+    "invalid_connection_string": "Připojovací řetězec není platný. Zkontrolujte jej a zkuste to znovu.",
+    "invalid_queue": "Zadejte platný název fronty.",
+    "invalid_auth": "Service Bus odmítl přihlašovací údaje nebo nemají oprávnění k této frontě.",
+    "queue_not_found": "Fronta nebyla nalezena. Zkontrolujte její název a zkuste to znovu.",
+    "cannot_connect": "Nelze se připojit ke službě Azure Service Bus. Zkontrolujte připojení a zkuste to znovu.",
+    "unknown": "Frontu se nepodařilo ověřit. Zkontrolujte údaje a zkuste to znovu."
   }
 }

@@ -13,6 +13,16 @@
           "queue_name": "Ime čakalne vrste Service Bus iz istega pravila za posredovanje."
         }
       },
+      "reauth_confirm": {
+        "title": "Posodobi poverilnice Service Bus",
+        "description": "Vnesi nove poverilnice za konfigurirano čakalno vrsto.",
+        "data": {
+          "connection_string": "Povezovalni niz čakalne vrste"
+        },
+        "data_description": {
+          "connection_string": "Povezovalni niz Azure Service Bus iz pravila za posredovanje. Ohrani ga kot skrivnost."
+        }
+      },
       "confirm": {
         "title": "Nova naprava: {name}",
         "description": "Stranka:        {customer_name}\nLokacija:       {location_name}\nMesto namestitve: {mount_point}",
@@ -24,7 +34,11 @@
         }
       }
     },
-    "flow_title": "Nova naprava: {name}"
+    "flow_title": "Nova naprava: {name}",
+    "abort": {
+      "reauth_successful": "Poverilnice Service Bus so posodobljene.",
+      "reauth_entry_not_found": "Konfiguracijskega vnosa ni bilo mogoče najti."
+    }
   },
   "issues": {
     "error_active": {
@@ -77,6 +91,12 @@
   },
   "error": {
     "queue_already_configured": "Ta čakalna vrsta je že dodana.",
-    "queue_already_configured_disabled": "Ta čakalna vrsta je že dodana, vendar je onemogočena. Namesto dodajanja nove omogoči obstoječi vnos."
+    "queue_already_configured_disabled": "Ta čakalna vrsta je že dodana, vendar je onemogočena. Namesto dodajanja nove omogoči obstoječi vnos.",
+    "invalid_connection_string": "Povezovalni niz ni veljaven. Preveri ga in poskusi znova.",
+    "invalid_queue": "Vnesi veljavno ime čakalne vrste.",
+    "invalid_auth": "Service Bus je zavrnil poverilnice ali pa nimajo dovoljenja za dostop do te čakalne vrste.",
+    "queue_not_found": "Čakalne vrste ni mogoče najti. Preveri njeno ime in poskusi znova.",
+    "cannot_connect": "Povezava z Azure Service Bus ni mogoča. Preveri povezavo in poskusi znova.",
+    "unknown": "Čakalne vrste ni bilo mogoče preveriti. Preveri podatke in poskusi znova."
   }
 }

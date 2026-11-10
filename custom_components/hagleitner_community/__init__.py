@@ -10,6 +10,11 @@ from uuid import UUID
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 
 from .const import DOMAIN
 from .coordinator import HagleitnerHub, async_restore_persisted_state
@@ -17,7 +22,12 @@ from .repairs import (
     async_clear_maintenance_issues,
     async_clear_obsolete_consumable_issues,
 )
-from .service_bus import run_receiver
+from .service_bus import (
+    QueueValidationError,
+    QueueValidationFailure,
+    async_validate_queue,
+    run_receiver,
+)
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -52,6 +62,33 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a queue hub or an adopted device."""
+    if entry.data.get("entry_type") != "device":
+        try:
+            await async_validate_queue(
+                entry.data.get("connection_string"), entry.data.get("queue_name")
+            )
+        except QueueValidationError as error:
+            if error.reason in {
+                QueueValidationFailure.INVALID_AUTH,
+                QueueValidationFailure.INVALID_CONNECTION_STRING,
+            }:
+                raise ConfigEntryAuthFailed(
+                    "Service Bus credentials need to be updated"
+                ) from error
+            if error.reason in {
+                QueueValidationFailure.CANNOT_CONNECT,
+            }:
+                raise ConfigEntryNotReady(
+                    "The configured Service Bus queue is not currently available"
+                ) from error
+            if error.reason is QueueValidationFailure.QUEUE_NOT_FOUND:
+                raise ConfigEntryError(
+                    "The configured Service Bus queue could not be found"
+                ) from error
+            raise ConfigEntryError(
+                "Unable to validate the configured Service Bus queue"
+            ) from error
+
     await async_restore_persisted_state(hass)
     if entry.data.get("entry_type") == "device":
         return await _async_setup_device(hass, entry)
@@ -229,12 +266,17 @@ async def _async_setup_device(
 ) -> bool:
     """Register an adopted device and load its entity platforms."""
     from homeassistant.exceptions import ConfigEntryNotReady
-    from homeassistant.helpers import area_registry as ar, device_registry as dr
+    from homeassistant.helpers import area_registry as ar
+    from homeassistant.helpers import device_registry as dr
 
     hub_entry_id = entry.data["hub_entry_id"]
     hub: HagleitnerHub | None = hass.data[DOMAIN].get(hub_entry_id)
     if hub is None:
-        if hass.config_entries.async_get_entry(hub_entry_id) is not None:
+        hub_entry = hass.config_entries.async_get_entry(hub_entry_id)
+        if (
+            hub_entry is not None
+            and hub_entry.state == ConfigEntryState.NOT_LOADED
+        ):
             await hass.config_entries.async_setup(hub_entry_id)
             hub = hass.data[DOMAIN].get(hub_entry_id)
     if hub is None:

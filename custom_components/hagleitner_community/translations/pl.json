@@ -13,6 +13,16 @@
           "queue_name": "Nazwa kolejki Service Bus z tej samej reguły przekazywania."
         }
       },
+      "reauth_confirm": {
+        "title": "Zaktualizuj dane uwierzytelniające Service Bus",
+        "description": "Wprowadź nowe dane uwierzytelniające dla skonfigurowanej kolejki.",
+        "data": {
+          "connection_string": "Ciąg połączenia kolejki"
+        },
+        "data_description": {
+          "connection_string": "Ciąg połączenia Azure Service Bus z reguły przekazywania. Zachowaj go w tajemnicy."
+        }
+      },
       "confirm": {
         "title": "Nowe urządzenie: {name}",
         "description": "Klient:         {customer_name}\nLokalizacja:    {location_name}\nMiejsce montażu: {mount_point}",
@@ -24,7 +34,11 @@
         }
       }
     },
-    "flow_title": "Nowe urządzenie: {name}"
+    "flow_title": "Nowe urządzenie: {name}",
+    "abort": {
+      "reauth_successful": "Dane uwierzytelniające Service Bus zostały zaktualizowane.",
+      "reauth_entry_not_found": "Nie znaleziono wpisu konfiguracji."
+    }
   },
   "issues": {
     "error_active": {
@@ -77,6 +91,12 @@
   },
   "error": {
     "queue_already_configured": "Ta kolejka została już dodana.",
-    "queue_already_configured_disabled": "Ta kolejka została już dodana, ale jest wyłączona. Włącz istniejący wpis zamiast dodawać kolejny."
+    "queue_already_configured_disabled": "Ta kolejka została już dodana, ale jest wyłączona. Włącz istniejący wpis zamiast dodawać kolejny.",
+    "invalid_connection_string": "Ciąg połączenia jest nieprawidłowy. Sprawdź go i spróbuj ponownie.",
+    "invalid_queue": "Wprowadź prawidłową nazwę kolejki.",
+    "invalid_auth": "Service Bus odrzucił dane uwierzytelniające lub nie mają one uprawnień do tej kolejki.",
+    "queue_not_found": "Nie znaleziono kolejki. Sprawdź jej nazwę i spróbuj ponownie.",
+    "cannot_connect": "Nie można połączyć się z Azure Service Bus. Sprawdź połączenie i spróbuj ponownie.",
+    "unknown": "Nie można zweryfikować kolejki. Sprawdź dane i spróbuj ponownie."
   }
 }

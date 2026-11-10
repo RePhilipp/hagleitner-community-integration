@@ -64,6 +64,36 @@ component replacement thresholds can also appear as maintenance tasks in Home
 Assistant's Repairs page. Battery, refill, and fill levels remain available as
 entities, not Repairs issues.
 
+## Data updates
+
+The integration receives pushed messages from Azure Service Bus; it does not
+poll Hagleitner devices or request readings on a schedule. Supported entities
+update when a forwarded resource-data message arrives. This integration does
+not set or guarantee how often Hagleitner forwards readings, and this project
+does not have a verified reporting interval or rate limit to publish. The
+Service Bus receive wait is not a device reporting interval.
+
+## Automation example
+
+If a device provides supported refill or fill data, it can expose a **Refill
+warning** binary sensor. Not every device provides these values. To show a Home
+Assistant notification when a refill warning changes from off to on, replace
+the example entity ID with that device's **Refill warning** entity ID:
+
+```yaml
+alias: Hagleitner refill reminder
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.replace_with_your_refill_warning_entity
+    from: "off"
+    to: "on"
+actions:
+  - action: persistent_notification.create
+    data:
+      title: Hagleitner refill warning
+      message: A Hagleitner device reported a refill warning.
+```
+
 ## Remove the integration
 
 In **Settings → Devices & services**, delete the Hagleitner Community entries

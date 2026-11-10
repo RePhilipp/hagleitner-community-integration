@@ -20,6 +20,7 @@ from .resource_data import (
     source_timestamp,
 )
 
+PARALLEL_UPDATES = 0
 _PROBLEM_MODE = "resource_problem"
 
 
