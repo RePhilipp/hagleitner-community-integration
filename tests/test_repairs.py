@@ -24,7 +24,7 @@ _REPLACEMENT_RESOURCE_TYPE_ID = 12307
 
 
 def _snapshot(
-    definition: ResourceDefinition,
+    definition: ResourceDefinition | None,
     value: str,
     *,
     equivalent_id: str | None = None,
@@ -119,6 +119,124 @@ async def test_component_replacement_still_creates_maintenance_repair(hass):
     issue = ir.async_get(hass).async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.severity is ir.IssueSeverity.WARNING
+
+
+async def test_pump_replacement_requires_both_healthy_triggers_to_clear(hass):
+    """Unknown pump telemetry preserves an issue until both triggers recover."""
+    device_id = "device-one"
+    definition = ResourceDefinition(name="Pump replacement", kind="maintenance")
+    time_trigger = _snapshot(
+        definition,
+        "change_required",
+        resource_type_id=_REPLACEMENT_RESOURCE_TYPE_ID,
+        instance_number=1,
+    )
+    volume_trigger = _snapshot(
+        definition,
+        "no_change_required",
+        resource_type_id=_REPLACEMENT_RESOURCE_TYPE_ID,
+        instance_number=2,
+    )
+    issue_id = f"{device_id}_{_REPLACEMENT_RESOURCE_TYPE_ID}_pump_pump_replacement"
+
+    async_update_maintenance_issue(
+        hass,
+        device_id,
+        "Dispenser",
+        time_trigger,
+        (time_trigger, volume_trigger),
+    )
+    registry = ir.async_get(hass)
+    assert registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    # One healthy trigger cannot establish that the other has also recovered.
+    async_update_maintenance_issue(
+        hass,
+        device_id,
+        "Dispenser",
+        volume_trigger,
+        (volume_trigger,),
+    )
+    assert registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    healthy_time_trigger = _snapshot(
+        definition,
+        "no_change_required",
+        resource_type_id=_REPLACEMENT_RESOURCE_TYPE_ID,
+        instance_number=1,
+    )
+    async_update_maintenance_issue(
+        hass,
+        device_id,
+        "Dispenser",
+        volume_trigger,
+        (healthy_time_trigger, volume_trigger),
+    )
+    assert registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_unrecognized_maintenance_values_and_resources_are_ignored(hass):
+    """Only supported maintenance resources and normalized states create issues."""
+    async_update_maintenance_issue(
+        hass,
+        "device-one",
+        "Dispenser",
+        _snapshot(ResourceDefinition(name="Unknown", kind="maintenance"), "unknown"),
+    )
+    async_update_maintenance_issue(
+        hass,
+        "device-one",
+        "Dispenser",
+        _snapshot(
+            ResourceDefinition(name="Other maintenance", kind="maintenance"),
+            "change_required",
+            resource_type_id=99999,
+        ),
+    )
+
+    assert ir.async_get(hass).issues == {}
+
+
+async def test_unknown_and_missing_problem_state_do_not_create_repairs(hass):
+    """Unknown status values stay non-actionable and duplicate reports are stable."""
+    device_id = "device-one"
+    definition = ResourceDefinition(name="Error status", kind="problem")
+    async_update_maintenance_issue(
+        hass,
+        device_id,
+        "Dispenser",
+        _snapshot(definition, "unrecognized-state"),
+    )
+    async_update_maintenance_issue(
+        hass,
+        device_id,
+        "Dispenser",
+        _snapshot(None, "error"),
+    )
+    assert ir.async_get(hass).issues == {}
+
+    snapshot = _snapshot(definition, "error")
+    async_update_maintenance_issue(hass, device_id, "Dispenser", snapshot)
+    async_update_maintenance_issue(hass, device_id, "Dispenser", snapshot)
+    assert len(ir.async_get(hass).issues) == 1
+
+
+async def test_maintenance_issue_links_to_config_entry_when_supported(hass):
+    """Created maintenance issues point back to their adopted-device entry."""
+    device_id = "device-one"
+    issue_id = f"{device_id}_1_0_error_active"
+    async_update_maintenance_issue(
+        hass,
+        device_id,
+        "Dispenser",
+        _snapshot(ResourceDefinition(name="Error status", kind="problem"), "error"),
+        config_entry_id="device-entry",
+    )
+
+    issue = ir.async_get(hass).async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    if "config_entry_id" in signature(ir.async_create_issue).parameters:
+        assert issue.config_entry_id == "device-entry"
 
 
 async def test_obsolete_consumable_repairs_are_removed(hass):

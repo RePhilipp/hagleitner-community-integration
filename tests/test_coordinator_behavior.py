@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -16,6 +17,7 @@ from custom_components.hagleitner_community.coordinator import (
     async_restore_persisted_state,
 )
 from custom_components.hagleitner_community.resource_data import (
+    ResourceDefinition,
     resource_value_snapshots,
     serialize_resource_snapshot,
 )
@@ -185,3 +187,140 @@ async def test_discovery_throttles_repeats_and_suggests_exact_hsm_room(
         "customer_id": 123,
         "suggested_area_id": room.id,
     }
+
+
+async def test_adopted_device_ignores_stale_and_duplicate_readings(hass, monkeypatch):
+    """Only a newer, changed supported reading reaches subscribed entities."""
+    hub_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"entry_type": "hub", "queue_name": "queue-a"},
+    )
+    hub_entry.add_to_hass(hass)
+    device_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "entry_type": "device",
+            "device_id": "device-1",
+            "hub_entry_id": hub_entry.entry_id,
+        },
+    )
+    device_entry.add_to_hass(hass)
+    hass.data[DOMAIN] = {}
+    hub = HagleitnerHub(hass, hub_entry, logging.getLogger(__name__))
+    monkeypatch.setattr(hub, "_async_schedule_state_save", lambda: None)
+    hub.adopt_device("device-1", device_entry.entry_id, "Dispenser")
+    state_updates = []
+    resource_updates = []
+    hub.async_add_state_listener("device-1", lambda: state_updates.append(True))
+    hub.async_add_resource_listener(
+        "device-1", lambda snapshot: resource_updates.append(snapshot.raw_value)
+    )
+
+    def message(logged_at, count):
+        return {
+            "deviceInfo": {"deviceId": "device-1", "deviceTypeId": "dispenser"},
+            "readings": [
+                {
+                    "loggedAt": logged_at,
+                    "resourceValues": [
+                        {
+                            "resourceIdentifier": {
+                                "resourceTypeId": 20486,
+                                "resourceInstanceNo": 0,
+                            },
+                            "integerValue": count,
+                        }
+                    ],
+                }
+            ],
+        }
+
+    await hub.async_handle_message(message("2026-11-10T12:00:00Z", 8))
+    await hub.async_handle_message(message("2026-11-10T11:00:00Z", 7))
+    await hub.async_handle_message(message("2026-11-10T12:00:00Z", 8))
+
+    snapshot = hub.resources_for_device("device-1")[0]
+    assert snapshot.raw_value == 8
+    assert snapshot.logged_at == "2026-11-10T12:00:00Z"
+    assert resource_updates == [8]
+    assert state_updates == [True]
+
+
+async def test_hub_reports_only_safe_firmware_and_cleans_up_unadopted_device(hass):
+    """Firmware strings are allowlisted and unadoption removes device listeners."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"entry_type": "hub"})
+    hass.data[DOMAIN] = {}
+    hub = HagleitnerHub(hass, entry, logging.getLogger(__name__))
+    hub.adopt_device("device-1", "device-entry", "Dispenser")
+    state_listener = lambda: None
+    resource_listener = lambda _snapshot: None
+    hub.async_add_state_listener("device-1", state_listener)
+    hub.async_add_resource_listener("device-1", resource_listener)
+
+    firmware = _supported_resource_snapshot()
+    hub.latest_values["device-1"] = {firmware.key: firmware}
+    assert hub.firmware_version_for_device("device-1") == "1.2.3"
+
+    unrelated = replace(
+        firmware,
+        definition=ResourceDefinition(name="Unrelated", kind="counter"),
+    )
+    hub.latest_values["device-1"] = {unrelated.key: unrelated}
+    assert hub.firmware_version_for_device("device-1") is None
+
+    hub.unadopt_device("device-1")
+    assert "device-1" not in hub.adopted_device_ids
+    assert "device-1" not in hub.device_entry_ids
+    assert "device-1" not in hub.device_names
+    assert "device-1" not in hub._state_listeners
+    assert "device-1" not in hub._resource_listeners
+
+    firmware = replace(firmware, raw_value="not a safe version;")
+    hub.latest_values["device-1"] = {firmware.key: firmware}
+    assert hub.firmware_version_for_device("device-1") is None
+
+
+def test_missing_hsm_location_never_suggests_an_area(hass):
+    """Area suggestion helpers require a meaningful supplied location."""
+    assert coordinator._suggest_area_from_hsm_location(
+        hass, "device-1", None
+    ) == (False, None)
+    assert coordinator._suggest_existing_area_id(hass, None) is None
+    assert coordinator._suggest_existing_area_id(hass, "  ") is None
+
+
+async def test_hub_adopts_preconfigured_device_when_its_first_message_arrives(
+    hass, monkeypatch
+):
+    """An existing device entry is linked rather than rediscovered on first data."""
+    hub_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"entry_type": "hub", "queue_name": "queue-a"},
+    )
+    hub_entry.add_to_hass(hass)
+    device_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "entry_type": "device",
+            "device_id": "device-1",
+            "hub_entry_id": hub_entry.entry_id,
+        },
+    )
+    device_entry.add_to_hass(hass)
+    hass.data[DOMAIN] = {}
+    hub = HagleitnerHub(hass, hub_entry, logging.getLogger(__name__))
+    monkeypatch.setattr(hub, "_async_schedule_state_save", lambda: None)
+
+    await hub.async_handle_message(
+        {"deviceInfo": {"deviceId": "device-1", "deviceTypeId": "dispenser"}}
+    )
+
+    assert "device-1" in hub.adopted_device_ids
+    assert hub.device_entry_ids["device-1"] == device_entry.entry_id
+    assert device_entry.data["hub_entry_ids"] == [hub_entry.entry_id]
+
+
+def test_empty_persisted_metadata_is_not_restored():
+    """Empty stored metadata does not create a meaningless device record."""
+    assert coordinator._restore_device_metadata({}) is None
+    assert coordinator._restore_device_metadata(None) is None
