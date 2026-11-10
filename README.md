@@ -59,10 +59,10 @@ integration and restart Home Assistant when prompted.
    to add the device. You can optionally assign it to a suggested area.
 
 Entities appear as supported values arrive; there is no fixed list of entities
-guaranteed for every device. Recognized connectivity issues, device errors, and
-component replacement thresholds can also appear as maintenance tasks in Home
-Assistant's Repairs page. Battery, refill, and fill levels remain available as
-entities, not Repairs issues.
+guaranteed for every device. Device errors and refill/fill warnings are binary
+sensors; connection status and battery, refill, and fill states are sensors.
+Flowmeter and pump replacement thresholds, and a missing configured queue, are
+shown in Home Assistant's Repairs page.
 
 ## Supported data and limitations
 
