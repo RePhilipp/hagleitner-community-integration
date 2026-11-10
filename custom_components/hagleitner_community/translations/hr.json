@@ -57,6 +57,13 @@
     "binary_sensor": {
       "mains_adapter": {
         "name": "Mrežni adapter priključen"
+      },
+      "refill_empty": {
+        "name": "Upozorenje za punjenje",
+        "state": {
+          "on": "Potrebno je punjenje",
+          "off": "Punjenje je u redu"
+        }
       }
     }
   },

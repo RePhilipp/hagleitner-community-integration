@@ -57,6 +57,13 @@
     "binary_sensor": {
       "mains_adapter": {
         "name": "Síťový adaptér připojen"
+      },
+      "refill_empty": {
+        "name": "Varování doplnění",
+        "state": {
+          "on": "Je třeba doplnit",
+          "off": "Doplnění v pořádku"
+        }
       }
     }
   },

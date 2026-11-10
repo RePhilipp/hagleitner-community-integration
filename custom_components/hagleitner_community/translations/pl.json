@@ -57,6 +57,13 @@
     "binary_sensor": {
       "mains_adapter": {
         "name": "Zasilacz sieciowy podłączony"
+      },
+      "refill_empty": {
+        "name": "Ostrzeżenie o uzupełnieniu",
+        "state": {
+          "on": "Wymagane uzupełnienie",
+          "off": "Uzupełnienie w porządku"
+        }
       }
     }
   },

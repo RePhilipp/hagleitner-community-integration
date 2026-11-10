@@ -57,6 +57,13 @@
     "binary_sensor": {
       "mains_adapter": {
         "name": "Omrežni napajalnik priključen"
+      },
+      "refill_empty": {
+        "name": "Opozorilo za polnjenje",
+        "state": {
+          "on": "Potrebno je polnjenje",
+          "off": "Polnjenje je v redu"
+        }
       }
     }
   },

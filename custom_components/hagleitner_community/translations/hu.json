@@ -57,6 +57,13 @@
     "binary_sensor": {
       "mains_adapter": {
         "name": "Hálózati adapter csatlakoztatva"
+      },
+      "refill_empty": {
+        "name": "Utántöltési figyelmeztetés",
+        "state": {
+          "on": "Utántöltés szükséges",
+          "off": "Utántöltés rendben"
+        }
       }
     }
   },
