@@ -83,8 +83,8 @@
       "refill_empty": {
         "name": "Ostrzeżenie o uzupełnieniu",
         "state": {
-          "on": "Wymagane uzupełnienie",
-          "off": "Uzupełnienie w porządku"
+          "on": "Ostrzeżenie o uzupełnieniu",
+          "off": "Brak ostrzeżenia o uzupełnieniu"
         }
       }
     }

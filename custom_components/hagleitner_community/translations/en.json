@@ -157,8 +157,8 @@
       "refill_empty": {
         "name": "Refill warning",
         "state": {
-          "on": "Refill needed",
-          "off": "Refill OK"
+          "on": "Refill warning",
+          "off": "No refill warning"
         }
       },
       "device_error": {

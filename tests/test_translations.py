@@ -65,6 +65,13 @@ def test_english_translates_all_shipped_entity_names_and_states():
         binary_sensor_translations[key].get("name")
         for key in ("mains_adapter", "refill_empty", "device_error")
     )
+    # This one entity covers both low/empty refill state and nearly-full fill
+    # status, so its binary state labels must describe a warning, not imply that
+    # refilling is already required or that a full refill is currently OK.
+    assert binary_sensor_translations["refill_empty"]["state"] == {
+        "on": "Refill warning",
+        "off": "No refill warning",
+    }
 
 
 def test_exception_translations_cover_user_facing_setup_errors():

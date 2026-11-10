@@ -83,8 +83,8 @@
       "refill_empty": {
         "name": "Opozorilo za polnjenje",
         "state": {
-          "on": "Potrebno je polnjenje",
-          "off": "Polnjenje je v redu"
+          "on": "Opozorilo za ponovno polnjenje",
+          "off": "Ni opozorila za ponovno polnjenje"
         }
       }
     }

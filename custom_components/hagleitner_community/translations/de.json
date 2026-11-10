@@ -98,8 +98,8 @@
       "refill_empty": {
         "name": "Nachfüllwarnung",
         "state": {
-          "on": "Nachfüllung erforderlich",
-          "off": "Nachfüllung in Ordnung"
+          "on": "Nachfüllwarnung",
+          "off": "Keine Nachfüllwarnung"
         }
       }
     }

@@ -83,8 +83,8 @@
       "refill_empty": {
         "name": "Upozornenie na doplnenie",
         "state": {
-          "on": "Je potrebné doplniť",
-          "off": "Doplnenie je v poriadku"
+          "on": "Upozornenie na doplnenie",
+          "off": "Bez upozornenia na doplnenie"
         }
       }
     }

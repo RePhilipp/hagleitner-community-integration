@@ -83,8 +83,8 @@
       "refill_empty": {
         "name": "Utántöltési figyelmeztetés",
         "state": {
-          "on": "Utántöltés szükséges",
-          "off": "Utántöltés rendben"
+          "on": "Utántöltési figyelmeztetés",
+          "off": "Nincs utántöltési figyelmeztetés"
         }
       }
     }

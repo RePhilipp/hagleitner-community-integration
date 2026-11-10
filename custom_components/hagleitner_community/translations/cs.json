@@ -83,8 +83,8 @@
       "refill_empty": {
         "name": "Varování doplnění",
         "state": {
-          "on": "Je třeba doplnit",
-          "off": "Doplnění v pořádku"
+          "on": "Upozornění na doplnění",
+          "off": "Bez upozornění na doplnění"
         }
       }
     }
