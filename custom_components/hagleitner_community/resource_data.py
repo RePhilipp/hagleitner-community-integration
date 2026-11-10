@@ -113,9 +113,9 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
         name="Fill status",
         kind="enum",
         enum_values={
-            0: "empty",
+            0: "full",
             1: "nearly_full",
-            2: "full",
+            2: "empty",
         },
     ),
     "f8cdaa9a-4633-4fd4-1d0d-08de5e8412d5": ResourceDefinition(

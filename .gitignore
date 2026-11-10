@@ -4,3 +4,4 @@
 /ha-test/
 __pycache__/
 *.py[cod]
+/.idea/
