@@ -116,7 +116,5 @@ def _safe_resource_value(snapshot: Any, definition: Any) -> Any:
         )
 
     allowed_values = set(definition.enum_values.values())
-    for values in definition.device_type_enum_values.values():
-        allowed_values.update(values.values())
     value = snapshot.mapped_value
     return value if isinstance(value, str) and value in allowed_values else None

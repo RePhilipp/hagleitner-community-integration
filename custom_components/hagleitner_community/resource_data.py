@@ -22,7 +22,6 @@ class ResourceDefinition:
     device_class: str | None = None
     unit: str | None = None
     enum_values: dict[int, Any] = field(default_factory=dict)
-    device_type_enum_values: dict[str, dict[int, Any]] = field(default_factory=dict)
     battery_percent_values: dict[int, int | None] = field(default_factory=dict)
     problem_entity_on_values: tuple[str, ...] = ()
     problem_entity_name: str | None = None
@@ -132,12 +131,6 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
             1: "temporarily_offline",
             2: "online",
             3: "not_connected",
-        },
-        device_type_enum_values={
-            "gateway longrange": {
-                0: "not_available",
-                2: "available",
-            }
         },
     ),
     "9c336908-7a04-4adc-8bd7-08dc3d205c10": ResourceDefinition(
@@ -526,7 +519,7 @@ def restore_resource_snapshot(data: Any) -> ResourceValueSnapshot | None:
 
 
 def device_display_name(message: dict[str, Any]) -> str:
-    """Return a translated type name for discovery, falling back to the ID."""
+    """Return a device name from its translated type and mount point."""
     device_id, _ = device_identity(message)
     device_info = _field(message, "deviceInfo", "DeviceInfo", default={}) or {}
     translations = (
@@ -538,12 +531,17 @@ def device_display_name(message: dict[str, Any]) -> str:
         )
         or []
     )
+    device_type_name = None
     for translation in translations:
         if str(_field(translation, "languageTag", "LanguageTag", default="")).casefold() == "en":
             value = _field(translation, "value", "Value")
-            if isinstance(value, str) and value:
-                return f"Hagleitner {value}"
-    return f"Hagleitner {device_id[:8]}"
+            if isinstance(value, str) and value.strip():
+                device_type_name = value.strip()
+                break
+
+    mount_point = parse_device_metadata(message).mount_point
+    name = " ".join(part for part in (device_type_name, mount_point) if part)
+    return name or f"Hagleitner {device_id[:8]}"
 
 
 def enum_options(
@@ -551,9 +549,6 @@ def enum_options(
     device_type_names: frozenset[str],
 ) -> list[str]:
     """Return allowed HA enum states for the device type."""
-    for device_type_name, values in definition.device_type_enum_values.items():
-        if device_type_name.casefold() in device_type_names:
-            return list(dict.fromkeys(values.values()))
     return list(dict.fromkeys(definition.enum_values.values()))
 
 
@@ -694,9 +689,6 @@ def _mapped_value(
     if definition is None or not isinstance(raw_value, int) or isinstance(raw_value, bool):
         return raw_value
 
-    for device_type_name, values in definition.device_type_enum_values.items():
-        if device_type_name.casefold() in device_type_names:
-            return values.get(raw_value, raw_value)
     return definition.enum_values.get(raw_value, raw_value)
 
 

@@ -15,6 +15,7 @@ from custom_components.hagleitner_community import (
     service_bus,
 )
 from custom_components.hagleitner_community.const import DOMAIN
+from custom_components.hagleitner_community.resource_data import device_display_name
 
 
 @pytest.mark.parametrize(
@@ -64,7 +65,7 @@ async def test_device_setup_uses_supported_registry_lookup_and_readable_model(
     entry = SimpleNamespace(
         data={
             "device_id": "device-1",
-            "device_name": "Hagleitner Foam dispenser",
+            "device_name": "Foam dispenser MountPoint",
             "device_type_id": type_id,
             "hub_entry_id": "hub-1",
             "device_type_name": friendly_type_name,
@@ -91,6 +92,31 @@ async def test_device_setup_uses_supported_registry_lookup_and_readable_model(
     assert registry.create_options["model"] == expected_model
     assert registry.create_options["manufacturer"] == "Hagleitner"
     assert registry.create_options["identifiers"] == identifiers
+
+
+@pytest.mark.parametrize(
+    ("mount_point", "expected_name"),
+    [
+        (" MountPoint ", "Foam dispenser MountPoint"),
+        ("", "Foam dispenser"),
+        (None, "Foam dispenser"),
+    ],
+)
+def test_device_display_name_includes_nonempty_mount_point(
+    mount_point, expected_name
+):
+    """Device names combine the English device type and optional mount point."""
+    message = {
+        "deviceInfo": {
+            "deviceId": "device-1",
+            "deviceTypeNameTranslations": [
+                {"languageTag": "en", "value": "Foam dispenser"}
+            ],
+        },
+        "locationInfo": {"mountPoint": mount_point},
+    }
+
+    assert device_display_name(message) == expected_name
 
 
 async def test_hub_receiver_uses_config_entry_background_task(hass, monkeypatch):
