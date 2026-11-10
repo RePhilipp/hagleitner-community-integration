@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
+import re
 import time
 from asyncio import Task
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 
-from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
+from homeassistant.config_entries import ConfigEntry, SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.core import callback
 from homeassistant.helpers import (
     area_registry as ar,
@@ -16,16 +17,18 @@ from homeassistant.helpers import (
     entity_registry as er,
     floor_registry as fr,
 )
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
-from .device import device_info, is_valid_customer_id
+from .device import device_info, device_model_id, is_valid_customer_id
 from .repairs import async_update_maintenance_issue
 from .resource_data import (
     DeviceMetadata,
     ResourceValueSnapshot,
     device_display_name,
     device_identity,
+    device_type_name,
     log_resource_values,
     merge_device_metadata,
     parse_device_metadata,
@@ -34,9 +37,9 @@ from .resource_data import (
     serialize_resource_snapshot,
     should_accept_reading,
 )
+from .service_bus_contract import parse_resource_data_message
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
 _DISCOVERY_RETRY_SECONDS = 120
@@ -60,6 +63,8 @@ async def async_restore_persisted_state(hass: HomeAssistant) -> None:
     shared = domain_data.setdefault("_shared_device_state", {})
     latest_values = shared.setdefault("latest_values", {})
     device_metadata = shared.setdefault("device_metadata", {})
+    component_network_ids = shared.setdefault("component_network_ids", {})
+    gateway_network_ids = shared.setdefault("gateway_network_ids", {})
 
     if isinstance(stored, dict):
         stored_devices = stored.get("devices", {})
@@ -82,6 +87,16 @@ async def async_restore_persisted_state(hass: HomeAssistant) -> None:
                 metadata = _restore_device_metadata(device_data.get("metadata"))
                 if metadata is not None:
                     device_metadata[device_id] = metadata
+                component_network_id = _normalize_network_id(
+                    device_data.get("component_network_id")
+                )
+                if component_network_id is not None:
+                    component_network_ids[device_id] = component_network_id
+                gateway_network_id = _normalize_network_id(
+                    device_data.get("gateway_network_id")
+                )
+                if gateway_network_id is not None:
+                    gateway_network_ids[device_id] = gateway_network_id
 
     shared["_state_store"] = store
     domain_data["_state_restored"] = True
@@ -129,13 +144,18 @@ def _restore_device_metadata(data: Any) -> DeviceMetadata | None:
     )
 
 
+def _normalize_network_id(value: Any) -> str | None:
+    """Normalize Hagleitner network IDs for matching while rejecting blanks."""
+    return value.strip().casefold() if isinstance(value, str) and value.strip() else None
+
+
 class HagleitnerHub:
     """Receive one queue's messages into shared device state."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: HagleitnerConfigEntry,
         logger: logging.Logger,
     ) -> None:
         self.hass = hass
@@ -153,6 +173,12 @@ class HagleitnerHub:
         self.device_metadata: dict[str, DeviceMetadata] = shared.setdefault(
             "device_metadata", {}
         )
+        self.component_network_ids: dict[str, str] = shared.setdefault(
+            "component_network_ids", {}
+        )
+        self.gateway_network_ids: dict[str, str] = shared.setdefault(
+            "gateway_network_ids", {}
+        )
         self.latest_values: dict[
             str, dict[str, ResourceValueSnapshot]
         ] = shared.setdefault("latest_values", {})
@@ -168,15 +194,56 @@ class HagleitnerHub:
         self._resource_listeners: dict[
             str, set[Callable[[ResourceValueSnapshot], None]]
         ] = shared.setdefault("resource_listeners", {})
+        self.receiver_available = False
         self.receiver_task: Task[None] | None = None
+
+    @callback
+    def async_set_receiver_available(self, available: bool) -> None:
+        """Update receiver status and refresh entities for this queue's devices."""
+        if self.receiver_available == available:
+            return
+        self.receiver_available = available
+        for device_id in self.adopted_device_ids:
+            if self.entry.entry_id not in self.device_sources.get(device_id, ()):
+                continue
+            for listener in tuple(self._state_listeners.get(device_id, ())):
+                listener()
 
     async def async_handle_message(self, message: dict[str, Any]) -> None:
         """Cache a message, prompt for unadopted devices, and update entities."""
+        contract = parse_resource_data_message(message)
         device_id, device_type_id = device_identity(message)
         device_name = device_display_name(message)
+        model_name = device_type_name(message)
         self.device_sources.setdefault(device_id, set()).add(self.entry.entry_id)
         self.device_names[device_id] = device_name
         log_resource_values(message, self.logger)
+
+        topology_changed = False
+        component_network_id = _normalize_network_id(
+            contract.component_info.network_id
+            if contract.component_info is not None
+            else None
+        )
+        if (
+            component_network_id is not None
+            and self.component_network_ids.get(device_id) != component_network_id
+        ):
+            self.component_network_ids[device_id] = component_network_id
+            topology_changed = True
+
+        gateway_cleared = False
+        if "gateway" in message or "Gateway" in message:
+            gateway_network_id = _normalize_network_id(
+                contract.gateway.network_id if contract.gateway is not None else None
+            )
+            if gateway_network_id is None:
+                gateway_cleared = True
+                if self.gateway_network_ids.pop(device_id, None) is not None:
+                    topology_changed = True
+            elif self.gateway_network_ids.get(device_id) != gateway_network_id:
+                self.gateway_network_ids[device_id] = gateway_network_id
+                topology_changed = True
 
         current_metadata = self.device_metadata.get(device_id, DeviceMetadata())
         updated_metadata = merge_device_metadata(
@@ -232,17 +299,36 @@ class HagleitnerHub:
         self._async_record_device_source(device_id)
         self._async_record_customer_id(device_id)
         self._async_record_device_location(device_id)
+        self._async_record_device_model(
+            device_id,
+            model_name,
+            device_model_id(device_type_id),
+        )
+        if gateway_cleared:
+            self._async_clear_device_link(device_id)
+        if topology_changed:
+            self.async_update_device_links()
+        if any(
+            snapshot.definition is not None
+            and snapshot.definition.name == "Firmware version"
+            for snapshot in resource_updates.values()
+        ):
+            self._async_record_firmware_version(device_id)
         for snapshot in resource_updates.values():
             self._async_update_maintenance_issue(device_id, snapshot)
-            for listener in tuple(self._resource_listeners.get(device_id, ())):
-                listener(snapshot)
+            for resource_listener in tuple(
+                self._resource_listeners.get(device_id, ())
+            ):
+                resource_listener(snapshot)
 
         if not resource_updates and not metadata_changed:
+            if topology_changed:
+                self._async_schedule_state_save()
             return
 
         self._async_schedule_state_save()
-        for listener in tuple(self._state_listeners.get(device_id, ())):
-            listener()
+        for state_listener in tuple(self._state_listeners.get(device_id, ())):
+            state_listener()
 
     def adopt_device(
         self,
@@ -283,6 +369,7 @@ class HagleitnerHub:
             self.device_names.get(device_id, f"Hagleitner {device_id[:8]}"),
             snapshot,
             tuple(self.resources_for_device(device_id)),
+            config_entry_id=device_entry_id,
         )
 
     def _async_record_device_source(self, device_id: str) -> None:
@@ -376,6 +463,152 @@ class HagleitnerHub:
             },
         )
 
+    def _async_record_device_model(
+        self,
+        device_id: str,
+        model_name: str | None,
+        model_id: str | None,
+    ) -> None:
+        """Persist a clean device-type name and update registry model fields."""
+        device_entry_id = self.device_entry_ids.get(device_id)
+        if device_entry_id is None:
+            return
+        device_entry = self.hass.config_entries.async_get_entry(device_entry_id)
+        if device_entry is None:
+            return
+
+        data_updates: dict[str, str] = {}
+        if model_name and device_entry.data.get("device_type_name") != model_name:
+            data_updates["device_type_name"] = model_name
+        if data_updates:
+            self.hass.config_entries.async_update_entry(
+                device_entry,
+                data={**device_entry.data, **data_updates},
+            )
+
+        registered_device = self._registered_device(device_id)
+        if registered_device is None:
+            return
+        model_changed = (
+            model_name is not None
+            and getattr(registered_device, "model", None) != model_name
+        )
+        model_id_changed = (
+            model_id is not None
+            and getattr(registered_device, "model_id", None) != model_id
+        )
+        if model_changed and model_id_changed:
+            dr.async_get(self.hass).async_update_device(
+                registered_device.id,
+                model=model_name,
+                model_id=model_id,
+            )
+        elif model_changed:
+            dr.async_get(self.hass).async_update_device(
+                registered_device.id,
+                model=model_name,
+            )
+        elif model_id_changed:
+            dr.async_get(self.hass).async_update_device(
+                registered_device.id,
+                model_id=model_id,
+            )
+
+    def _device_entry_id(self, device_id: str) -> str | None:
+        """Find the config entry for an adopted or configured device."""
+        if device_entry_id := self.device_entry_ids.get(device_id):
+            return device_entry_id
+        return next(
+            (
+                entry.entry_id
+                for entry in self.hass.config_entries.async_entries(DOMAIN)
+                if entry.data.get("entry_type") == "device"
+                and entry.data.get("device_id") == device_id
+            ),
+            None,
+        )
+
+    def _registered_device(self, device_id: str) -> DeviceEntry | None:
+        """Return the registry entry for one configured Hagleitner device."""
+        config_entry_id = self._device_entry_id(device_id)
+        if config_entry_id is None:
+            return None
+        return next(
+            (
+                device
+                for device in dr.async_get(self.hass).async_get_devices(
+                    identifiers={(DOMAIN, device_id)}
+                )
+                if getattr(device, "config_entry_id", config_entry_id)
+                == config_entry_id
+            ),
+            None,
+        )
+
+    def _async_clear_device_link(self, device_id: str) -> None:
+        """Clear a formerly reported gateway relationship for one device."""
+        device = self._registered_device(device_id)
+        if device is not None and device.via_device_id is not None:
+            dr.async_get(self.hass).async_update_device(
+                device.id,
+                via_device_id=None,
+            )
+
+    def async_update_device_links(self) -> None:
+        """Resolve reported gateway network IDs to HA device registry IDs."""
+        for device_id in tuple(self.gateway_network_ids):
+            device = self._registered_device(device_id)
+            if device is None:
+                continue
+
+            matching_parent_ids = {
+                parent.id
+                for candidate_id, network_id in self.component_network_ids.items()
+                if candidate_id != device_id
+                and network_id == self.gateway_network_ids[device_id]
+                if (parent := self._registered_device(candidate_id)) is not None
+            }
+            via_device_id = (
+                next(iter(matching_parent_ids))
+                if len(matching_parent_ids) == 1
+                else None
+            )
+            if device.via_device_id != via_device_id:
+                dr.async_get(self.hass).async_update_device(
+                    device.id,
+                    via_device_id=via_device_id,
+                )
+
+    def _async_record_firmware_version(self, device_id: str) -> None:
+        """Copy a reported firmware version to the device registry."""
+        device_entry_id = self.device_entry_ids.get(device_id)
+        if device_entry_id is None:
+            return
+        device_entry = self.hass.config_entries.async_get_entry(device_entry_id)
+        if device_entry is None:
+            return
+
+        firmware_version = self.firmware_version_for_device(device_id)
+        if firmware_version is None:
+            return
+        device_registry = dr.async_get(self.hass)
+        registered_device = next(
+            iter(
+                device_registry.async_get_devices(
+                    identifiers={(DOMAIN, device_id)}
+                )
+            ),
+            None,
+        )
+        if (
+            registered_device is not None
+            and registered_device.sw_version != firmware_version
+        ):
+            device_registry.async_update_device(
+                registered_device.id,
+                sw_version=firmware_version,
+            )
+
     def _async_schedule_state_save(self) -> None:
         """Debounce persistence of the latest adopted-device values."""
         store: Store[dict[str, Any]] | None = self._shared_state.get("_state_store")
@@ -404,13 +637,20 @@ class HagleitnerHub:
                 if metadata is not None
                 else {}
             )
-            if resources or any(
+            component_network_id = self.component_network_ids.get(device_id)
+            gateway_network_id = self.gateway_network_ids.get(device_id)
+            if resources or component_network_id or gateway_network_id or any(
                 value is not None for value in serialized_metadata.values()
             ):
-                devices[device_id] = {
+                device_data: dict[str, Any] = {
                     "resources": resources,
                     "metadata": serialized_metadata,
                 }
+                if component_network_id is not None:
+                    device_data["component_network_id"] = component_network_id
+                if gateway_network_id is not None:
+                    device_data["gateway_network_id"] = gateway_network_id
+                devices[device_id] = device_data
         return {"devices": devices}
 
     def resources_for_device(
@@ -424,6 +664,30 @@ class HagleitnerHub:
     ) -> ResourceValueSnapshot | None:
         """Return the last received state for an entity's resource."""
         return self.latest_values.get(device_id, {}).get(resource_key)
+
+    def device_is_offline(self, device_id: str) -> bool:
+        """Return true only for an explicitly reported offline status."""
+        return any(
+            snapshot.definition is not None
+            and snapshot.definition.kind == "connection"
+            and snapshot.mapped_value == "offline"
+            for snapshot in self.latest_values.get(device_id, {}).values()
+        )
+
+    def firmware_version_for_device(self, device_id: str) -> str | None:
+        """Return a safely formatted firmware version if one has been reported."""
+        for snapshot in self.latest_values.get(device_id, {}).values():
+            if (
+                snapshot.definition is None
+                or snapshot.definition.name != "Firmware version"
+            ):
+                continue
+            value = snapshot.raw_value
+            if isinstance(value, str) and re.fullmatch(
+                r"[A-Za-z0-9._+-]{1,64}", value
+            ):
+                return value
+        return None
 
     def metadata_for_device(self, device_id: str) -> DeviceMetadata:
         """Return the last received customer and location details."""
@@ -468,11 +732,14 @@ class HagleitnerHub:
             "device_type_id": device_type_id,
             "device_name": device_display_name(message),
         }
+        if model_name := device_type_name(message):
+            discovery_data["device_type_name"] = model_name
         metadata = self.metadata_for_device(device_id)
+        discovery_data["customer_name"] = metadata.customer_name or ""
+        discovery_data["location_name"] = metadata.location or ""
+        discovery_data["mount_point"] = metadata.mount_point or ""
         if is_valid_customer_id(metadata.customer_id):
             discovery_data["customer_id"] = metadata.customer_id
-        discovery_data["hsm_location_path"] = metadata.location or "—"
-        discovery_data["hsm_mount_point"] = metadata.mount_point or "—"
         has_location_area, suggested_area_id = _suggest_area_from_hsm_location(
             self.hass,
             device_id,
@@ -495,6 +762,9 @@ class HagleitnerHub:
             context={"source": SOURCE_INTEGRATION_DISCOVERY},
             data=discovery_data,
         )
+
+
+HagleitnerConfigEntry: TypeAlias = ConfigEntry[HagleitnerHub | None]
 
 
 def _suggest_area_from_hsm_location(

@@ -8,6 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 from homeassistant.helpers import device_registry as dr
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.hagleitner_community import (
     _async_setup_device,
@@ -15,17 +16,15 @@ from custom_components.hagleitner_community import (
     service_bus,
 )
 from custom_components.hagleitner_community.const import DOMAIN
+from custom_components.hagleitner_community.resource_data import device_display_name
 
 
 @pytest.mark.parametrize(
     ("friendly_type_name", "expected_model"),
     [
         ("Foam dispenser", "Foam dispenser"),
-        (None, "Hagleitner Foam dispenser"),
-        (
-            "d15a2a06-7a04-4a7b-8f29-815d75c1da2f",
-            "Hagleitner Foam dispenser",
-        ),
+        (None, None),
+        ("d15a2a06-7a04-4a7b-8f29-815d75c1da2f", None),
     ],
 )
 async def test_device_setup_uses_supported_registry_lookup_and_readable_model(
@@ -61,16 +60,22 @@ async def test_device_setup_uses_supported_registry_lookup_and_readable_model(
         lambda *_args: asyncio.sleep(0),
     )
 
+    hub_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"entry_type": "hub"},
+    )
+    hub_entry.add_to_hass(hass)
     entry = SimpleNamespace(
         data={
             "device_id": "device-1",
-            "device_name": "Hagleitner Foam dispenser",
+            "device_name": "Foam dispenser MountPoint",
             "device_type_id": type_id,
-            "hub_entry_id": "hub-1",
+            "hub_entry_id": hub_entry.entry_id,
             "device_type_name": friendly_type_name,
         },
         entry_id="device-entry-1",
         title="Dispenser",
+        runtime_data=None,
     )
 
     class Hub:
@@ -84,13 +89,55 @@ async def test_device_setup_uses_supported_registry_lookup_and_readable_model(
         def _async_record_device_source(*_args):
             pass
 
-    hass.data[DOMAIN] = {"hub-1": Hub()}
+        @staticmethod
+        def firmware_version_for_device(_device_id):
+            return "1.2.3"
+
+        @staticmethod
+        def async_update_device_links():
+            pass
+
+    hub = Hub()
+    hub_entry.runtime_data = hub
+    hass.data[DOMAIN] = {}
 
     assert await _async_setup_device(hass, entry)
+    assert entry.runtime_data is hub
     assert registry.lookup_identifiers == identifiers
     assert registry.create_options["model"] == expected_model
-    assert registry.create_options["manufacturer"] == "Hagleitner"
+    assert registry.create_options["model_id"] == type_id
+    assert registry.create_options["sw_version"] == "1.2.3"
+    assert registry.create_options["manufacturer"] == (
+        "HAGLEITNER Hygiene International GmbH"
+    )
     assert registry.create_options["identifiers"] == identifiers
+
+
+@pytest.mark.parametrize(
+    ("mount_point", "expected_name"),
+    [
+        (" MountPoint ", "Foam dispenser MountPoint"),
+        ("", "Foam dispenser"),
+        ("   ", "Foam dispenser"),
+        (None, "Foam dispenser"),
+        (42, "Foam dispenser"),
+    ],
+)
+def test_device_display_name_includes_nonempty_mount_point(
+    mount_point, expected_name
+):
+    """Device names append a non-empty, trimmed mount point when available."""
+    message = {
+        "deviceInfo": {
+            "deviceId": "device-1",
+            "deviceTypeNameTranslations": [
+                {"languageTag": "en", "value": "Foam dispenser"}
+            ],
+        },
+        "locationInfo": {"mountPoint": mount_point},
+    }
+
+    assert device_display_name(message) == expected_name
 
 
 async def test_hub_receiver_uses_config_entry_background_task(hass, monkeypatch):
@@ -112,6 +159,9 @@ async def test_hub_receiver_uses_config_entry_background_task(hass, monkeypatch)
         async def async_handle_message(self, _message):
             pass
 
+        def async_set_receiver_available(self, _available):
+            pass
+
     hub = Hub()
 
     async def run_receiver(*_args):
@@ -124,6 +174,10 @@ async def test_hub_receiver_uses_config_entry_background_task(hass, monkeypatch)
     monkeypatch.setattr(
         "custom_components.hagleitner_community._async_rebind_orphaned_devices",
         lambda *_args: None,
+    )
+    monkeypatch.setattr(
+        "custom_components.hagleitner_community.async_validate_queue",
+        lambda *_args: asyncio.sleep(0),
     )
     monkeypatch.setattr(
         "custom_components.hagleitner_community.HagleitnerHub",
@@ -139,7 +193,9 @@ async def test_hub_receiver_uses_config_entry_background_task(hass, monkeypatch)
     )
 
     hass.data[DOMAIN] = {}
-    assert await async_setup_entry(hass, Entry())
+    entry = Entry()
+    assert await async_setup_entry(hass, entry)
+    assert entry.runtime_data is hub
     await asyncio.wait_for(receiver_started.wait(), timeout=1)
     await hass.async_block_till_done()
 

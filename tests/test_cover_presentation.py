@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from homeassistant.const import EntityCategory
+
 from custom_components.hagleitner_community.binary_sensor import _binary_modes
 from custom_components.hagleitner_community.resource_data import (
     ResourceDefinition,
@@ -15,6 +17,9 @@ from custom_components.hagleitner_community.sensor import (
 _COVER_DEFINITION = ResourceDefinition(
     name="Cover state",
     kind="opening",
+    entity_translation_key="cover_state",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_registry_enabled_default=False,
     enum_values={0: "opened", 1: "closed"},
 )
 
@@ -49,7 +54,7 @@ def test_cover_state_shows_opened_and_closed_without_a_boolean_duplicate():
     """Expose the enum state only; it is not a security or binary sensor."""
     opened_snapshot = _cover_snapshot("opened")
     assert _sensor_modes(_COVER_DEFINITION, opened_snapshot) == (
-        ("enum", "Cover state"),
+        "enum",
     )
     assert _binary_modes(opened_snapshot) == ()
 
@@ -60,11 +65,12 @@ def test_cover_state_shows_opened_and_closed_without_a_boolean_duplicate():
         _COVER_DEFINITION,
         frozenset(),
         "enum",
-        "Cover state",
         None,
     )
     assert opened_entity.native_value == "opened"
     assert opened_entity.unique_id == "device_cover-resource_enum"
+    assert opened_entity.entity_category is EntityCategory.DIAGNOSTIC
+    assert opened_entity.entity_registry_enabled_default is False
 
     closed_snapshot = _cover_snapshot("closed")
     closed_entity = HagleitnerSensor(
@@ -74,7 +80,6 @@ def test_cover_state_shows_opened_and_closed_without_a_boolean_duplicate():
         _COVER_DEFINITION,
         frozenset(),
         "enum",
-        "Cover state",
         None,
     )
     assert closed_entity.native_value == "closed"

@@ -7,14 +7,15 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from .const import DOMAIN
+from .coordinator import HagleitnerConfigEntry
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant,
+    entry: HagleitnerConfigEntry,
 ) -> dict[str, Any]:
     """Return a privacy-safe summary for one queue or adopted device."""
     domain_data = hass.data.get(DOMAIN, {})
@@ -26,19 +27,7 @@ async def async_get_config_entry_diagnostics(
     if entry.data.get("entry_type") == "device":
         device_id = entry.data.get("device_id")
         device_ids = [device_id] if isinstance(device_id, str) else []
-        queue_name = entry.data.get("hub_queue_name")
-        if not isinstance(queue_name, str):
-            hub_entry_id = entry.data.get("hub_entry_id")
-            hub_entry = (
-                hass.config_entries.async_get_entry(hub_entry_id)
-                if isinstance(hub_entry_id, str)
-                else None
-            )
-            queue_name = (
-                hub_entry.data.get("queue_name") if hub_entry is not None else None
-            )
     else:
-        queue_name = entry.data.get("queue_name")
         device_ids = [
             device_id
             for device_id, source_ids in device_sources.items()
@@ -71,8 +60,6 @@ async def async_get_config_entry_diagnostics(
         "device_count": len(device_ids),
         "devices": devices,
     }
-    if isinstance(queue_name, str):
-        diagnostics["queue_name"] = queue_name
     return diagnostics
 
 
@@ -116,7 +103,5 @@ def _safe_resource_value(snapshot: Any, definition: Any) -> Any:
         )
 
     allowed_values = set(definition.enum_values.values())
-    for values in definition.device_type_enum_values.values():
-        allowed_values.update(values.values())
     value = snapshot.mapped_value
     return value if isinstance(value, str) and value in allowed_values else None

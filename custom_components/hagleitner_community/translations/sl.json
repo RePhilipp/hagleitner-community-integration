@@ -7,15 +7,58 @@
         "data": {
           "connection_string": "Povezovalni niz čakalne vrste",
           "queue_name": "Ime čakalne vrste"
+        },
+        "data_description": {
+          "connection_string": "Povezovalni niz Azure Service Bus iz pravila za posredovanje. Ohrani ga kot skrivnost.",
+          "queue_name": "Ime čakalne vrste Service Bus iz istega pravila za posredovanje."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Posodobi poverilnice Service Bus",
+        "description": "Vnesi nove poverilnice za konfigurirano čakalno vrsto.",
+        "data": {
+          "connection_string": "Povezovalni niz čakalne vrste"
+        },
+        "data_description": {
+          "connection_string": "Povezovalni niz Azure Service Bus iz pravila za posredovanje. Ohrani ga kot skrivnost."
         }
       },
       "confirm": {
-        "title": "Nova naprava Hagleitner",
-        "description": "Želiš dodati {name} v Home Assistant?\n\n**Lokacija HSM:** {location_path}  \n**Mesto namestitve HSM:** {mount_point}\n\nNaprava in njene entitete bodo ustvarjene šele po potrditvi. Pomišljaj (—) pomeni, da HSM te vrednosti ni posredoval. Predlagano območje lahko spremeniš.",
+        "title": "Nova naprava: {name}",
+        "description": "Stranka:        {customer_name}\nLokacija:       {location_name}\nMesto namestitve: {mount_point}",
         "data": {
           "area_id": "Predlagano območje"
+        },
+        "data_description": {
+          "area_id": "Po želji dodeli prevzeto napravo območju Home Assistant."
+        }
+      },
+      "reconfigure": {
+        "title": "Change the Service Bus queue",
+        "description": "Connect this entry to another Azure Service Bus queue. The stored credentials are checked before the change is saved.",
+        "data": {
+          "queue_name": "Queue name"
+        },
+        "data_description": {
+          "queue_name": "The Service Bus queue name from the forwarding rule."
         }
       }
+    },
+    "flow_title": "Nova naprava: {name}",
+    "abort": {
+      "reauth_successful": "Poverilnice Service Bus so posodobljene.",
+      "reauth_entry_not_found": "Konfiguracijskega vnosa ni bilo mogoče najti.",
+      "reconfigure_not_supported": "Adopted device entries cannot be reconfigured."
+    },
+    "error": {
+      "queue_already_configured": "Ta čakalna vrsta je že dodana.",
+      "queue_already_configured_disabled": "Ta čakalna vrsta je že dodana, vendar je onemogočena. Namesto dodajanja nove omogoči obstoječi vnos.",
+      "invalid_connection_string": "Povezovalni niz ni veljaven. Preveri ga in poskusi znova.",
+      "invalid_queue": "Vnesi veljavno ime čakalne vrste.",
+      "invalid_auth": "Service Bus je zavrnil poverilnice ali pa nimajo dovoljenja za dostop do te čakalne vrste.",
+      "queue_not_found": "Čakalne vrste ni mogoče najti. Preveri njeno ime in poskusi znova.",
+      "cannot_connect": "Povezava z Azure Service Bus ni mogoča. Preveri povezavo in poskusi znova.",
+      "unknown": "Čakalne vrste ni bilo mogoče preveriti. Preveri podatke in poskusi znova."
     }
   },
   "issues": {
@@ -34,10 +77,48 @@
     "pump_replacement": {
       "title": "{device_name}: zamenjaj črpalko",
       "description": "Dosežen je časovni ali količinski prag za zamenjavo črpalke. Zamenjaj jo in ponastavi opravilo zamenjave črpalke, da zapreš to nalogo."
+    },
+    "queue_not_found": {
+      "title": "Service Bus queue not found",
+      "description": "The configured queue is missing or its name changed. Verify the queue name in the Hagleitner forwarding rule, then reconfigure this entry to use the correct queue."
     }
   },
   "entity": {
     "sensor": {
+      "dispense_count": {
+        "name": "Število doziranj"
+      },
+      "refill_count": {
+        "name": "Število polnjenj"
+      },
+      "passage_count": {
+        "name": "Števec prehodov"
+      },
+      "refill_state": {
+        "name": "Stanje polnjenja",
+        "state": {
+          "full": "Full",
+          "low": "Low",
+          "empty": "Empty"
+        }
+      },
+      "connection_status": {
+        "name": "Stanje povezave",
+        "state": {
+          "offline": "Offline",
+          "temporarily_offline": "Temporarily offline",
+          "online": "Online",
+          "not_connected": "Not connected"
+        }
+      },
+      "fill_status": {
+        "name": "Stanje napolnjenosti",
+        "state": {
+          "full": "Full",
+          "nearly_full": "Nearly full",
+          "empty": "Empty"
+        }
+      },
       "metadata_customer_name": {
         "name": "Ime stranke"
       },
@@ -52,16 +133,71 @@
       },
       "battery_level": {
         "name": "Raven baterije"
+      },
+      "people_count": {
+        "name": "People count"
+      },
+      "firmware_version": {
+        "name": "Firmware version"
+      },
+      "total_delivery_volume": {
+        "name": "Total delivery volume"
+      },
+      "total_dispensed_water_volume": {
+        "name": "Total dispensed water volume"
+      },
+      "online_ratio": {
+        "name": "Online ratio"
+      },
+      "cover_state": {
+        "name": "Cover state",
+        "state": {
+          "opened": "Open",
+          "closed": "Closed"
+        }
+      },
+      "number_of_openings": {
+        "name": "Number of openings"
       }
     },
     "binary_sensor": {
       "mains_adapter": {
         "name": "Omrežni napajalnik priključen"
+      },
+      "device_error": {
+        "name": "Napaka naprave"
+      },
+      "refill_warning": {
+        "name": "Opozorilo za polnjenje",
+        "state": {
+          "on": "Opozorilo za ponovno polnjenje",
+          "off": "Ni opozorila za ponovno polnjenje"
+        }
+      },
+      "fill_warning": {
+        "name": "Opozorilo o ravni polnjenja",
+        "state": {
+          "on": "Opozorilo o ravni polnjenja",
+          "off": "Ni opozorila o ravni polnjenja"
+        }
       }
     }
   },
-  "error": {
-    "queue_already_configured": "Ta čakalna vrsta je že dodana.",
-    "queue_already_configured_disabled": "Ta čakalna vrsta je že dodana, vendar je onemogočena. Namesto dodajanja nove omogoči obstoječi vnos."
+  "exceptions": {
+    "service_bus_credentials_invalid": {
+      "message": "The Service Bus connection string is invalid, or the credentials do not have permission to access this queue."
+    },
+    "service_bus_queue_unavailable": {
+      "message": "The configured Service Bus queue is not currently available."
+    },
+    "service_bus_queue_not_found": {
+      "message": "The configured Service Bus queue could not be found."
+    },
+    "service_bus_queue_validation_failed": {
+      "message": "Unable to validate the configured Service Bus queue."
+    },
+    "waiting_for_queue_connection": {
+      "message": "Waiting for the Hagleitner queue connection."
+    }
   }
 }

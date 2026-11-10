@@ -4,9 +4,9 @@
   "codeowners": ["@RePhilipp"],
   "config_flow": true,
   "documentation": "https://github.com/RePhilipp/hagleitner-community-integration",
-  "issue_tracker": "https://github.com/RePhilipp/hagleitner-community-integration/issues",
   "integration_type": "hub",
   "iot_class": "cloud_push",
-  "requirements": ["azure-servicebus==7.15.0", "certifi>=2017.4.17"],
-  "version": "0.1.0"
+  "issue_tracker": "https://github.com/RePhilipp/hagleitner-community-integration/issues",
+  "requirements": ["azure-servicebus>=7.15.0"],
+  "version": "0.2.0"
 }

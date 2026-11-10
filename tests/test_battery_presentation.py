@@ -2,29 +2,29 @@
 
 from __future__ import annotations
 
+import pytest
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import EntityCategory, PERCENTAGE
 
 from custom_components.hagleitner_community.binary_sensor import (
     HagleitnerBinarySensor,
     _binary_modes,
 )
 from custom_components.hagleitner_community.resource_data import (
-    ResourceDefinition,
     ResourceValueSnapshot,
+    SUPPORTED_RESOURCES_BY_EQUIVALENT_ID,
+    battery_percentage,
+    resource_value_snapshots,
 )
 from custom_components.hagleitner_community.sensor import (
     HagleitnerSensor,
     _sensor_modes,
 )
 
-_BATTERY_DEFINITION = ResourceDefinition(
-    name="Energy supply status",
-    kind="battery",
-    enum_values={0: "ok", 1: "low", 2: "empty", 3: "mains_adapter"},
-    battery_percent_values={0: 100, 1: 20, 2: 0, 3: None},
-)
+_BATTERY_DEFINITION = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[
+    "77d144fd-d7a3-42f7-03aa-08dac1664f9a"
+]
 
 
 def _battery_snapshot(mapped_value: str, raw_value: int) -> ResourceValueSnapshot:
@@ -53,13 +53,34 @@ class _BatteryHub:
         return self._snapshot
 
 
-def test_battery_percentage_is_the_only_low_normal_empty_sensor():
-    """Expose one battery entity for states that map to a percentage."""
-    snapshot = _battery_snapshot("low", 1)
+@pytest.mark.parametrize("raw_value", (1, 2))
+def test_catalog_low_energy_values_are_reported_as_twenty_percent(raw_value):
+    """Both production-catalog low values map to the low battery percentage."""
+    snapshot = resource_value_snapshots(
+        {
+            "deviceInfo": {"deviceId": "device-1"},
+            "readings": [
+                {
+                    "resourceValues": [
+                        {
+                            "resourceIdentifier": {
+                                "resourceTypeId": 12288,
+                                "resourceInstanceNo": 0,
+                                "resourceInstanceEquivalentId": (
+                                    "77d144fd-d7a3-42f7-03aa-08dac1664f9a"
+                                ),
+                            },
+                            "integerValue": raw_value,
+                        }
+                    ]
+                }
+            ],
+        }
+    )[0]
 
-    assert _sensor_modes(_BATTERY_DEFINITION, snapshot) == (
-        ("battery_level", None),
-    )
+    assert snapshot.mapped_value == "low"
+    assert battery_percentage(snapshot) == 20
+    assert _sensor_modes(_BATTERY_DEFINITION, snapshot) == ("battery_level",)
     assert _binary_modes(snapshot) == ()
 
     level_entity = HagleitnerSensor(
@@ -70,13 +91,12 @@ def test_battery_percentage_is_the_only_low_normal_empty_sensor():
         frozenset(),
         "battery_level",
         None,
-        None,
     )
     assert level_entity.native_value == 20
     assert level_entity._attr_device_class == SensorDeviceClass.BATTERY
     assert level_entity._attr_native_unit_of_measurement == PERCENTAGE
     assert level_entity._attr_state_class == SensorStateClass.MEASUREMENT
-    assert getattr(level_entity, "_attr_entity_category", None) is None
+    assert level_entity._attr_entity_category is EntityCategory.DIAGNOSTIC
 
 
 def test_normal_battery_is_reported_as_one_hundred_percent():
@@ -89,7 +109,6 @@ def test_normal_battery_is_reported_as_one_hundred_percent():
         _BATTERY_DEFINITION,
         frozenset(),
         "battery_level",
-        None,
         None,
     )
 

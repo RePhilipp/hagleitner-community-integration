@@ -9,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, PERCENTAGE, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -17,32 +16,35 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import HagleitnerHub
+from .coordinator import HagleitnerConfigEntry, HagleitnerHub
 from .device import device_info
 from .resource_data import (
     ResourceDefinition,
     ResourceValueSnapshot,
     battery_percentage,
-    device_type_icon,
     enum_options,
     source_timestamp,
 )
 
+PARALLEL_UPDATES = 0
 _OBSOLETE_BATTERY_STATUS_NAME = "Energy supply status"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HagleitnerConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for one adopted device."""
     device_id = entry.data["device_id"]
     _remove_obsolete_battery_status_sensors(hass, entry, device_id)
 
-    hub: HagleitnerHub | None = hass.data[DOMAIN].get(entry.data["hub_entry_id"])
+    hub = getattr(entry, "runtime_data", None)
     if hub is None:
-        raise ConfigEntryNotReady("Waiting for the Hagleitner queue connection")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="waiting_for_queue_connection",
+        )
 
     customer_id = entry.data.get("customer_id")
     added_ids: set[str] = set()
@@ -53,7 +55,7 @@ async def async_setup_entry(
             return
 
         entities = []
-        for mode, name in _sensor_modes(definition, snapshot):
+        for mode in _sensor_modes(definition, snapshot):
             unique_id = f"{device_id}_{snapshot.key}_{mode}"
             if unique_id in added_ids:
                 continue
@@ -66,7 +68,6 @@ async def async_setup_entry(
                     definition,
                     snapshot.device_type_names,
                     mode,
-                    name,
                     customer_id,
                 )
             )
@@ -94,7 +95,7 @@ async def async_setup_entry(
 @callback
 def _remove_obsolete_battery_status_sensors(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HagleitnerConfigEntry,
     device_id: str,
 ) -> None:
     """Remove the old enum sensor now that battery percent is the primary value."""
@@ -114,24 +115,24 @@ def _remove_obsolete_battery_status_sensors(
 def _sensor_modes(
     definition: ResourceDefinition,
     snapshot: ResourceValueSnapshot,
-) -> tuple[tuple[str, str | None], ...]:
+) -> tuple[str, ...]:
     """Return HA sensor entities for a resource kind."""
     if definition.kind == "counter":
-        return (("counter", definition.name),)
+        return ("counter",)
     if definition.kind == "measurement":
-        return (("measurement", definition.name),)
+        return ("measurement",)
     if definition.kind == "diagnostic":
-        return (("diagnostic", definition.name),)
+        return ("diagnostic",)
     if definition.kind == "enum":
-        return (("enum", definition.name),)
+        return ("enum",)
     if definition.kind == "opening":
-        return (("enum", definition.name),)
+        return ("enum",)
     if definition.kind == "battery":
         if snapshot.mapped_value == "mains_adapter":
             return ()
-        return (("battery_level", None),)
+        return ("battery_level",)
     if definition.kind == "connection":
-        return (("enum", definition.name),)
+        return ("enum",)
     return ()
 
 
@@ -149,7 +150,6 @@ class HagleitnerSensor(SensorEntity):
         definition: ResourceDefinition,
         device_type_names: frozenset[str],
         mode: str,
-        name: str | None,
         customer_id: int | None,
     ) -> None:
         """Initialize a sensor for one resource instance."""
@@ -159,31 +159,18 @@ class HagleitnerSensor(SensorEntity):
         self._definition = definition
         self._mode = mode
         self._attr_device_info = device_info(device_id, customer_id)
+        self._attr_entity_registry_enabled_default = (
+            definition.entity_registry_enabled_default
+        )
+        if definition.entity_category is not None:
+            self._attr_entity_category = definition.entity_category
         if mode == "battery_level":
             self._attr_translation_key = "battery_level"
-        elif name is not None:
-            self._attr_name = name
+        elif definition.entity_translation_key is not None:
+            self._attr_translation_key = definition.entity_translation_key
         self._attr_unique_id = f"{device_id}_{resource_key}_{mode}"
-        if mode == "counter" and definition.name in {
-            "Dispense count",
-            "Refill count",
-        }:
-            self._attr_icon = "mdi:counter"
-        elif mode == "enum" and definition.kind == "connection":
-            self._attr_icon = "mdi:lan-connect"
-        elif mode == "enum" and definition.kind == "opening":
-            self._attr_icon = "mdi:package-variant"
-        elif mode == "enum" and definition.name == "Refill state":
-            self._attr_icon = "mdi:package-variant-closed"
-        elif mode == "enum" or (
-            mode == "counter" and definition.device_class is None
-        ):
-            self._attr_icon = device_type_icon(device_type_names)
-        elif mode == "measurement":
-            self._attr_icon = "mdi:percent"
-        elif mode == "diagnostic":
+        if mode == "diagnostic":
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
-            self._attr_icon = "mdi:chip"
 
         if mode == "enum":
             self._attr_device_class = SensorDeviceClass.ENUM
@@ -218,10 +205,19 @@ class HagleitnerSensor(SensorEntity):
         if self._mode in ("counter", "measurement", "diagnostic"):
             return snapshot.raw_value
         if self._mode == "enum":
-            if snapshot.mapped_value in self._attr_options:
+            options = self._attr_options
+            if options is not None and snapshot.mapped_value in options:
                 return snapshot.mapped_value
             return None
         return None
+
+    @property
+    def available(self) -> bool:
+        """Hide device readings only for an explicitly offline device."""
+        return self._hub.receiver_available and (
+            self._definition.kind == "connection"
+            or not self._hub.device_is_offline(self._device_id)
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
@@ -269,18 +265,20 @@ class HagleitnerMetadataSensor(SensorEntity):
         self._attr_device_info = device_info(device_id, customer_id)
         self._attr_translation_key = f"metadata_{metadata_key}"
         self._attr_unique_id = f"{device_id}_{metadata_key}"
-        self._attr_icon = {
-            "customer_name": "mdi:account",
-            "customer_id": "mdi:identifier",
-            "location": "mdi:map-marker",
-            "mount_point": "mdi:map-marker-radius",
-        }[metadata_key]
+        self._attr_entity_registry_enabled_default = metadata_key != "customer_id"
 
     @property
     def native_value(self) -> Any:
         """Return the latest customer or location metadata."""
         metadata = self._hub.metadata_for_device(self._device_id)
         return getattr(metadata, self._metadata_key)
+
+    @property
+    def available(self) -> bool:
+        """Hide metadata only while the queue or device is offline."""
+        return self._hub.receiver_available and not self._hub.device_is_offline(
+            self._device_id
+        )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to metadata and state changes."""

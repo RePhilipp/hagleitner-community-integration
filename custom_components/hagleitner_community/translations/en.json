@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "New {name}",
     "step": {
       "user": {
         "title": "Connect Hagleitner Community",
@@ -7,15 +8,57 @@
         "data": {
           "connection_string": "Queue connection string",
           "queue_name": "Queue name"
+        },
+        "data_description": {
+          "connection_string": "The Azure Service Bus connection string from the forwarding rule. Keep it secret.",
+          "queue_name": "The Service Bus queue name from the same forwarding rule."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Update Service Bus credentials",
+        "description": "Enter replacement credentials for the configured queue.",
+        "data": {
+          "connection_string": "Queue connection string"
+        },
+        "data_description": {
+          "connection_string": "The Azure Service Bus connection string from the forwarding rule. Keep it secret."
+        }
+      },
+      "reconfigure": {
+        "title": "Change the Service Bus queue",
+        "description": "Connect this entry to another Azure Service Bus queue. The stored credentials are checked before the change is saved.",
+        "data": {
+          "queue_name": "Queue name"
+        },
+        "data_description": {
+          "queue_name": "The Service Bus queue name from the forwarding rule."
         }
       },
       "confirm": {
-        "title": "New Hagleitner device",
-        "description": "Add {name} to Home Assistant?\n\n**HSM location:** {location_path}  \n**HSM mount point:** {mount_point}\n\nThe device and its entities are created only after you confirm. A dash (—) means HSM did not provide that value. The suggested area can be changed.",
+        "title": "New {name}",
+        "description": "Customer:      {customer_name}\nLocation:      {location_name}\nMount point:   {mount_point}",
         "data": {
           "area_id": "Suggested area"
+        },
+        "data_description": {
+          "area_id": "Optionally assign the adopted device to a Home Assistant area."
         }
       }
+    },
+    "abort": {
+      "reauth_successful": "Service Bus credentials were updated.",
+      "reauth_entry_not_found": "The configuration entry could not be found.",
+      "reconfigure_not_supported": "Adopted device entries cannot be reconfigured."
+    },
+    "error": {
+      "queue_already_configured": "This queue is already added.",
+      "queue_already_configured_disabled": "This queue is already added but disabled. Enable the existing entry instead of adding another.",
+      "invalid_connection_string": "The connection string is not valid. Check it and try again.",
+      "invalid_queue": "Enter a valid queue name.",
+      "invalid_auth": "Service Bus rejected the credentials or they do not have permission to access this queue.",
+      "queue_not_found": "The queue could not be found. Check the queue name and try again.",
+      "cannot_connect": "Could not connect to Azure Service Bus. Check the connection and try again.",
+      "unknown": "Could not validate the queue. Check the details and try again."
     }
   },
   "issues": {
@@ -34,10 +77,73 @@
     "pump_replacement": {
       "title": "{device_name}: replace pump",
       "description": "A time- or volume-based pump replacement threshold has been reached. Replace the pump and reset its change action to clear this task."
+    },
+    "queue_not_found": {
+      "title": "Service Bus queue not found",
+      "description": "The configured queue is missing or its name changed. Verify the queue name in the Hagleitner forwarding rule, then reconfigure this entry to use the correct queue."
     }
   },
   "entity": {
     "sensor": {
+      "dispense_count": {
+        "name": "Dispense count"
+      },
+      "refill_count": {
+        "name": "Refill count"
+      },
+      "passage_count": {
+        "name": "Passage count"
+      },
+      "people_count": {
+        "name": "People count"
+      },
+      "refill_state": {
+        "name": "Refill state",
+        "state": {
+          "full": "Full",
+          "low": "Low",
+          "empty": "Empty"
+        }
+      },
+      "connection_status": {
+        "name": "Connection state",
+        "state": {
+          "offline": "Offline",
+          "temporarily_offline": "Temporarily offline",
+          "online": "Online",
+          "not_connected": "Not connected"
+        }
+      },
+      "fill_status": {
+        "name": "Fill state",
+        "state": {
+          "full": "Full",
+          "nearly_full": "Nearly full",
+          "empty": "Empty"
+        }
+      },
+      "firmware_version": {
+        "name": "Firmware version"
+      },
+      "total_delivery_volume": {
+        "name": "Total delivery volume"
+      },
+      "total_dispensed_water_volume": {
+        "name": "Total dispensed water volume"
+      },
+      "online_ratio": {
+        "name": "Online ratio"
+      },
+      "cover_state": {
+        "name": "Cover state",
+        "state": {
+          "opened": "Open",
+          "closed": "Closed"
+        }
+      },
+      "number_of_openings": {
+        "name": "Number of openings"
+      },
       "metadata_customer_name": {
         "name": "Customer name"
       },
@@ -57,11 +163,41 @@
     "binary_sensor": {
       "mains_adapter": {
         "name": "Mains adapter connected"
+      },
+      "refill_warning": {
+        "name": "Refill warning",
+        "state": {
+          "on": "Refill warning",
+          "off": "No refill warning"
+        }
+      },
+      "fill_warning": {
+        "name": "Fill warning",
+        "state": {
+          "on": "Fill warning",
+          "off": "No fill warning"
+        }
+      },
+      "device_error": {
+        "name": "Device error"
       }
     }
   },
-  "error": {
-    "queue_already_configured": "This queue is already added.",
-    "queue_already_configured_disabled": "This queue is already added but disabled. Enable the existing entry instead of adding another."
+  "exceptions": {
+    "service_bus_credentials_invalid": {
+      "message": "The Service Bus connection string is invalid, or the credentials do not have permission to access this queue."
+    },
+    "service_bus_queue_unavailable": {
+      "message": "The configured Service Bus queue is not currently available."
+    },
+    "service_bus_queue_not_found": {
+      "message": "The configured Service Bus queue could not be found."
+    },
+    "service_bus_queue_validation_failed": {
+      "message": "Unable to validate the configured Service Bus queue."
+    },
+    "waiting_for_queue_connection": {
+      "message": "Waiting for the Hagleitner queue connection."
+    }
   }
 }

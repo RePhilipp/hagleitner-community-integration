@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from enum import Enum
+from inspect import signature
+from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
@@ -19,6 +21,7 @@ _OBSOLETE_CONSUMABLE_ISSUE_KEYS = (
     "fill_nearly_full",
     "fill_full",
 )
+_QUEUE_NOT_FOUND_ISSUE_PREFIX = "queue_not_found_"
 
 
 class _IssueState(Enum):
@@ -30,8 +33,6 @@ class _IssueState(Enum):
 
 
 _ISSUE_SEVERITIES = {
-    "error_active": ir.IssueSeverity.ERROR,
-    "connection_offline": ir.IssueSeverity.ERROR,
     "flowmeter_replacement": ir.IssueSeverity.WARNING,
     "pump_replacement": ir.IssueSeverity.WARNING,
 }
@@ -44,6 +45,7 @@ def async_update_maintenance_issue(
     device_name: str,
     snapshot: ResourceValueSnapshot,
     device_snapshots: tuple[ResourceValueSnapshot, ...] = (),
+    config_entry_id: str | None = None,
 ) -> None:
     """Create the active issue for a resource and clear its resolved issues."""
     definition = snapshot.definition
@@ -80,6 +82,7 @@ def async_update_maintenance_issue(
                 "resource_name": definition.name,
                 "resource_type_id": str(snapshot.resource_type_id),
             },
+            **_config_entry_issue_kwargs(config_entry_id),
         )
 
 
@@ -97,15 +100,63 @@ def async_clear_maintenance_issues(
 
 
 @callback
-def async_clear_obsolete_consumable_issues(hass: HomeAssistant) -> None:
-    """Remove old Repairs entries for states now exposed as device entities."""
+def async_clear_obsolete_issues(hass: HomeAssistant) -> None:
+    """Remove old issues for conditions now exposed as device entities."""
     registry = ir.async_get(hass)
     obsolete_suffixes = tuple(
-        f"_{issue_key}" for issue_key in _OBSOLETE_CONSUMABLE_ISSUE_KEYS
+        f"_{issue_key}"
+        for issue_key in (
+            *_OBSOLETE_CONSUMABLE_ISSUE_KEYS,
+            "error_active",
+            "connection_offline",
+        )
     )
     for domain, issue_id in tuple(registry.issues):
         if domain == DOMAIN and issue_id.endswith(obsolete_suffixes):
             ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+@callback
+def async_create_queue_not_found_issue(
+    hass: HomeAssistant,
+    config_entry_id: str,
+) -> None:
+    """Explain how to fix a hub entry that points at a missing queue."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"{_QUEUE_NOT_FOUND_ISSUE_PREFIX}{config_entry_id}",
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="queue_not_found",
+        **_config_entry_issue_kwargs(config_entry_id),
+    )
+
+
+@callback
+def async_clear_queue_not_found_issue(
+    hass: HomeAssistant,
+    config_entry_id: str,
+) -> None:
+    """Clear the missing-queue issue after setup validates successfully."""
+    ir.async_delete_issue(
+        hass,
+        DOMAIN,
+        f"{_QUEUE_NOT_FOUND_ISSUE_PREFIX}{config_entry_id}",
+    )
+
+
+def _config_entry_issue_kwargs(
+    config_entry_id: str | None,
+) -> dict[str, Any]:
+    """Link an issue to its config entry on Home Assistant versions that support it."""
+    if (
+        config_entry_id is not None
+        and "config_entry_id" in signature(ir.async_create_issue).parameters
+    ):
+        return {"config_entry_id": config_entry_id}
+    return {}
 
 
 def _issue_states(
@@ -116,26 +167,6 @@ def _issue_states(
     definition = snapshot.definition
     if definition is None:
         return {}
-
-    if definition.kind == "problem":
-        return {
-            "error_active": _issue_state(snapshot.mapped_value, "error", ("no_error",))
-        }
-
-    if definition.kind == "connection":
-        return {
-            "connection_offline": _issue_state(
-                snapshot.mapped_value,
-                "offline",
-                (
-                    "temporarily_offline",
-                    "online",
-                    "not_connected",
-                    "not_available",
-                    "available",
-                ),
-            )
-        }
 
     if definition.kind == "maintenance":
         if snapshot.resource_type_id != _REPLACEMENT_RESOURCE_TYPE_ID:

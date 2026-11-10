@@ -1,0 +1,71 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "refill_warning": {
+        "default": "mdi:beaker-alert-outline",
+        "state": {
+          "off": "mdi:beaker-check-outline"
+        }
+      },
+      "fill_warning": {
+        "default": "mdi:beaker-alert",
+        "state": {
+          "off": "mdi:beaker-check"
+        }
+      },
+      "device_error": {
+        "default": "mdi:alert-circle",
+        "state": {
+          "off": "mdi:alert-circle-check"
+        }
+      }
+    },
+    "sensor": {
+      "dispense_count": {
+        "default": "mdi:numeric"
+      },
+      "refill_count": {
+        "default": "mdi:numeric"
+      },
+      "passage_count": {
+        "default": "mdi:numeric"
+      },
+      "people_count": {
+        "default": "mdi:numeric"
+      },
+      "refill_state": {
+        "default": "mdi:beaker-outline"
+      },
+      "connection_status": {
+        "default": "mdi:lan"
+      },
+      "fill_status": {
+        "default": "mdi:beaker"
+      },
+      "firmware_version": {
+        "default": "mdi:chip"
+      },
+      "online_ratio": {
+        "default": "mdi:percent"
+      },
+      "cover_state": {
+        "default": "mdi:package-variant"
+      },
+      "number_of_openings": {
+        "default": "mdi:counter"
+      },
+      "metadata_customer_name": {
+        "default": "mdi:account"
+      },
+      "metadata_customer_id": {
+        "default": "mdi:identifier"
+      },
+      "metadata_location": {
+        "default": "mdi:map-marker"
+      },
+      "metadata_mount_point": {
+        "default": "mdi:map-marker-radius"
+      }
+    }
+  }
+}

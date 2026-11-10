@@ -7,15 +7,58 @@
         "data": {
           "connection_string": "Verbindungszeichenfolge der Warteschlange",
           "queue_name": "Name der Warteschlange"
+        },
+        "data_description": {
+          "connection_string": "Die Azure-Service-Bus-Verbindungszeichenfolge aus der Weiterleitungsregel. Halte sie geheim.",
+          "queue_name": "Der Name der Service-Bus-Warteschlange aus derselben Weiterleitungsregel."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Service-Bus-Zugangsdaten aktualisieren",
+        "description": "Gib neue Zugangsdaten für die konfigurierte Warteschlange ein.",
+        "data": {
+          "connection_string": "Verbindungszeichenfolge der Warteschlange"
+        },
+        "data_description": {
+          "connection_string": "Die Azure-Service-Bus-Verbindungszeichenfolge aus der Weiterleitungsregel. Halte sie geheim."
+        }
+      },
+      "reconfigure": {
+        "title": "Service-Bus-Warteschlange ändern",
+        "description": "Verbinde diesen Eintrag mit einer anderen Azure-Service-Bus-Warteschlange. Die gespeicherten Zugangsdaten werden vor dem Speichern geprüft.",
+        "data": {
+          "queue_name": "Name der Warteschlange"
+        },
+        "data_description": {
+          "queue_name": "Der Name der Service-Bus-Warteschlange aus der Weiterleitungsregel."
         }
       },
       "confirm": {
-        "title": "Neues Hagleitner-Gerät",
-        "description": "{name} zu Home Assistant hinzufügen?\n\n**HSM-Standort:** {location_path}  \n**HSM-Montagepunkt:** {mount_point}\n\nDas Gerät und seine Entitäten werden erst nach deiner Bestätigung erstellt. Ein Gedankenstrich (—) bedeutet, dass HSM diesen Wert nicht bereitgestellt hat. Der vorgeschlagene Bereich kann geändert werden.",
+        "title": "Neues Gerät: {name}",
+        "description": "Kunde:          {customer_name}\nStandort:       {location_name}\nMontagepunkt:   {mount_point}",
         "data": {
           "area_id": "Vorgeschlagener Bereich"
+        },
+        "data_description": {
+          "area_id": "Weise das übernommene Gerät optional einem Home-Assistant-Bereich zu."
         }
       }
+    },
+    "flow_title": "Neues Gerät: {name}",
+    "abort": {
+      "reauth_successful": "Die Service-Bus-Zugangsdaten wurden aktualisiert.",
+      "reauth_entry_not_found": "Der Konfigurationseintrag wurde nicht gefunden.",
+      "reconfigure_not_supported": "Übernommene Geräteeinträge können nicht neu konfiguriert werden."
+    },
+    "error": {
+      "queue_already_configured": "Diese Warteschlange wurde bereits hinzugefügt.",
+      "queue_already_configured_disabled": "Diese Warteschlange wurde bereits hinzugefügt, ist aber deaktiviert. Aktiviere den vorhandenen Eintrag, anstatt einen weiteren hinzuzufügen.",
+      "invalid_connection_string": "Die Verbindungszeichenfolge ist ungültig. Überprüfe sie und versuche es erneut.",
+      "invalid_queue": "Gib einen gültigen Warteschlangennamen ein.",
+      "invalid_auth": "Service Bus hat die Zugangsdaten abgelehnt oder sie haben keine Berechtigung für diese Warteschlange.",
+      "queue_not_found": "Die Warteschlange wurde nicht gefunden. Überprüfe den Namen und versuche es erneut.",
+      "cannot_connect": "Keine Verbindung zu Azure Service Bus möglich. Überprüfe die Verbindung und versuche es erneut.",
+      "unknown": "Die Warteschlange konnte nicht überprüft werden. Überprüfe die Angaben und versuche es erneut."
     }
   },
   "issues": {
@@ -34,10 +77,73 @@
     "pump_replacement": {
       "title": "{device_name}: Pumpe ersetzen",
       "description": "Ein zeit- oder volumenabhängiger Austauschgrenzwert für die Pumpe wurde erreicht. Ersetze die Pumpe und setze die Aktion zum Pumpenwechsel zurück, um diese Aufgabe zu löschen."
+    },
+    "queue_not_found": {
+      "title": "Service-Bus-Warteschlange nicht gefunden",
+      "description": "Die konfigurierte Warteschlange fehlt oder ihr Name wurde geändert. Prüfe den Namen in der Hagleitner-Weiterleitungsregel und konfiguriere diesen Eintrag mit der richtigen Warteschlange neu."
     }
   },
   "entity": {
     "sensor": {
+      "dispense_count": {
+        "name": "Abgabezähler"
+      },
+      "refill_count": {
+        "name": "Nachfüllzähler"
+      },
+      "passage_count": {
+        "name": "Durchgangszähler"
+      },
+      "people_count": {
+        "name": "Personenanzahl"
+      },
+      "refill_state": {
+        "name": "Nachfüllstatus",
+        "state": {
+          "full": "Voll",
+          "low": "Niedrig",
+          "empty": "Leer"
+        }
+      },
+      "connection_status": {
+        "name": "Verbindungsstatus",
+        "state": {
+          "offline": "Offline",
+          "temporarily_offline": "Vorübergehend offline",
+          "online": "Online",
+          "not_connected": "Nicht verbunden"
+        }
+      },
+      "fill_status": {
+        "name": "Füllstatus",
+        "state": {
+          "full": "Voll",
+          "nearly_full": "Fast voll",
+          "empty": "Leer"
+        }
+      },
+      "firmware_version": {
+        "name": "Firmwareversion"
+      },
+      "total_delivery_volume": {
+        "name": "Gesamtes Liefervolumen"
+      },
+      "total_dispensed_water_volume": {
+        "name": "Gesamtmenge des ausgegebenen Wassers"
+      },
+      "online_ratio": {
+        "name": "Online-Anteil"
+      },
+      "cover_state": {
+        "name": "Abdeckungsstatus",
+        "state": {
+          "opened": "Geöffnet",
+          "closed": "Geschlossen"
+        }
+      },
+      "number_of_openings": {
+        "name": "Anzahl der Öffnungen"
+      },
       "metadata_customer_name": {
         "name": "Kundenname"
       },
@@ -57,11 +163,41 @@
     "binary_sensor": {
       "mains_adapter": {
         "name": "Netzadapter angeschlossen"
+      },
+      "refill_warning": {
+        "name": "Nachfüllwarnung",
+        "state": {
+          "on": "Nachfüllwarnung",
+          "off": "Keine Nachfüllwarnung"
+        }
+      },
+      "fill_warning": {
+        "name": "Füllstandswarnung",
+        "state": {
+          "on": "Füllstandswarnung",
+          "off": "Keine Füllstandswarnung"
+        }
+      },
+      "device_error": {
+        "name": "Gerätefehler"
       }
     }
   },
-  "error": {
-    "queue_already_configured": "Diese Warteschlange wurde bereits hinzugefügt.",
-    "queue_already_configured_disabled": "Diese Warteschlange wurde bereits hinzugefügt, ist aber deaktiviert. Aktiviere den vorhandenen Eintrag, anstatt einen weiteren hinzuzufügen."
+  "exceptions": {
+    "service_bus_credentials_invalid": {
+      "message": "The Service Bus connection string is invalid, or the credentials do not have permission to access this queue."
+    },
+    "service_bus_queue_unavailable": {
+      "message": "The configured Service Bus queue is not currently available."
+    },
+    "service_bus_queue_not_found": {
+      "message": "The configured Service Bus queue could not be found."
+    },
+    "service_bus_queue_validation_failed": {
+      "message": "Unable to validate the configured Service Bus queue."
+    },
+    "waiting_for_queue_connection": {
+      "message": "Waiting for the Hagleitner queue connection."
+    }
   }
 }

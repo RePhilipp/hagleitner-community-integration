@@ -7,6 +7,9 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
+from uuid import UUID
+
+from homeassistant.const import EntityCategory
 
 REFILL_STATE_EQUIVALENT_ID = "4b963ce8-14f4-4f90-03a9-08dac1664f9a"
 
@@ -17,11 +20,16 @@ class ResourceDefinition:
 
     name: str
     kind: str
+    entity_translation_key: str | None = None
     device_class: str | None = None
     unit: str | None = None
     enum_values: dict[int, Any] = field(default_factory=dict)
-    device_type_enum_values: dict[str, dict[int, Any]] = field(default_factory=dict)
     battery_percent_values: dict[int, int | None] = field(default_factory=dict)
+    problem_entity_on_values: tuple[str, ...] = ()
+    problem_entity_translation_key: str | None = None
+    problem_entity_unique_id_suffix: str | None = None
+    entity_category: EntityCategory | None = None
+    entity_registry_enabled_default: bool = True
 
 
 @dataclass(frozen=True)
@@ -55,72 +63,97 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     "84b96502-7738-43fb-f3dd-08dace26c91e": ResourceDefinition(
         name="Dispense count",
         kind="counter",
+        entity_translation_key="dispense_count",
+        entity_category=None,
+        entity_registry_enabled_default=True,
     ),
     "491d2cd9-92a0-4107-f3de-08dace26c91e": ResourceDefinition(
         name="Refill count",
         kind="counter",
+        entity_translation_key="refill_count",
+        entity_category=None,
+        entity_registry_enabled_default=True,
+    ),
+    "f8cdaa9a-4633-4fd4-1d0d-08de5e8412d5": ResourceDefinition(
+        name="Passage count",
+        kind="counter",
+        entity_translation_key="passage_count",
+        entity_category=None,
+        entity_registry_enabled_default=True,
     ),
     "77d144fd-d7a3-42f7-03aa-08dac1664f9a": ResourceDefinition(
         name="Energy supply status",
         kind="battery",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "ok",
             1: "low",
-            2: "empty",
+            2: "low",
             3: "mains_adapter",
         },
         battery_percent_values={
             0: 100,
             1: 20,
-            2: 0,
+            2: 20,
             3: None,
         },
     ),
     REFILL_STATE_EQUIVALENT_ID: ResourceDefinition(
         name="Refill state",
         kind="enum",
+        entity_translation_key="refill_state",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "full",
             1: "low",
             2: "empty",
         },
+        problem_entity_on_values=("low", "empty"),
+        problem_entity_translation_key="refill_warning",
+        problem_entity_unique_id_suffix="refill_empty",
     ),
     "9a77375d-964c-451f-03ab-08dac1664f9a": ResourceDefinition(
         name="Error status",
         kind="problem",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "no_error",
             1: "error",
         },
+        problem_entity_on_values=("error",),
+        problem_entity_translation_key="device_error",
+        problem_entity_unique_id_suffix="device_error",
     ),
     "7c178f1d-271f-4554-03ac-08dac1664f9a": ResourceDefinition(
         name="Connection status",
         kind="connection",
+        entity_translation_key="connection_status",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "offline",
             1: "temporarily_offline",
             2: "online",
             3: "not_connected",
         },
-        device_type_enum_values={
-            "gateway longrange": {
-                0: "not_available",
-                2: "available",
-            }
-        },
     ),
     "9c336908-7a04-4adc-8bd7-08dc3d205c10": ResourceDefinition(
         name="Fill status",
         kind="enum",
+        entity_translation_key="fill_status",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         enum_values={
-            0: "empty",
+            0: "full",
             1: "nearly_full",
-            2: "full",
+            2: "empty",
         },
-    ),
-    "f8cdaa9a-4633-4fd4-1d0d-08de5e8412d5": ResourceDefinition(
-        name="Passage counter",
-        kind="counter",
+        problem_entity_on_values=("nearly_full", "empty"),
+        problem_entity_translation_key="fill_warning",
+        problem_entity_unique_id_suffix="refill_empty",
     ),
 }
 
@@ -130,27 +163,42 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
     (3, 0): ResourceDefinition(
         name="Firmware version",
         kind="diagnostic",
+        entity_translation_key="firmware_version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     (28680, 0): ResourceDefinition(
         name="Total delivery volume",
         kind="counter",
+        entity_translation_key="total_delivery_volume",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         device_class="volume",
         unit="milliliters",
     ),
     (28682, 0): ResourceDefinition(
         name="Total dispensed water volume",
         kind="counter",
+        entity_translation_key="total_dispensed_water_volume",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         device_class="volume",
         unit="liters",
     ),
     (45058, 0): ResourceDefinition(
         name="Online ratio",
         kind="measurement",
+        entity_translation_key="online_ratio",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         unit="percentage",
     ),
     (12289, 0): ResourceDefinition(
         name="Cover state",
         kind="opening",
+        entity_translation_key="cover_state",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         enum_values={
             0: "opened",
             1: "closed",
@@ -159,18 +207,29 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
     (20486, 0): ResourceDefinition(
         name="Number of openings",
         kind="counter",
+        entity_translation_key="number_of_openings",
+        entity_category=None,
+        entity_registry_enabled_default=True,
     ),
     (20485, 0): ResourceDefinition(
         name="Passage count",
         kind="counter",
+        entity_translation_key="passage_count",
+        entity_category=None,
+        entity_registry_enabled_default=True,
     ),
     (20485, 1): ResourceDefinition(
         name="People count",
         kind="counter",
+        entity_translation_key="people_count",
+        entity_category=None,
+        entity_registry_enabled_default=True,
     ),
     (12307, 0): ResourceDefinition(
         name="Flowmeter change required (volume-based)",
         kind="maintenance",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "no_change_required",
             1: "change_required",
@@ -179,6 +238,8 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
     (12307, 1): ResourceDefinition(
         name="Pump change required (time-based)",
         kind="maintenance",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "no_change_required",
             1: "change_required",
@@ -187,6 +248,8 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
     (12307, 2): ResourceDefinition(
         name="Pump change required (volume-based)",
         kind="maintenance",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "no_change_required",
             1: "change_required",
@@ -275,6 +338,38 @@ def device_identity(message: dict[str, Any]) -> tuple[str, str]:
 
     device_type_id = _field(device_info, "deviceTypeId", "DeviceTypeId", default="")
     return device_id, str(device_type_id).lower()
+
+
+def device_type_name(message: dict[str, Any]) -> str | None:
+    """Return the English translated device type name, when supplied."""
+    device_info = _field(message, "deviceInfo", "DeviceInfo", default={}) or {}
+    if not isinstance(device_info, dict):
+        return None
+    translations = _field(
+        device_info,
+        "deviceTypeNameTranslations",
+        "DeviceTypeNameTranslations",
+        default=[],
+    )
+    if not isinstance(translations, list):
+        return None
+    for translation in translations:
+        if not isinstance(translation, dict):
+            continue
+        language_tag = _field(translation, "languageTag", "LanguageTag", default="")
+        value = _field(translation, "value", "Value")
+        if (
+            isinstance(language_tag, str)
+            and language_tag.casefold() == "en"
+            and isinstance(value, str)
+            and value.strip()
+        ):
+            value = value.strip()
+            try:
+                UUID(value)
+            except ValueError:
+                return value
+    return None
 
 
 def log_resource_values(message: dict[str, Any], logger: logging.Logger) -> None:
@@ -472,24 +567,13 @@ def restore_resource_snapshot(data: Any) -> ResourceValueSnapshot | None:
 
 
 def device_display_name(message: dict[str, Any]) -> str:
-    """Return a translated type name for discovery, falling back to the ID."""
+    """Return the translated device type with its known mount point."""
     device_id, _ = device_identity(message)
-    device_info = _field(message, "deviceInfo", "DeviceInfo", default={}) or {}
-    translations = (
-        _field(
-            device_info,
-            "deviceTypeNameTranslations",
-            "DeviceTypeNameTranslations",
-            default=[],
-        )
-        or []
-    )
-    for translation in translations:
-        if str(_field(translation, "languageTag", "LanguageTag", default="")).casefold() == "en":
-            value = _field(translation, "value", "Value")
-            if isinstance(value, str) and value:
-                return f"Hagleitner {value}"
-    return f"Hagleitner {device_id[:8]}"
+    display_name = device_type_name(message) or f"Hagleitner {device_id[:8]}"
+    mount_point = parse_device_metadata(message).mount_point
+    if mount_point:
+        return f"{display_name} {mount_point}"
+    return display_name
 
 
 def enum_options(
@@ -497,46 +581,7 @@ def enum_options(
     device_type_names: frozenset[str],
 ) -> list[str]:
     """Return allowed HA enum states for the device type."""
-    for device_type_name, values in definition.device_type_enum_values.items():
-        if device_type_name.casefold() in device_type_names:
-            return list(dict.fromkeys(values.values()))
     return list(dict.fromkeys(definition.enum_values.values()))
-
-
-def device_type_icon(device_type_names: frozenset[str]) -> str:
-    """Choose a built-in MDI icon from translated Hagleitner device names."""
-    names = " ".join(device_type_names)
-    if "gateway" in names:
-        return "mdi:router-wireless"
-    if "dishwash" in names:
-        return "mdi:dishwasher"
-    if "counter" in names or "passage" in names:
-        return "mdi:account-group"
-    if any(term in names for term in ("waste bin", "sanitary waste", "paperbox")):
-        return "mdi:trash-can"
-    if "toilet seat" in names or "toilet paper" in names or "tissue" in names:
-        return "mdi:toilet"
-    if "wet wipe" in names:
-        return "mdi:package-variant"
-    if "towel" in names or "sense towel" in names:
-        return "mdi:paper-roll"
-    if any(term in names for term in ("fragrance", "freshair")):
-        return "mdi:air-purifier"
-    if "sunscreen" in names or any(
-        term in names for term in ("skincare", "moistcare", "cream", "lotion")
-    ):
-        return "mdi:lotion"
-    if "shower gel" in names:
-        return "mdi:shower"
-    if any(term in names for term in ("disinfect", "sanitizer", "gel")):
-        return "mdi:hand-sanitizer"
-    if "foam" in names or "soap" in names:
-        return "mdi:soap"
-    if "flowmeter" in names or "level unit" in names:
-        return "mdi:gauge"
-    if any(term in names for term in ("dosing", "integral", "industrial")):
-        return "mdi:water-pump"
-    return "mdi:devices"
 
 
 def battery_percentage(
@@ -640,9 +685,6 @@ def _mapped_value(
     if definition is None or not isinstance(raw_value, int) or isinstance(raw_value, bool):
         return raw_value
 
-    for device_type_name, values in definition.device_type_enum_values.items():
-        if device_type_name.casefold() in device_type_names:
-            return values.get(raw_value, raw_value)
     return definition.enum_values.get(raw_value, raw_value)
 
 
