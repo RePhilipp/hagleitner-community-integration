@@ -1,12 +1,19 @@
 {
   "domain": "hagleitner_community",
   "name": "Hagleitner Community",
-  "codeowners": ["@RePhilipp"],
+  "categories": [
+    "appliances_cleaning.cleaning"
+  ],
+  "codeowners": [
+    "@RePhilipp"
+  ],
   "config_flow": true,
   "documentation": "https://github.com/RePhilipp/hagleitner-community-integration",
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "issue_tracker": "https://github.com/RePhilipp/hagleitner-community-integration/issues",
-  "requirements": ["azure-servicebus>=7.15.0"],
+  "requirements": [
+    "azure-servicebus>=7.15.0"
+  ],
   "version": "0.2.0"
 }
