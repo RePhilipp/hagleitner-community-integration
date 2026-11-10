@@ -7,6 +7,10 @@
         "data": {
           "connection_string": "Ciąg połączenia kolejki",
           "queue_name": "Nazwa kolejki"
+        },
+        "data_description": {
+          "connection_string": "Ciąg połączenia Azure Service Bus z reguły przekazywania. Zachowaj go w tajemnicy.",
+          "queue_name": "Nazwa kolejki Service Bus z tej samej reguły przekazywania."
         }
       },
       "confirm": {
@@ -14,6 +18,9 @@
         "description": "Klient:         {customer_name}\nLokalizacja:    {location_name}\nMiejsce montażu: {mount_point}",
         "data": {
           "area_id": "Sugerowany obszar"
+        },
+        "data_description": {
+          "area_id": "Opcjonalnie przypisz przejęte urządzenie do obszaru Home Assistant."
         }
       }
     },

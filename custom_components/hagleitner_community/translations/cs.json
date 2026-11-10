@@ -7,6 +7,10 @@
         "data": {
           "connection_string": "Připojovací řetězec fronty",
           "queue_name": "Název fronty"
+        },
+        "data_description": {
+          "connection_string": "Připojovací řetězec Azure Service Bus z pravidla předávání. Uchovávejte jej v tajnosti.",
+          "queue_name": "Název fronty Service Bus ze stejného pravidla předávání."
         }
       },
       "confirm": {
@@ -14,6 +18,9 @@
         "description": "Zákazník:       {customer_name}\nUmístění:       {location_name}\nMísto montáže:  {mount_point}",
         "data": {
           "area_id": "Navržená oblast"
+        },
+        "data_description": {
+          "area_id": "Volitelně přiřaďte přijaté zařízení k oblasti Home Assistant."
         }
       }
     },

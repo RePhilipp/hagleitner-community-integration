@@ -65,6 +65,7 @@ async def test_device_discovery_persists_valid_customer_id(
 
     assert result["type"] == "create_entry"
     device_entry = result["result"]
+    assert device_entry.unique_id == "device-123"
     assert device_entry.data["customer_id"] == 456
 
     class EmptyHub:
@@ -118,6 +119,7 @@ async def test_device_discovery_does_not_persist_invalid_customer_id(
     )
 
     assert result["type"] == "create_entry"
+    assert result["result"].unique_id == f"device-{customer_id}"
     assert "customer_id" not in result["result"].data
 
 

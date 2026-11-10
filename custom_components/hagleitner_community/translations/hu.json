@@ -7,6 +7,10 @@
         "data": {
           "connection_string": "A sor kapcsolati karakterlánca",
           "queue_name": "Sor neve"
+        },
+        "data_description": {
+          "connection_string": "A továbbítási szabály Azure Service Bus kapcsolati karakterlánca. Tartsa titokban.",
+          "queue_name": "A Service Bus-sor neve ugyanabból a továbbítási szabályból."
         }
       },
       "confirm": {
@@ -14,6 +18,9 @@
         "description": "Ügyfél:         {customer_name}\nHelyszín:       {location_name}\nSzerelési pont: {mount_point}",
         "data": {
           "area_id": "Javasolt terület"
+        },
+        "data_description": {
+          "area_id": "Opcionálisan rendeljen Home Assistant-területet az átvett eszközhöz."
         }
       }
     },

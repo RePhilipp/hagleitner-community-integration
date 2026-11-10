@@ -8,6 +8,10 @@
         "data": {
           "connection_string": "Queue connection string",
           "queue_name": "Queue name"
+        },
+        "data_description": {
+          "connection_string": "The Azure Service Bus connection string from the forwarding rule. Keep it secret.",
+          "queue_name": "The Service Bus queue name from the same forwarding rule."
         }
       },
       "confirm": {
@@ -15,6 +19,9 @@
         "description": "Customer:      {customer_name}\nLocation:      {location_name}\nMount point:   {mount_point}",
         "data": {
           "area_id": "Suggested area"
+        },
+        "data_description": {
+          "area_id": "Optionally assign the adopted device to a Home Assistant area."
         }
       }
     }

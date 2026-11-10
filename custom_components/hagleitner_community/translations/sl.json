@@ -7,6 +7,10 @@
         "data": {
           "connection_string": "Povezovalni niz čakalne vrste",
           "queue_name": "Ime čakalne vrste"
+        },
+        "data_description": {
+          "connection_string": "Povezovalni niz Azure Service Bus iz pravila za posredovanje. Ohrani ga kot skrivnost.",
+          "queue_name": "Ime čakalne vrste Service Bus iz istega pravila za posredovanje."
         }
       },
       "confirm": {
@@ -14,6 +18,9 @@
         "description": "Stranka:        {customer_name}\nLokacija:       {location_name}\nMesto namestitve: {mount_point}",
         "data": {
           "area_id": "Predlagano območje"
+        },
+        "data_description": {
+          "area_id": "Po želji dodeli prevzeto napravo območju Home Assistant."
         }
       }
     },

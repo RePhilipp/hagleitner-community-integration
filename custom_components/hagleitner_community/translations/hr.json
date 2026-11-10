@@ -7,6 +7,10 @@
         "data": {
           "connection_string": "Niz za povezivanje reda čekanja",
           "queue_name": "Naziv reda čekanja"
+        },
+        "data_description": {
+          "connection_string": "Niz za povezivanje Azure Service Bus iz pravila prosljeđivanja. Čuvajte ga kao tajnu.",
+          "queue_name": "Naziv reda Service Bus iz istog pravila prosljeđivanja."
         }
       },
       "confirm": {
@@ -14,6 +18,9 @@
         "description": "Korisnik:       {customer_name}\nLokacija:       {location_name}\nMjesto montaže: {mount_point}",
         "data": {
           "area_id": "Predloženo područje"
+        },
+        "data_description": {
+          "area_id": "Po želji dodijelite preuzeti uređaj području u Home Assistantu."
         }
       }
     },

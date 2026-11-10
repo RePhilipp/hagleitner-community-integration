@@ -7,6 +7,10 @@
         "data": {
           "connection_string": "Verbindungszeichenfolge der Warteschlange",
           "queue_name": "Name der Warteschlange"
+        },
+        "data_description": {
+          "connection_string": "Die Azure-Service-Bus-Verbindungszeichenfolge aus der Weiterleitungsregel. Halte sie geheim.",
+          "queue_name": "Der Name der Service-Bus-Warteschlange aus derselben Weiterleitungsregel."
         }
       },
       "confirm": {
@@ -14,6 +18,9 @@
         "description": "Kunde:          {customer_name}\nStandort:       {location_name}\nMontagepunkt:   {mount_point}",
         "data": {
           "area_id": "Vorgeschlagener Bereich"
+        },
+        "data_description": {
+          "area_id": "Weise das übernommene Gerät optional einem Home-Assistant-Bereich zu."
         }
       }
     },
