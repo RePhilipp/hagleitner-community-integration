@@ -64,6 +64,23 @@ component replacement thresholds can also appear as maintenance tasks in Home
 Assistant's Repairs page. Battery, refill, and fill levels remain available as
 entities, not Repairs issues.
 
+## Supported data and limitations
+
+For resource values the integration recognizes, it can expose dispense, refill,
+passage, and people counts; delivery or dispensed-water volume; refill and fill
+status; battery level or mains-adapter status; connection status; and device
+errors. Depending on the data sent, diagnostic entities can also include firmware
+version, cover state, online ratio, and customer or location details. Some
+diagnostic entities are disabled by default; if a value is expected, check the
+device's disabled entities in Home Assistant. The integration provides sensors
+and binary sensors for monitoring; it does not provide device controls.
+
+Entity availability depends on the data Hagleitner forwards. The integration
+recognizes specific resource identifiers, not a complete list of product models,
+and the project has not verified model-by-model coverage. A model name alone
+cannot guarantee which entities it will provide. Even a recognized resource
+appears only if it is included in a selected device's forwarded messages.
+
 ## Data updates
 
 The integration receives pushed messages from Azure Service Bus; it does not
@@ -72,6 +89,42 @@ update when a forwarded resource-data message arrives. This integration does
 not set or guarantee how often Hagleitner forwards readings, and this project
 does not have a verified reporting interval or rate limit to publish. The
 Service Bus receive wait is not a device reporting interval.
+
+The latest supported values are retained across Home Assistant restarts. A
+temporary loss of the queue connection makes entities unavailable while the
+receiver reconnects; availability also reflects a device's explicitly reported
+offline status. While the queue receiver is connected, the connection-status
+entity itself remains available when the device is reported offline.
+
+## Troubleshooting
+
+- **The queue entry cannot start:** Check that the Service Bus connection string
+  has permission for the queue and that the queue name matches the queue shown
+  in the forwarding rule. If the credentials have changed, use Home Assistant's
+  reauthentication flow for the entry. A queue-not-found issue in Repairs means
+  the configured queue could not be found; correct the queue name or restore the
+  queue in Azure.
+- **The integration or entities are unavailable:** Check Home Assistant's
+  integration status and logs, and verify that the Azure Service Bus queue is
+  reachable. The receiver retries after connection failures. If the device's
+  Connection status reports **Offline**, its value and metadata entities can be
+  unavailable until another status is forwarded.
+- **A device or expected entity is missing:** Confirm that the device is selected
+  in the Hygiene Portal forwarding rule and that the queue receives its data.
+  New devices require confirmation in Home Assistant. Entities are created only
+  for resource identifiers recognized by this integration; if no matching
+  supported value is forwarded, no entity is created for it. Reporting is
+  push-based, so waiting for a later message may be necessary and the integration
+  cannot predict when one will arrive.
+- **A maintenance task remains in Repairs:** A task clears when the relevant
+  supported readings report its condition as resolved. For the pump replacement
+  task, both time-based and volume-based readings must report that no change is
+  required. Removing the adopted device entry also removes its maintenance issues.
+
+For diagnosis, Home Assistant's integration diagnostics provide a limited
+summary of recognized values. Integration log entries can include raw resource
+data and identifiers; redact them and never share Service Bus connection strings
+or credentials when asking for help.
 
 ## Automation example
 
