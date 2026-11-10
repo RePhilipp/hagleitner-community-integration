@@ -17,7 +17,11 @@ from homeassistant.exceptions import (
 )
 
 from .const import DOMAIN
-from .coordinator import HagleitnerHub, async_restore_persisted_state
+from .coordinator import (
+    HagleitnerConfigEntry,
+    HagleitnerHub,
+    async_restore_persisted_state,
+)
 from .repairs import (
     async_clear_maintenance_issues,
     async_clear_obsolete_consumable_issues,
@@ -30,7 +34,6 @@ from .service_bus import (
 )
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,7 +63,10 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: HagleitnerConfigEntry,
+) -> bool:
     """Set up a queue hub or an adopted device."""
     if entry.data.get("entry_type") != "device":
         try:
@@ -95,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _async_rebind_orphaned_devices(hass, entry)
     hub = HagleitnerHub(hass, entry, _LOGGER)
-    hass.data[DOMAIN][entry.entry_id] = hub
+    entry.runtime_data = hub
     for configured_entry in hass.config_entries.async_entries(DOMAIN):
         if (
             configured_entry.data.get("entry_type") == "device"
@@ -138,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 def _async_rebind_orphaned_devices(
     hass: HomeAssistant,
-    hub_entry: ConfigEntry,
+    hub_entry: HagleitnerConfigEntry,
 ) -> None:
     """Reattach device entries whose previous hub entry was removed."""
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -219,8 +225,8 @@ def _async_rebind_orphaned_devices(
 
 def _async_set_device_hub_queue(
     hass: HomeAssistant,
-    device_entry: ConfigEntry,
-    hub_entry: ConfigEntry,
+    device_entry: HagleitnerConfigEntry,
+    hub_entry: HagleitnerConfigEntry,
 ) -> None:
     """Remember the hub queue so device entries can survive hub removal."""
     queue_name = hub_entry.data.get("queue_name")
@@ -238,13 +244,17 @@ async def _async_setup_linked_devices(
     hub: HagleitnerHub,
 ) -> None:
     """Set up adopted entries after the hub has been loaded or reloaded."""
+    hub_entry = hass.config_entries.async_get_entry(hub_entry_id)
+    if hub_entry is None:
+        return
+
     for device_entry in hass.config_entries.async_entries(DOMAIN):
         if (
             device_entry.data.get("entry_type") != "device"
             or device_entry.data.get("hub_entry_id") != hub_entry_id
             or device_entry.disabled_by is not None
             or device_entry.state != ConfigEntryState.NOT_LOADED
-            or hass.data[DOMAIN].get(hub_entry_id) is not hub
+            or getattr(hub_entry, "runtime_data", None) is not hub
         ):
             continue
         await hass.config_entries.async_setup(device_entry.entry_id)
@@ -262,7 +272,7 @@ def _async_remove_device_setup_task(
 
 async def _async_setup_device(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HagleitnerConfigEntry,
 ) -> bool:
     """Register an adopted device and load its entity platforms."""
     from homeassistant.exceptions import ConfigEntryNotReady
@@ -270,18 +280,18 @@ async def _async_setup_device(
     from homeassistant.helpers import device_registry as dr
 
     hub_entry_id = entry.data["hub_entry_id"]
-    hub: HagleitnerHub | None = hass.data[DOMAIN].get(hub_entry_id)
+    hub_entry = hass.config_entries.async_get_entry(hub_entry_id)
+    hub: HagleitnerHub | None = (
+        getattr(hub_entry, "runtime_data", None) if hub_entry is not None else None
+    )
     if hub is None:
-        hub_entry = hass.config_entries.async_get_entry(hub_entry_id)
-        if (
-            hub_entry is not None
-            and hub_entry.state == ConfigEntryState.NOT_LOADED
-        ):
+        if hub_entry is not None and hub_entry.state == ConfigEntryState.NOT_LOADED:
             await hass.config_entries.async_setup(hub_entry_id)
-            hub = hass.data[DOMAIN].get(hub_entry_id)
+            hub = getattr(hub_entry, "runtime_data", None)
     if hub is None:
         raise ConfigEntryNotReady("Waiting for the Hagleitner queue connection")
 
+    entry.runtime_data = hub
     device_id = entry.data["device_id"]
     hub.adopt_device(device_id, entry.entry_id, entry.title)
     hub._async_record_device_source(device_id)
@@ -310,18 +320,21 @@ async def _async_setup_device(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant,
+    entry: HagleitnerConfigEntry,
+) -> bool:
     """Unload an adopted device or its queue connection."""
     if entry.data.get("entry_type") == "device":
-        hub: HagleitnerHub | None = hass.data[DOMAIN].get(
-            entry.data["hub_entry_id"]
-        )
+        hub = getattr(entry, "runtime_data", None)
         if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
             return False
         if hub is not None:
             hub.unadopt_device(entry.data["device_id"])
+        entry.runtime_data = None
         return True
 
+    hub = getattr(entry, "runtime_data", None)
     setup_tasks = hass.data[DOMAIN].get(_DEVICE_SETUP_TASKS, {})
     setup_task = setup_tasks.get(entry.entry_id)
     if setup_task is not None and not setup_task.done():
@@ -335,7 +348,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             and configured_entry.data.get("hub_entry_id") == entry.entry_id
         )
     ]
-    hub = hass.data[DOMAIN].get(entry.entry_id)
     retained_entries: set[str] = set()
     if hub is not None:
         for device_entry in device_entries:
@@ -367,9 +379,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "hub_queue_name": alternate_entry.data.get("queue_name"),
                 },
             )
+            device_entry.runtime_data = getattr(alternate_entry, "runtime_data", None)
             retained_entries.add(device_entry.entry_id)
 
-    unloaded_entries: list[ConfigEntry] = []
+    unloaded_entries: list[HagleitnerConfigEntry] = []
     for device_entry in device_entries:
         if device_entry.entry_id in retained_entries:
             continue
@@ -390,17 +403,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for sources in hub.device_sources.values():
             sources.discard(entry.entry_id)
 
-    hass.data[DOMAIN].pop(entry.entry_id, None)
     if hub is not None and hub.receiver_task is not None:
         hub.receiver_task.cancel()
         try:
             await hub.receiver_task
         except asyncio.CancelledError:
             pass
+    entry.runtime_data = None
     return True
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(
+    hass: HomeAssistant,
+    entry: HagleitnerConfigEntry,
+) -> None:
     """Remove repair issues when an adopted device entry is deleted."""
     if entry.data.get("entry_type") == "device":
         async_clear_maintenance_issues(hass, entry.data["device_id"])

@@ -185,7 +185,7 @@ async def test_setup_does_not_create_entities_without_resource_values(hass):
         def async_add_resource_listener(_device_id, _listener):
             return lambda: None
 
-    hass.data[DOMAIN] = {hub_entry.entry_id: EmptyHub()}
+    device_entry.runtime_data = EmptyHub()
 
     await async_setup_binary_entry(hass, device_entry, lambda _entities: None)
 
@@ -236,7 +236,7 @@ async def test_setup_removes_obsolete_battery_status_sensor(hass):
         def async_add_resource_listener(_device_id, _listener):
             return lambda: None
 
-    hass.data[DOMAIN] = {hub_entry.entry_id: EmptyHub()}
+    device_entry.runtime_data = EmptyHub()
 
     await async_setup_sensor_entry(hass, device_entry, lambda _entities: None)
 

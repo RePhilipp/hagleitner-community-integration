@@ -79,7 +79,7 @@ async def test_device_discovery_persists_valid_customer_id(
         def async_add_resource_listener(device_id, listener):
             return lambda: None
 
-    hass.data.setdefault(DOMAIN, {})["hub-entry"] = EmptyHub()
+    device_entry.runtime_data = EmptyHub()
     entities = []
     await async_setup_entry(hass, device_entry, entities.extend)
 

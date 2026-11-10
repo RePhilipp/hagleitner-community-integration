@@ -6,13 +6,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import HagleitnerHub
+from .coordinator import HagleitnerConfigEntry, HagleitnerHub
 from .device import device_info
 from .resource_data import (
     ResourceDefinition,
@@ -33,13 +31,13 @@ def _unique_id_suffix(mode: str, definition: ResourceDefinition) -> str:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HagleitnerConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary sensors for one adopted device."""
     device_id = entry.data["device_id"]
 
-    hub: HagleitnerHub | None = hass.data[DOMAIN].get(entry.data["hub_entry_id"])
+    hub = getattr(entry, "runtime_data", None)
     if hub is None:
         raise ConfigEntryNotReady("Waiting for the Hagleitner queue connection")
 

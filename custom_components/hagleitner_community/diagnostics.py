@@ -7,14 +7,15 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from .const import DOMAIN
+from .coordinator import HagleitnerConfigEntry
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant,
+    entry: HagleitnerConfigEntry,
 ) -> dict[str, Any]:
     """Return a privacy-safe summary for one queue or adopted device."""
     domain_data = hass.data.get(DOMAIN, {})

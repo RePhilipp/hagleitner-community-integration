@@ -8,6 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 from homeassistant.helpers import device_registry as dr
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.hagleitner_community import (
     _async_setup_device,
@@ -62,16 +63,22 @@ async def test_device_setup_uses_supported_registry_lookup_and_readable_model(
         lambda *_args: asyncio.sleep(0),
     )
 
+    hub_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"entry_type": "hub"},
+    )
+    hub_entry.add_to_hass(hass)
     entry = SimpleNamespace(
         data={
             "device_id": "device-1",
             "device_name": "Foam dispenser MountPoint",
             "device_type_id": type_id,
-            "hub_entry_id": "hub-1",
+            "hub_entry_id": hub_entry.entry_id,
             "device_type_name": friendly_type_name,
         },
         entry_id="device-entry-1",
         title="Dispenser",
+        runtime_data=None,
     )
 
     class Hub:
@@ -85,9 +92,12 @@ async def test_device_setup_uses_supported_registry_lookup_and_readable_model(
         def _async_record_device_source(*_args):
             pass
 
-    hass.data[DOMAIN] = {"hub-1": Hub()}
+    hub = Hub()
+    hub_entry.runtime_data = hub
+    hass.data[DOMAIN] = {}
 
     assert await _async_setup_device(hass, entry)
+    assert entry.runtime_data is hub
     assert registry.lookup_identifiers == identifiers
     assert registry.create_options["model"] == expected_model
     assert registry.create_options["manufacturer"] == "Hagleitner"
@@ -172,7 +182,9 @@ async def test_hub_receiver_uses_config_entry_background_task(hass, monkeypatch)
     )
 
     hass.data[DOMAIN] = {}
-    assert await async_setup_entry(hass, Entry())
+    entry = Entry()
+    assert await async_setup_entry(hass, entry)
+    assert entry.runtime_data is hub
     await asyncio.wait_for(receiver_started.wait(), timeout=1)
     await hass.async_block_till_done()
 

@@ -6,9 +6,9 @@ import logging
 import time
 from asyncio import Task
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 
-from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
+from homeassistant.config_entries import ConfigEntry, SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.core import callback
 from homeassistant.helpers import (
     area_registry as ar,
@@ -36,7 +36,6 @@ from .resource_data import (
 )
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
 _DISCOVERY_RETRY_SECONDS = 120
@@ -135,7 +134,7 @@ class HagleitnerHub:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: HagleitnerConfigEntry,
         logger: logging.Logger,
     ) -> None:
         self.hass = hass
@@ -509,6 +508,9 @@ class HagleitnerHub:
             context={"source": SOURCE_INTEGRATION_DISCOVERY},
             data=discovery_data,
         )
+
+
+HagleitnerConfigEntry: TypeAlias = ConfigEntry[HagleitnerHub | None]
 
 
 def _suggest_area_from_hsm_location(

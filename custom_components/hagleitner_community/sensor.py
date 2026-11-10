@@ -9,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, PERCENTAGE, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -17,7 +16,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import HagleitnerHub
+from .coordinator import HagleitnerConfigEntry, HagleitnerHub
 from .device import device_info
 from .resource_data import (
     ResourceDefinition,
@@ -34,14 +33,14 @@ _OBSOLETE_BATTERY_STATUS_NAME = "Energy supply status"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HagleitnerConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for one adopted device."""
     device_id = entry.data["device_id"]
     _remove_obsolete_battery_status_sensors(hass, entry, device_id)
 
-    hub: HagleitnerHub | None = hass.data[DOMAIN].get(entry.data["hub_entry_id"])
+    hub = getattr(entry, "runtime_data", None)
     if hub is None:
         raise ConfigEntryNotReady("Waiting for the Hagleitner queue connection")
 
@@ -111,7 +110,7 @@ async def async_setup_entry(
 @callback
 def _remove_obsolete_battery_status_sensors(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HagleitnerConfigEntry,
     device_id: str,
 ) -> None:
     """Remove the old enum sensor now that battery percent is the primary value."""
