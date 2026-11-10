@@ -30,6 +30,7 @@ async def run_receiver(
     ssl_context: ssl.SSLContext | None = None
     while True:
         try:
+            _LOGGER.info("Starting Azure Service Bus receiver for queue %s", queue_name)
             if ssl_context is None:
                 ssl_context = await asyncio.to_thread(_create_ssl_context)
             async with ServiceBusClient.from_connection_string(
@@ -42,7 +43,10 @@ async def run_receiver(
                     max_wait_time=5,
                 )
                 async with receiver:
-                    _LOGGER.info("Listening on Azure Service Bus queue %s", queue_name)
+                    _LOGGER.info(
+                        "Started Azure Service Bus receiver; listening on queue %s",
+                        queue_name,
+                    )
                     while True:
                         messages = await receiver.receive_messages(
                             max_message_count=10,
@@ -70,10 +74,11 @@ async def run_receiver(
                                 raise
                             except Exception as error:
                                 _LOGGER.error(
-                                    "Message handler failed for queue %s (%s); "
+                                    "Message handler failed for queue %s (%s): %s; "
                                     "abandoning message for redelivery",
                                     queue_name,
                                     type(error).__name__,
+                                    error,
                                 )
                                 await receiver.abandon_message(service_bus_message)
                                 continue
