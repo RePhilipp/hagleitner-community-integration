@@ -154,6 +154,8 @@ def test_only_unique_conditions_create_binary_entities():
         assert _binary_modes(snapshot) == ()
 
     assert (12294, 0) not in SUPPORTED_RESOURCES_BY_TYPE_INSTANCE
+    assert cover_definition.entity_category == "diagnostic"
+    assert cover_definition.entity_registry_enabled_default is False
 
 
 async def test_setup_does_not_create_entities_without_resource_values(hass):

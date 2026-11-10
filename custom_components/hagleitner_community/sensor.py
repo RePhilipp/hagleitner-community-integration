@@ -52,6 +52,22 @@ async def async_setup_entry(
         if definition is None:
             return
 
+        resource_unique_id_prefix = f"{device_id}_{snapshot.key}_"
+        if not definition.entity_registry_enabled_default:
+            registry = er.async_get(hass)
+            for registry_entry in er.async_entries_for_config_entry(
+                registry, entry.entry_id
+            ):
+                if (
+                    registry_entry.domain == "sensor"
+                    and registry_entry.unique_id.startswith(resource_unique_id_prefix)
+                    and registry_entry.disabled_by is None
+                ):
+                    registry.async_update_entity(
+                        registry_entry.entity_id,
+                        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+                    )
+
         entities = []
         for mode, name in _sensor_modes(definition, snapshot):
             unique_id = f"{device_id}_{snapshot.key}_{mode}"
@@ -159,6 +175,11 @@ class HagleitnerSensor(SensorEntity):
         self._definition = definition
         self._mode = mode
         self._attr_device_info = device_info(device_id, customer_id)
+        self._attr_entity_registry_enabled_default = (
+            definition.entity_registry_enabled_default
+        )
+        if definition.entity_category is not None:
+            self._attr_entity_category = definition.entity_category
         if mode == "battery_level":
             self._attr_translation_key = "battery_level"
         elif name is not None:

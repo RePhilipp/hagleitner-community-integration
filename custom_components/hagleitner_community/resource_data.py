@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
+from homeassistant.const import EntityCategory
+
 REFILL_STATE_EQUIVALENT_ID = "4b963ce8-14f4-4f90-03a9-08dac1664f9a"
 
 
@@ -25,6 +27,8 @@ class ResourceDefinition:
     problem_entity_on_values: tuple[str, ...] = ()
     problem_entity_name: str | None = None
     problem_entity_translation_key: str | None = None
+    entity_category: EntityCategory | None = None
+    entity_registry_enabled_default: bool = True
 
 
 @dataclass(frozen=True)
@@ -58,14 +62,20 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     "84b96502-7738-43fb-f3dd-08dace26c91e": ResourceDefinition(
         name="Dispense count",
         kind="counter",
+        entity_category=None,
+        entity_registry_enabled_default=True,
     ),
     "491d2cd9-92a0-4107-f3de-08dace26c91e": ResourceDefinition(
         name="Refill count",
         kind="counter",
+        entity_category=None,
+        entity_registry_enabled_default=True,
     ),
     "77d144fd-d7a3-42f7-03aa-08dac1664f9a": ResourceDefinition(
         name="Energy supply status",
         kind="battery",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "ok",
             1: "low",
@@ -82,6 +92,8 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     REFILL_STATE_EQUIVALENT_ID: ResourceDefinition(
         name="Refill state",
         kind="enum",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "full",
             1: "low",
@@ -94,6 +106,8 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     "9a77375d-964c-451f-03ab-08dac1664f9a": ResourceDefinition(
         name="Error status",
         kind="problem",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "no_error",
             1: "error",
@@ -102,6 +116,8 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     "7c178f1d-271f-4554-03ac-08dac1664f9a": ResourceDefinition(
         name="Connection status",
         kind="connection",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "offline",
             1: "temporarily_offline",
@@ -118,6 +134,8 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     "9c336908-7a04-4adc-8bd7-08dc3d205c10": ResourceDefinition(
         name="Fill status",
         kind="enum",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "full",
             1: "nearly_full",
@@ -130,6 +148,8 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
     "f8cdaa9a-4633-4fd4-1d0d-08de5e8412d5": ResourceDefinition(
         name="Passage counter",
         kind="counter",
+        entity_category=None,
+        entity_registry_enabled_default=True,
     ),
 }
 
@@ -139,27 +159,37 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
     (3, 0): ResourceDefinition(
         name="Firmware version",
         kind="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,
     ),
     (28680, 0): ResourceDefinition(
         name="Total delivery volume",
         kind="counter",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         device_class="volume",
         unit="milliliters",
     ),
     (28682, 0): ResourceDefinition(
         name="Total dispensed water volume",
         kind="counter",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         device_class="volume",
         unit="liters",
     ),
     (45058, 0): ResourceDefinition(
         name="Online ratio",
         kind="measurement",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         unit="percentage",
     ),
     (12289, 0): ResourceDefinition(
         name="Cover state",
         kind="opening",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         enum_values={
             0: "opened",
             1: "closed",
@@ -168,18 +198,26 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
     (20486, 0): ResourceDefinition(
         name="Number of openings",
         kind="counter",
+        entity_category=None,
+        entity_registry_enabled_default=True,
     ),
     (20485, 0): ResourceDefinition(
         name="Passage count",
         kind="counter",
+        entity_category=None,
+        entity_registry_enabled_default=True,
     ),
     (20485, 1): ResourceDefinition(
         name="People count",
         kind="counter",
+        entity_category=None,
+        entity_registry_enabled_default=True,
     ),
     (12307, 0): ResourceDefinition(
         name="Flowmeter change required (volume-based)",
         kind="maintenance",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "no_change_required",
             1: "change_required",
@@ -188,6 +226,8 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
     (12307, 1): ResourceDefinition(
         name="Pump change required (time-based)",
         kind="maintenance",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "no_change_required",
             1: "change_required",
@@ -196,6 +236,8 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
     (12307, 2): ResourceDefinition(
         name="Pump change required (volume-based)",
         kind="maintenance",
+        entity_category=None,
+        entity_registry_enabled_default=True,
         enum_values={
             0: "no_change_required",
             1: "change_required",
