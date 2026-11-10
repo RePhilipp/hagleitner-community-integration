@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import time
 from asyncio import Task
 from collections.abc import Callable
@@ -244,6 +245,12 @@ class HagleitnerHub:
         self._async_record_device_source(device_id)
         self._async_record_customer_id(device_id)
         self._async_record_device_location(device_id)
+        if any(
+            snapshot.definition is not None
+            and snapshot.definition.name == "Firmware version"
+            for snapshot in resource_updates.values()
+        ):
+            self._async_record_firmware_version(device_id)
         for snapshot in resource_updates.values():
             self._async_update_maintenance_issue(device_id, snapshot)
             for listener in tuple(self._resource_listeners.get(device_id, ())):
@@ -388,6 +395,36 @@ class HagleitnerHub:
             },
         )
 
+    def _async_record_firmware_version(self, device_id: str) -> None:
+        """Copy a reported firmware version to the device registry."""
+        device_entry_id = self.device_entry_ids.get(device_id)
+        if device_entry_id is None:
+            return
+        device_entry = self.hass.config_entries.async_get_entry(device_entry_id)
+        if device_entry is None:
+            return
+
+        firmware_version = self.firmware_version_for_device(device_id)
+        if firmware_version is None:
+            return
+        device_registry = dr.async_get(self.hass)
+        registered_device = next(
+            iter(
+                device_registry.async_get_devices(
+                    identifiers={(DOMAIN, device_id)}
+                )
+            ),
+            None,
+        )
+        if (
+            registered_device is not None
+            and registered_device.sw_version != firmware_version
+        ):
+            device_registry.async_update_device(
+                registered_device.id,
+                sw_version=firmware_version,
+            )
+
     def _async_schedule_state_save(self) -> None:
         """Debounce persistence of the latest adopted-device values."""
         store: Store[dict[str, Any]] | None = self._shared_state.get("_state_store")
@@ -436,6 +473,30 @@ class HagleitnerHub:
     ) -> ResourceValueSnapshot | None:
         """Return the last received state for an entity's resource."""
         return self.latest_values.get(device_id, {}).get(resource_key)
+
+    def device_is_offline(self, device_id: str) -> bool:
+        """Return true only for an explicitly reported offline status."""
+        return any(
+            snapshot.definition is not None
+            and snapshot.definition.kind == "connection"
+            and snapshot.mapped_value == "offline"
+            for snapshot in self.latest_values.get(device_id, {}).values()
+        )
+
+    def firmware_version_for_device(self, device_id: str) -> str | None:
+        """Return a safely formatted firmware version if one has been reported."""
+        for snapshot in self.latest_values.get(device_id, {}).values():
+            if (
+                snapshot.definition is None
+                or snapshot.definition.name != "Firmware version"
+            ):
+                continue
+            value = snapshot.raw_value
+            if isinstance(value, str) and re.fullmatch(
+                r"[A-Za-z0-9._+-]{1,64}", value
+            ):
+                return value
+        return None
 
     def metadata_for_device(self, device_id: str) -> DeviceMetadata:
         """Return the last received customer and location details."""

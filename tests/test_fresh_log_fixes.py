@@ -92,6 +92,10 @@ async def test_device_setup_uses_supported_registry_lookup_and_readable_model(
         def _async_record_device_source(*_args):
             pass
 
+        @staticmethod
+        def firmware_version_for_device(_device_id):
+            return "1.2.3"
+
     hub = Hub()
     hub_entry.runtime_data = hub
     hass.data[DOMAIN] = {}
@@ -100,6 +104,7 @@ async def test_device_setup_uses_supported_registry_lookup_and_readable_model(
     assert entry.runtime_data is hub
     assert registry.lookup_identifiers == identifiers
     assert registry.create_options["model"] == expected_model
+    assert registry.create_options["sw_version"] == "1.2.3"
     assert registry.create_options["manufacturer"] == "Hagleitner"
     assert registry.create_options["identifiers"] == identifiers
 

@@ -248,8 +248,11 @@ class HagleitnerSensor(SensorEntity):
 
     @property
     def available(self) -> bool:
-        """Only expose readings while the queue receiver is connected."""
-        return self._hub.receiver_available
+        """Hide device readings only for an explicitly offline device."""
+        return self._hub.receiver_available and (
+            self._definition.kind == "connection"
+            or not self._hub.device_is_offline(self._device_id)
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
@@ -312,8 +315,10 @@ class HagleitnerMetadataSensor(SensorEntity):
 
     @property
     def available(self) -> bool:
-        """Only expose metadata while the queue receiver is connected."""
-        return self._hub.receiver_available
+        """Hide metadata only while the queue or device is offline."""
+        return self._hub.receiver_available and not self._hub.device_is_offline(
+            self._device_id
+        )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to metadata and state changes."""

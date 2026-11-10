@@ -147,8 +147,10 @@ class HagleitnerBinarySensor(BinarySensorEntity):
 
     @property
     def available(self) -> bool:
-        """Only expose readings while the queue receiver is connected."""
-        return self._hub.receiver_available
+        """Hide device values only while the queue or device is offline."""
+        return self._hub.receiver_available and not self._hub.device_is_offline(
+            self._device_id
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:

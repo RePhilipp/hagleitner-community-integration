@@ -303,6 +303,7 @@ async def _async_setup_device(
         identifiers=identifiers,
         manufacturer="Hagleitner",
         model=_device_model(entry.data),
+        sw_version=hub.firmware_version_for_device(device_id),
         name=entry.data["device_name"],
     )
     area_id = entry.data.get("area_id")
