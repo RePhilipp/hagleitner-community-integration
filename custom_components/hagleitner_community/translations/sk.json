@@ -60,6 +60,24 @@
   },
   "entity": {
     "sensor": {
+      "dispense_count": {
+        "name": "Počet dávok"
+      },
+      "refill_count": {
+        "name": "Počet doplnení"
+      },
+      "passage_count": {
+        "name": "Počítadlo frekvencií"
+      },
+      "refill_state": {
+        "name": "Stav doplnenia"
+      },
+      "connection_status": {
+        "name": "Stav pripojenia"
+      },
+      "fill_status": {
+        "name": "Stav naplnenia"
+      },
       "metadata_customer_name": {
         "name": "Názov zákazníka"
       },

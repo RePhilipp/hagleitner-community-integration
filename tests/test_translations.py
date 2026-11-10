@@ -94,6 +94,26 @@ def test_german_translates_all_shipped_entity_names_and_states():
             ), key
 
 
+def test_catalog_backed_resource_names_exist_in_every_locale():
+    """Catalog-localized resource names are present in every shipped locale."""
+    catalog_backed_keys = {
+        "dispense_count",
+        "refill_count",
+        "passage_count",
+        "refill_state",
+        "connection_status",
+        "fill_status",
+    }
+
+    for locale_file in _TRANSLATIONS_PATH.glob("*.json"):
+        translations = json.loads(locale_file.read_text(encoding="utf-8"))
+        sensors = translations["entity"]["sensor"]
+        assert catalog_backed_keys <= set(sensors), locale_file.name
+        assert all(sensors[key].get("name") for key in catalog_backed_keys), (
+            locale_file.name
+        )
+
+
 def test_exception_translations_cover_user_facing_setup_errors():
     """All translated Home Assistant setup exceptions have English messages."""
     translations = json.loads(

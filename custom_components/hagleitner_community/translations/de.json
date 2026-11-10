@@ -76,13 +76,13 @@
   "entity": {
     "sensor": {
       "dispense_count": {
-        "name": "Ausgabeanzahl"
+        "name": "Abgabezähler"
       },
       "refill_count": {
-        "name": "Nachfüllanzahl"
+        "name": "Nachfüllzähler"
       },
       "passage_count": {
-        "name": "Durchgangsanzahl"
+        "name": "Durchgangszähler"
       },
       "people_count": {
         "name": "Personenanzahl"

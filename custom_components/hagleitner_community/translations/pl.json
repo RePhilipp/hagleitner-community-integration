@@ -60,6 +60,24 @@
   },
   "entity": {
     "sensor": {
+      "dispense_count": {
+        "name": "Liczba wydanych porcji"
+      },
+      "refill_count": {
+        "name": "Liczba uzupełnień"
+      },
+      "passage_count": {
+        "name": "Licznik przejść"
+      },
+      "refill_state": {
+        "name": "Stan napełnienia"
+      },
+      "connection_status": {
+        "name": "Stan połączenia"
+      },
+      "fill_status": {
+        "name": "Stan napełnienia"
+      },
       "metadata_customer_name": {
         "name": "Nazwa klienta"
       },

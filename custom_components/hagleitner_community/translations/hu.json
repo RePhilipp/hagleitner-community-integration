@@ -60,6 +60,24 @@
   },
   "entity": {
     "sensor": {
+      "dispense_count": {
+        "name": "Kiadások száma"
+      },
+      "refill_count": {
+        "name": "Utántöltések száma"
+      },
+      "passage_count": {
+        "name": "Áthaladásszámláló"
+      },
+      "refill_state": {
+        "name": "Utántöltési állapot"
+      },
+      "connection_status": {
+        "name": "Kapcsolati állapot"
+      },
+      "fill_status": {
+        "name": "Töltöttségi állapot"
+      },
       "metadata_customer_name": {
         "name": "Ügyfél neve"
       },

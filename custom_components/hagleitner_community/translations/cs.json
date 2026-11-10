@@ -60,6 +60,24 @@
   },
   "entity": {
     "sensor": {
+      "dispense_count": {
+        "name": "Počet vydání"
+      },
+      "refill_count": {
+        "name": "Počet doplnění"
+      },
+      "passage_count": {
+        "name": "Počítadlo průchodů"
+      },
+      "refill_state": {
+        "name": "Stav doplnění"
+      },
+      "connection_status": {
+        "name": "Stav připojení"
+      },
+      "fill_status": {
+        "name": "Stav naplnění"
+      },
       "metadata_customer_name": {
         "name": "Název zákazníka"
       },

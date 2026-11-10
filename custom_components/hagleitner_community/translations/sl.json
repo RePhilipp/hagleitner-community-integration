@@ -60,6 +60,24 @@
   },
   "entity": {
     "sensor": {
+      "dispense_count": {
+        "name": "Število doziranj"
+      },
+      "refill_count": {
+        "name": "Število polnjenj"
+      },
+      "passage_count": {
+        "name": "Števec prehodov"
+      },
+      "refill_state": {
+        "name": "Stanje polnjenja"
+      },
+      "connection_status": {
+        "name": "Stanje povezave"
+      },
+      "fill_status": {
+        "name": "Stanje napolnjenosti"
+      },
       "metadata_customer_name": {
         "name": "Ime stranke"
       },

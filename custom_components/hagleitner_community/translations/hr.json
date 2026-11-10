@@ -60,6 +60,24 @@
   },
   "entity": {
     "sensor": {
+      "dispense_count": {
+        "name": "Broj doza"
+      },
+      "refill_count": {
+        "name": "Broj nadopuna"
+      },
+      "passage_count": {
+        "name": "Brojač prolazaka"
+      },
+      "refill_state": {
+        "name": "Stanje nadopune"
+      },
+      "connection_status": {
+        "name": "Stanje veze"
+      },
+      "fill_status": {
+        "name": "Stanje punjenja"
+      },
       "metadata_customer_name": {
         "name": "Naziv kupca"
       },
