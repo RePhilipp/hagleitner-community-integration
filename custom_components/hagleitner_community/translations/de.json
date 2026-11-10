@@ -49,6 +49,16 @@
       "reauth_successful": "Die Service-Bus-Zugangsdaten wurden aktualisiert.",
       "reauth_entry_not_found": "Der Konfigurationseintrag wurde nicht gefunden.",
       "reconfigure_not_supported": "Übernommene Geräteeinträge können nicht neu konfiguriert werden."
+    },
+    "error": {
+      "queue_already_configured": "Diese Warteschlange wurde bereits hinzugefügt.",
+      "queue_already_configured_disabled": "Diese Warteschlange wurde bereits hinzugefügt, ist aber deaktiviert. Aktiviere den vorhandenen Eintrag, anstatt einen weiteren hinzuzufügen.",
+      "invalid_connection_string": "Die Verbindungszeichenfolge ist ungültig. Überprüfe sie und versuche es erneut.",
+      "invalid_queue": "Gib einen gültigen Warteschlangennamen ein.",
+      "invalid_auth": "Service Bus hat die Zugangsdaten abgelehnt oder sie haben keine Berechtigung für diese Warteschlange.",
+      "queue_not_found": "Die Warteschlange wurde nicht gefunden. Überprüfe den Namen und versuche es erneut.",
+      "cannot_connect": "Keine Verbindung zu Azure Service Bus möglich. Überprüfe die Verbindung und versuche es erneut.",
+      "unknown": "Die Warteschlange konnte nicht überprüft werden. Überprüfe die Angaben und versuche es erneut."
     }
   },
   "issues": {
@@ -173,14 +183,21 @@
       }
     }
   },
-  "error": {
-    "queue_already_configured": "Diese Warteschlange wurde bereits hinzugefügt.",
-    "queue_already_configured_disabled": "Diese Warteschlange wurde bereits hinzugefügt, ist aber deaktiviert. Aktiviere den vorhandenen Eintrag, anstatt einen weiteren hinzuzufügen.",
-    "invalid_connection_string": "Die Verbindungszeichenfolge ist ungültig. Überprüfe sie und versuche es erneut.",
-    "invalid_queue": "Gib einen gültigen Warteschlangennamen ein.",
-    "invalid_auth": "Service Bus hat die Zugangsdaten abgelehnt oder sie haben keine Berechtigung für diese Warteschlange.",
-    "queue_not_found": "Die Warteschlange wurde nicht gefunden. Überprüfe den Namen und versuche es erneut.",
-    "cannot_connect": "Keine Verbindung zu Azure Service Bus möglich. Überprüfe die Verbindung und versuche es erneut.",
-    "unknown": "Die Warteschlange konnte nicht überprüft werden. Überprüfe die Angaben und versuche es erneut."
+  "exceptions": {
+    "service_bus_credentials_invalid": {
+      "message": "The Service Bus connection string is invalid, or the credentials do not have permission to access this queue."
+    },
+    "service_bus_queue_unavailable": {
+      "message": "The configured Service Bus queue is not currently available."
+    },
+    "service_bus_queue_not_found": {
+      "message": "The configured Service Bus queue could not be found."
+    },
+    "service_bus_queue_validation_failed": {
+      "message": "Unable to validate the configured Service Bus queue."
+    },
+    "waiting_for_queue_connection": {
+      "message": "Waiting for the Hagleitner queue connection."
+    }
   }
 }

@@ -32,12 +32,33 @@
         "data_description": {
           "area_id": "Opcionálisan rendeljen Home Assistant-területet az átvett eszközhöz."
         }
+      },
+      "reconfigure": {
+        "title": "Change the Service Bus queue",
+        "description": "Connect this entry to another Azure Service Bus queue. The stored credentials are checked before the change is saved.",
+        "data": {
+          "queue_name": "Queue name"
+        },
+        "data_description": {
+          "queue_name": "The Service Bus queue name from the forwarding rule."
+        }
       }
     },
     "flow_title": "Új eszköz: {name}",
     "abort": {
       "reauth_successful": "A Service Bus hitelesítő adatai frissültek.",
-      "reauth_entry_not_found": "A konfigurációs bejegyzés nem található."
+      "reauth_entry_not_found": "A konfigurációs bejegyzés nem található.",
+      "reconfigure_not_supported": "Adopted device entries cannot be reconfigured."
+    },
+    "error": {
+      "queue_already_configured": "Ez a sor már hozzá van adva.",
+      "queue_already_configured_disabled": "Ez a sor már hozzá van adva, de le van tiltva. Újabb hozzáadása helyett engedélyezze a meglévő bejegyzést.",
+      "invalid_connection_string": "A kapcsolati karakterlánc érvénytelen. Ellenőrizze, majd próbálja újra.",
+      "invalid_queue": "Adjon meg érvényes sornevet.",
+      "invalid_auth": "A Service Bus elutasította a hitelesítő adatokat, vagy azoknak nincs jogosultságuk a sor eléréséhez.",
+      "queue_not_found": "A sor nem található. Ellenőrizze a nevét, majd próbálja újra.",
+      "cannot_connect": "Nem sikerült csatlakozni az Azure Service Bushoz. Ellenőrizze a kapcsolatot, majd próbálja újra.",
+      "unknown": "Nem sikerült ellenőrizni a sort. Ellenőrizze az adatokat, majd próbálja újra."
     }
   },
   "issues": {
@@ -56,6 +77,10 @@
     "pump_replacement": {
       "title": "{device_name}: cserélje ki a szivattyút",
       "description": "A szivattyú elérte az idő- vagy térfogat-alapú cserehatárt. Cserélje ki, majd a feladat törléséhez állítsa vissza a szivattyúcsere műveletet."
+    },
+    "queue_not_found": {
+      "title": "Service Bus queue not found",
+      "description": "The configured queue is missing or its name changed. Verify the queue name in the Hagleitner forwarding rule, then reconfigure this entry to use the correct queue."
     }
   },
   "entity": {
@@ -70,13 +95,29 @@
         "name": "Áthaladásszámláló"
       },
       "refill_state": {
-        "name": "Utántöltési állapot"
+        "name": "Utántöltési állapot",
+        "state": {
+          "full": "Full",
+          "low": "Low",
+          "empty": "Empty"
+        }
       },
       "connection_status": {
-        "name": "Kapcsolati állapot"
+        "name": "Kapcsolati állapot",
+        "state": {
+          "offline": "Offline",
+          "temporarily_offline": "Temporarily offline",
+          "online": "Online",
+          "not_connected": "Not connected"
+        }
       },
       "fill_status": {
-        "name": "Töltöttségi állapot"
+        "name": "Töltöttségi állapot",
+        "state": {
+          "full": "Full",
+          "nearly_full": "Nearly full",
+          "empty": "Empty"
+        }
       },
       "metadata_customer_name": {
         "name": "Ügyfél neve"
@@ -92,6 +133,31 @@
       },
       "battery_level": {
         "name": "Töltöttségi szint"
+      },
+      "people_count": {
+        "name": "People count"
+      },
+      "firmware_version": {
+        "name": "Firmware version"
+      },
+      "total_delivery_volume": {
+        "name": "Total delivery volume"
+      },
+      "total_dispensed_water_volume": {
+        "name": "Total dispensed water volume"
+      },
+      "online_ratio": {
+        "name": "Online ratio"
+      },
+      "cover_state": {
+        "name": "Cover state",
+        "state": {
+          "opened": "Open",
+          "closed": "Closed"
+        }
+      },
+      "number_of_openings": {
+        "name": "Number of openings"
       }
     },
     "binary_sensor": {
@@ -117,14 +183,21 @@
       }
     }
   },
-  "error": {
-    "queue_already_configured": "Ez a sor már hozzá van adva.",
-    "queue_already_configured_disabled": "Ez a sor már hozzá van adva, de le van tiltva. Újabb hozzáadása helyett engedélyezze a meglévő bejegyzést.",
-    "invalid_connection_string": "A kapcsolati karakterlánc érvénytelen. Ellenőrizze, majd próbálja újra.",
-    "invalid_queue": "Adjon meg érvényes sornevet.",
-    "invalid_auth": "A Service Bus elutasította a hitelesítő adatokat, vagy azoknak nincs jogosultságuk a sor eléréséhez.",
-    "queue_not_found": "A sor nem található. Ellenőrizze a nevét, majd próbálja újra.",
-    "cannot_connect": "Nem sikerült csatlakozni az Azure Service Bushoz. Ellenőrizze a kapcsolatot, majd próbálja újra.",
-    "unknown": "Nem sikerült ellenőrizni a sort. Ellenőrizze az adatokat, majd próbálja újra."
+  "exceptions": {
+    "service_bus_credentials_invalid": {
+      "message": "The Service Bus connection string is invalid, or the credentials do not have permission to access this queue."
+    },
+    "service_bus_queue_unavailable": {
+      "message": "The configured Service Bus queue is not currently available."
+    },
+    "service_bus_queue_not_found": {
+      "message": "The configured Service Bus queue could not be found."
+    },
+    "service_bus_queue_validation_failed": {
+      "message": "Unable to validate the configured Service Bus queue."
+    },
+    "waiting_for_queue_connection": {
+      "message": "Waiting for the Hagleitner queue connection."
+    }
   }
 }

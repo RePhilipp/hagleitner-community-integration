@@ -32,12 +32,33 @@
         "data_description": {
           "area_id": "Volitelně přiřaďte přijaté zařízení k oblasti Home Assistant."
         }
+      },
+      "reconfigure": {
+        "title": "Change the Service Bus queue",
+        "description": "Connect this entry to another Azure Service Bus queue. The stored credentials are checked before the change is saved.",
+        "data": {
+          "queue_name": "Queue name"
+        },
+        "data_description": {
+          "queue_name": "The Service Bus queue name from the forwarding rule."
+        }
       }
     },
     "flow_title": "Nové zařízení: {name}",
     "abort": {
       "reauth_successful": "Přihlašovací údaje Service Bus byly aktualizovány.",
-      "reauth_entry_not_found": "Konfigurační položku se nepodařilo najít."
+      "reauth_entry_not_found": "Konfigurační položku se nepodařilo najít.",
+      "reconfigure_not_supported": "Adopted device entries cannot be reconfigured."
+    },
+    "error": {
+      "queue_already_configured": "Tato fronta již byla přidána.",
+      "queue_already_configured_disabled": "Tato fronta již byla přidána, ale je zakázána. Místo přidání další povolte stávající položku.",
+      "invalid_connection_string": "Připojovací řetězec není platný. Zkontrolujte jej a zkuste to znovu.",
+      "invalid_queue": "Zadejte platný název fronty.",
+      "invalid_auth": "Service Bus odmítl přihlašovací údaje nebo nemají oprávnění k této frontě.",
+      "queue_not_found": "Fronta nebyla nalezena. Zkontrolujte její název a zkuste to znovu.",
+      "cannot_connect": "Nelze se připojit ke službě Azure Service Bus. Zkontrolujte připojení a zkuste to znovu.",
+      "unknown": "Frontu se nepodařilo ověřit. Zkontrolujte údaje a zkuste to znovu."
     }
   },
   "issues": {
@@ -56,6 +77,10 @@
     "pump_replacement": {
       "title": "{device_name}: vyměňte čerpadlo",
       "description": "Byl dosažen časový nebo objemový limit pro výměnu čerpadla. Vyměňte čerpadlo a resetujte akci výměny čerpadla, aby se tento úkol uzavřel."
+    },
+    "queue_not_found": {
+      "title": "Service Bus queue not found",
+      "description": "The configured queue is missing or its name changed. Verify the queue name in the Hagleitner forwarding rule, then reconfigure this entry to use the correct queue."
     }
   },
   "entity": {
@@ -70,13 +95,29 @@
         "name": "Počítadlo průchodů"
       },
       "refill_state": {
-        "name": "Stav doplnění"
+        "name": "Stav doplnění",
+        "state": {
+          "full": "Full",
+          "low": "Low",
+          "empty": "Empty"
+        }
       },
       "connection_status": {
-        "name": "Stav připojení"
+        "name": "Stav připojení",
+        "state": {
+          "offline": "Offline",
+          "temporarily_offline": "Temporarily offline",
+          "online": "Online",
+          "not_connected": "Not connected"
+        }
       },
       "fill_status": {
-        "name": "Stav naplnění"
+        "name": "Stav naplnění",
+        "state": {
+          "full": "Full",
+          "nearly_full": "Nearly full",
+          "empty": "Empty"
+        }
       },
       "metadata_customer_name": {
         "name": "Název zákazníka"
@@ -92,6 +133,31 @@
       },
       "battery_level": {
         "name": "Úroveň nabití baterie"
+      },
+      "people_count": {
+        "name": "People count"
+      },
+      "firmware_version": {
+        "name": "Firmware version"
+      },
+      "total_delivery_volume": {
+        "name": "Total delivery volume"
+      },
+      "total_dispensed_water_volume": {
+        "name": "Total dispensed water volume"
+      },
+      "online_ratio": {
+        "name": "Online ratio"
+      },
+      "cover_state": {
+        "name": "Cover state",
+        "state": {
+          "opened": "Open",
+          "closed": "Closed"
+        }
+      },
+      "number_of_openings": {
+        "name": "Number of openings"
       }
     },
     "binary_sensor": {
@@ -117,14 +183,21 @@
       }
     }
   },
-  "error": {
-    "queue_already_configured": "Tato fronta již byla přidána.",
-    "queue_already_configured_disabled": "Tato fronta již byla přidána, ale je zakázána. Místo přidání další povolte stávající položku.",
-    "invalid_connection_string": "Připojovací řetězec není platný. Zkontrolujte jej a zkuste to znovu.",
-    "invalid_queue": "Zadejte platný název fronty.",
-    "invalid_auth": "Service Bus odmítl přihlašovací údaje nebo nemají oprávnění k této frontě.",
-    "queue_not_found": "Fronta nebyla nalezena. Zkontrolujte její název a zkuste to znovu.",
-    "cannot_connect": "Nelze se připojit ke službě Azure Service Bus. Zkontrolujte připojení a zkuste to znovu.",
-    "unknown": "Frontu se nepodařilo ověřit. Zkontrolujte údaje a zkuste to znovu."
+  "exceptions": {
+    "service_bus_credentials_invalid": {
+      "message": "The Service Bus connection string is invalid, or the credentials do not have permission to access this queue."
+    },
+    "service_bus_queue_unavailable": {
+      "message": "The configured Service Bus queue is not currently available."
+    },
+    "service_bus_queue_not_found": {
+      "message": "The configured Service Bus queue could not be found."
+    },
+    "service_bus_queue_validation_failed": {
+      "message": "Unable to validate the configured Service Bus queue."
+    },
+    "waiting_for_queue_connection": {
+      "message": "Waiting for the Hagleitner queue connection."
+    }
   }
 }

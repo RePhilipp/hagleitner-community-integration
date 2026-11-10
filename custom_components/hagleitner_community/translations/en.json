@@ -49,6 +49,16 @@
       "reauth_successful": "Service Bus credentials were updated.",
       "reauth_entry_not_found": "The configuration entry could not be found.",
       "reconfigure_not_supported": "Adopted device entries cannot be reconfigured."
+    },
+    "error": {
+      "queue_already_configured": "This queue is already added.",
+      "queue_already_configured_disabled": "This queue is already added but disabled. Enable the existing entry instead of adding another.",
+      "invalid_connection_string": "The connection string is not valid. Check it and try again.",
+      "invalid_queue": "Enter a valid queue name.",
+      "invalid_auth": "Service Bus rejected the credentials or they do not have permission to access this queue.",
+      "queue_not_found": "The queue could not be found. Check the queue name and try again.",
+      "cannot_connect": "Could not connect to Azure Service Bus. Check the connection and try again.",
+      "unknown": "Could not validate the queue. Check the details and try again."
     }
   },
   "issues": {
@@ -189,15 +199,5 @@
     "waiting_for_queue_connection": {
       "message": "Waiting for the Hagleitner queue connection."
     }
-  },
-  "error": {
-    "queue_already_configured": "This queue is already added.",
-    "queue_already_configured_disabled": "This queue is already added but disabled. Enable the existing entry instead of adding another.",
-    "invalid_connection_string": "The connection string is not valid. Check it and try again.",
-    "invalid_queue": "Enter a valid queue name.",
-    "invalid_auth": "Service Bus rejected the credentials or they do not have permission to access this queue.",
-    "queue_not_found": "The queue could not be found. Check the queue name and try again.",
-    "cannot_connect": "Could not connect to Azure Service Bus. Check the connection and try again.",
-    "unknown": "Could not validate the queue. Check the details and try again."
   }
 }

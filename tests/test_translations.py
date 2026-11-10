@@ -26,6 +26,34 @@ def test_all_locale_files_are_valid_json():
         json.loads(locale_file.read_text(encoding="utf-8"))
 
 
+def _translation_keys(
+    value: object,
+    prefix: tuple[str, ...] = (),
+) -> set[tuple[str, ...]]:
+    """Return every nested translation key path in a locale document."""
+    if not isinstance(value, dict):
+        return set()
+    keys: set[tuple[str, ...]] = set()
+    for key, child in value.items():
+        path = (*prefix, key)
+        keys.add(path)
+        keys.update(_translation_keys(child, path))
+    return keys
+
+
+def test_all_locales_have_the_same_translation_keys():
+    """Keep every locale structurally complete with English fallback strings."""
+    english_keys = _translation_keys(
+        json.loads((_TRANSLATIONS_PATH / "en.json").read_text(encoding="utf-8"))
+    )
+
+    for locale_file in _TRANSLATIONS_PATH.glob("*.json"):
+        locale_keys = _translation_keys(
+            json.loads(locale_file.read_text(encoding="utf-8"))
+        )
+        assert locale_keys == english_keys, locale_file.name
+
+
 def test_english_translates_all_shipped_entity_names_and_states():
     """Every generated entity has a key, English name, and enum-state labels."""
     translations = json.loads(

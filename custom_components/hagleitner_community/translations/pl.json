@@ -32,12 +32,33 @@
         "data_description": {
           "area_id": "Opcjonalnie przypisz przejęte urządzenie do obszaru Home Assistant."
         }
+      },
+      "reconfigure": {
+        "title": "Change the Service Bus queue",
+        "description": "Connect this entry to another Azure Service Bus queue. The stored credentials are checked before the change is saved.",
+        "data": {
+          "queue_name": "Queue name"
+        },
+        "data_description": {
+          "queue_name": "The Service Bus queue name from the forwarding rule."
+        }
       }
     },
     "flow_title": "Nowe urządzenie: {name}",
     "abort": {
       "reauth_successful": "Dane uwierzytelniające Service Bus zostały zaktualizowane.",
-      "reauth_entry_not_found": "Nie znaleziono wpisu konfiguracji."
+      "reauth_entry_not_found": "Nie znaleziono wpisu konfiguracji.",
+      "reconfigure_not_supported": "Adopted device entries cannot be reconfigured."
+    },
+    "error": {
+      "queue_already_configured": "Ta kolejka została już dodana.",
+      "queue_already_configured_disabled": "Ta kolejka została już dodana, ale jest wyłączona. Włącz istniejący wpis zamiast dodawać kolejny.",
+      "invalid_connection_string": "Ciąg połączenia jest nieprawidłowy. Sprawdź go i spróbuj ponownie.",
+      "invalid_queue": "Wprowadź prawidłową nazwę kolejki.",
+      "invalid_auth": "Service Bus odrzucił dane uwierzytelniające lub nie mają one uprawnień do tej kolejki.",
+      "queue_not_found": "Nie znaleziono kolejki. Sprawdź jej nazwę i spróbuj ponownie.",
+      "cannot_connect": "Nie można połączyć się z Azure Service Bus. Sprawdź połączenie i spróbuj ponownie.",
+      "unknown": "Nie można zweryfikować kolejki. Sprawdź dane i spróbuj ponownie."
     }
   },
   "issues": {
@@ -56,6 +77,10 @@
     "pump_replacement": {
       "title": "{device_name}: wymień pompę",
       "description": "Osiągnięto próg wymiany pompy zależny od czasu lub objętości. Wymień pompę i zresetuj czynność jej wymiany, aby zamknąć to zadanie."
+    },
+    "queue_not_found": {
+      "title": "Service Bus queue not found",
+      "description": "The configured queue is missing or its name changed. Verify the queue name in the Hagleitner forwarding rule, then reconfigure this entry to use the correct queue."
     }
   },
   "entity": {
@@ -70,13 +95,29 @@
         "name": "Licznik przejść"
       },
       "refill_state": {
-        "name": "Stan napełnienia"
+        "name": "Stan napełnienia",
+        "state": {
+          "full": "Full",
+          "low": "Low",
+          "empty": "Empty"
+        }
       },
       "connection_status": {
-        "name": "Stan połączenia"
+        "name": "Stan połączenia",
+        "state": {
+          "offline": "Offline",
+          "temporarily_offline": "Temporarily offline",
+          "online": "Online",
+          "not_connected": "Not connected"
+        }
       },
       "fill_status": {
-        "name": "Stan napełnienia"
+        "name": "Stan napełnienia",
+        "state": {
+          "full": "Full",
+          "nearly_full": "Nearly full",
+          "empty": "Empty"
+        }
       },
       "metadata_customer_name": {
         "name": "Nazwa klienta"
@@ -92,6 +133,31 @@
       },
       "battery_level": {
         "name": "Poziom baterii"
+      },
+      "people_count": {
+        "name": "People count"
+      },
+      "firmware_version": {
+        "name": "Firmware version"
+      },
+      "total_delivery_volume": {
+        "name": "Total delivery volume"
+      },
+      "total_dispensed_water_volume": {
+        "name": "Total dispensed water volume"
+      },
+      "online_ratio": {
+        "name": "Online ratio"
+      },
+      "cover_state": {
+        "name": "Cover state",
+        "state": {
+          "opened": "Open",
+          "closed": "Closed"
+        }
+      },
+      "number_of_openings": {
+        "name": "Number of openings"
       }
     },
     "binary_sensor": {
@@ -117,14 +183,21 @@
       }
     }
   },
-  "error": {
-    "queue_already_configured": "Ta kolejka została już dodana.",
-    "queue_already_configured_disabled": "Ta kolejka została już dodana, ale jest wyłączona. Włącz istniejący wpis zamiast dodawać kolejny.",
-    "invalid_connection_string": "Ciąg połączenia jest nieprawidłowy. Sprawdź go i spróbuj ponownie.",
-    "invalid_queue": "Wprowadź prawidłową nazwę kolejki.",
-    "invalid_auth": "Service Bus odrzucił dane uwierzytelniające lub nie mają one uprawnień do tej kolejki.",
-    "queue_not_found": "Nie znaleziono kolejki. Sprawdź jej nazwę i spróbuj ponownie.",
-    "cannot_connect": "Nie można połączyć się z Azure Service Bus. Sprawdź połączenie i spróbuj ponownie.",
-    "unknown": "Nie można zweryfikować kolejki. Sprawdź dane i spróbuj ponownie."
+  "exceptions": {
+    "service_bus_credentials_invalid": {
+      "message": "The Service Bus connection string is invalid, or the credentials do not have permission to access this queue."
+    },
+    "service_bus_queue_unavailable": {
+      "message": "The configured Service Bus queue is not currently available."
+    },
+    "service_bus_queue_not_found": {
+      "message": "The configured Service Bus queue could not be found."
+    },
+    "service_bus_queue_validation_failed": {
+      "message": "Unable to validate the configured Service Bus queue."
+    },
+    "waiting_for_queue_connection": {
+      "message": "Waiting for the Hagleitner queue connection."
+    }
   }
 }
