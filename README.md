@@ -1,27 +1,25 @@
 # Hagleitner Community
 
-An unofficial community integration for bringing Hagleitner device data into
-Home Assistant. It is an independent project and is not maintained, supported,
-or endorsed by Hagleitner.
+The **Hagleitner Community** integration connects Home Assistant to Hagleitner
+device data forwarded from the [Hygiene Portal](https://hsm.hygieneportal.com/)
+through Azure Service Bus. [Hagleitner](https://www.hagleitner.com/) develops
+hygiene products and digital hygiene solutions. This is an independent
+community project and is not maintained, supported, or endorsed by Hagleitner.
 
-## Before you begin
+## Prerequisites
 
-The integration needs a Service Bus connection string and queue name. In the
-Hagleitner Hygiene Portal, visit
-[Devices → Data forwarding](https://hsm.hygieneportal.com/devices/data-forwarding)
-and create a **ResourceDataForwardingRule**. The portal provides the connection
-and queue details. **Only devices selected in that rule have their values
-forwarded.**
-
-Open the rule and select its **Connection strings** tab. Copy the **Service bus
-connection** and **Service bus queue** values into the Home Assistant setup;
-the SignalR connection is not used by this integration.
+1. ResourceDataForwarding must be enabled for your customer. If the data-forwarding
+   option or rule is unavailable, contact Hagleitner Sales to ask about enabling
+   it. Confirm any applicable costs with Sales.
+2. In the Hagleitner Hygiene Portal, visit
+   [Devices → Data forwarding](https://hsm.hygieneportal.com/devices/data-forwarding)
+   and create a **ResourceDataForwardingRule**. Select the devices whose values
+   should be forwarded; **only selected devices are included**.
+3. Open the rule's **Connection strings** tab and copy the **Service bus
+   connection** and **Service bus queue** values. The SignalR connection is not
+   used by this integration.
 
 ![Hagleitner portal showing the Service Bus connection and queue fields](docs/images/forwarding-rule-connection-strings.png)
-
-ResourceDataForwarding must be enabled for your customer. If the data-forwarding
-option or rule is unavailable, contact Hagleitner Sales to ask about enabling
-it. Confirm any applicable costs with Sales.
 
 You can use multiple forwarding rules. Add each rule's queue as a separate
 integration entry; devices included by more than one rule remain a single
@@ -33,20 +31,56 @@ messages between them, so each instance may miss some readings. If you run
 multiple Home Assistant instances, create a separate forwarding rule (and queue)
 for each instance.
 
+## Install the integration
+
+### Home Assistant 2026.11 or newer
+
+The [Marketplace](https://www.home-assistant.io/integrations/marketplace/)
+is built into Home Assistant. Open **Settings → Marketplace** and search for
+**Hagleitner Community**. If it is not listed, use **Add from link** and enter
+[`RePhilipp/hagleitner-community-integration`](https://github.com/RePhilipp/hagleitner-community-integration).
+Open the repository and select **Install**. Follow any restart prompt shown by
+Home Assistant.
+
+### Home Assistant 2026.10 or older
+
+These versions use HACS rather than the built-in Marketplace. Install HACS if
+needed, then open **HACS → Integrations**. If Hagleitner Community is not listed,
+add [`RePhilipp/hagleitner-community-integration`](https://github.com/RePhilipp/hagleitner-community-integration)
+as a custom repository with the **Integration** category. Download the
+integration and restart Home Assistant when prompted.
+
 ## Set up Home Assistant
 
-After installing the integration through
-[Marketplace](https://www.hacs.xyz/docs/marketplace/), restart Home Assistant if
-prompted. Go to **Settings → Devices & services → Add integration** and choose
-**Hagleitner Community**. Enter the Service Bus connection string and queue name
-from the portal.
+1. Go to **Settings → Devices & services → Add integration** and choose
+   **Hagleitner Community**.
+2. Enter the Service Bus connection string and queue name from the portal.
+3. When Home Assistant offers a newly detected device for adoption, confirm it
+   to add the device. You can optionally assign it to a suggested area.
 
-When a message arrives for a new device, Home Assistant offers it for adoption.
-Confirm adoption to add the device. Entities appear as supported values arrive;
-there is no fixed list of entities guaranteed for every device. Recognized
-connectivity issues, device errors, and component replacement thresholds can
-also appear as maintenance tasks in Home Assistant's Repairs page. Battery,
-refill, and fill levels remain available as entities, not Repairs issues.
+Entities appear as supported values arrive; there is no fixed list of entities
+guaranteed for every device. Recognized connectivity issues, device errors, and
+component replacement thresholds can also appear as maintenance tasks in Home
+Assistant's Repairs page. Battery, refill, and fill levels remain available as
+entities, not Repairs issues.
+
+## Remove the integration
+
+In **Settings → Devices & services**, delete the Hagleitner Community entries
+you no longer need. Each queue is a separate entry, and adopted devices have
+their own entries. Deleting a queue entry stops its Home Assistant receiver but
+does not delete the Hagleitner forwarding rule or automatically delete adopted
+device entries. Delete adopted device entries separately to unload their
+entities and clear their maintenance issues.
+
+Deleting an entry in Home Assistant does not change the forwarding rule in the
+Hagleitner Hygiene Portal. To stop forwarding a device's data, edit the rule at
+[Devices → Data forwarding](https://hsm.hygieneportal.com/devices/data-forwarding)
+in the portal as well.
+
+On Home Assistant 2026.11 or newer, remove the integration entries before
+uninstalling the repository from the Marketplace. On older versions, remove the
+entries before uninstalling it from HACS.
 
 ## Developer information
 
