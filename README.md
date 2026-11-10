@@ -35,7 +35,8 @@ for each instance.
 
 ## Set up Home Assistant
 
-After installing the integration through HACS, restart Home Assistant if
+After installing the integration through
+[Marketplace](https://www.hacs.xyz/docs/marketplace/), restart Home Assistant if
 prompted. Go to **Settings → Devices & services → Add integration** and choose
 **Hagleitner Community**. Enter the Service Bus connection string and queue name
 from the portal.
