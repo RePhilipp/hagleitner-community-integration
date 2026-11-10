@@ -137,9 +137,19 @@ async def run_receiver(
     """Receive and settle messages, rebuilding the receiver after runtime failures."""
     retry_delay = _INITIAL_RETRY_DELAY
     ssl_context: ssl.SSLContext | None = None
+    outage_logged = False
+    first_attempt = True
     while True:
         try:
-            _LOGGER.info("Starting Azure Service Bus receiver for queue %s", queue_name)
+            if first_attempt:
+                _LOGGER.info(
+                    "Starting Azure Service Bus receiver for queue %s", queue_name
+                )
+                first_attempt = False
+            else:
+                _LOGGER.debug(
+                    "Retrying Azure Service Bus receiver for queue %s", queue_name
+                )
             if ssl_context is None:
                 ssl_context = await asyncio.to_thread(_create_ssl_context)
             async with ServiceBusClient.from_connection_string(
@@ -152,10 +162,9 @@ async def run_receiver(
                     max_wait_time=5,
                 )
                 async with receiver:
-                    # DEBUG ONLY: remove before merging; pause to observe unavailable.
-                    await asyncio.sleep(10)
                     if status_handler is not None:
                         status_handler(True)
+                    outage_logged = False
                     _LOGGER.info(
                         "Started Azure Service Bus receiver; listening on queue %s",
                         queue_name,
@@ -206,15 +215,15 @@ async def run_receiver(
         except Exception as error:
             if status_handler is not None:
                 status_handler(False)
-            # DEBUG ONLY: remove before merging; pause to observe unavailable.
-            await asyncio.sleep(10)
-            _LOGGER.error(
-                "Service Bus receiver for queue %s failed (%s); "
-                "recreating it in %s seconds",
-                queue_name,
-                type(error).__name__,
-                retry_delay,
-            )
+            if not outage_logged:
+                _LOGGER.info(
+                    "Service Bus receiver for queue %s is unavailable (%s); "
+                    "retrying in %s seconds",
+                    queue_name,
+                    type(error).__name__,
+                    retry_delay,
+                )
+                outage_logged = True
             await asyncio.sleep(retry_delay)
             retry_delay = min(retry_delay * 2, _MAX_RETRY_DELAY)
 

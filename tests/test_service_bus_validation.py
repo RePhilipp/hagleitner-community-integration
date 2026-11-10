@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import threading
 
 import pytest
@@ -226,7 +227,7 @@ async def test_validation_rejects_empty_connection_and_queue_without_client(
     assert calls == []
 
 
-async def test_receiver_keeps_reconnecting_after_a_successful_probe(monkeypatch):
+async def test_receiver_logs_one_outage_and_one_recovery(monkeypatch, caplog):
     """The persistent consumer still retries transient failures in the background."""
     attempts = 0
     receiver_started = asyncio.Event()
@@ -260,7 +261,7 @@ async def test_receiver_keeps_reconnecting_after_a_successful_probe(monkeypatch)
     def from_connection_string(*_args, **_kwargs):
         nonlocal attempts
         attempts += 1
-        if attempts == 1:
+        if attempts < 3:
             raise ServiceBusConnectionError(message="private transient detail")
         return Client()
 
@@ -269,6 +270,7 @@ async def test_receiver_keeps_reconnecting_after_a_successful_probe(monkeypatch)
 
     monkeypatch.setattr(service_bus, "_create_ssl_context", lambda: object())
     monkeypatch.setattr(service_bus.asyncio, "sleep", skip_retry_delay)
+    caplog.set_level(logging.DEBUG, logger=service_bus.__name__)
     monkeypatch.setattr(
         service_bus.ServiceBusClient,
         "from_connection_string",
@@ -283,6 +285,18 @@ async def test_receiver_keeps_reconnecting_after_a_successful_probe(monkeypatch)
     with pytest.raises(asyncio.CancelledError):
         await task
 
-    assert attempts == 2
+    assert attempts == 3
     assert receiver_closed is True
     assert client_closed is True
+    messages = [record.getMessage() for record in caplog.records]
+    assert sum("is unavailable" in message for message in messages) == 1
+    assert sum("Starting Azure Service Bus receiver" in message for message in messages) == 1
+    assert sum("Retrying Azure Service Bus receiver" in message for message in messages) == 2
+    assert sum("Started Azure Service Bus receiver" in message for message in messages) == 1
+    assert all(
+        record.levelno == logging.INFO
+        for record in caplog.records
+        if "is unavailable" in record.getMessage()
+        or "Started Azure Service Bus receiver" in record.getMessage()
+    )
+    assert "private transient detail" not in caplog.text
