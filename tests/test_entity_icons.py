@@ -93,8 +93,16 @@ def test_sensor_icons_are_defined_by_entity_translation_key():
     """Keep custom icons in icons.json instead of entity state attributes."""
     icons = json.loads(_ICONS_PATH.read_text())["entity"]["sensor"]
     for equivalent_id, expected_key, expected_icon in (
-        ("84b96502-7738-43fb-f3dd-08dace26c91e", "dispense_count", "mdi:counter"),
-        ("491d2cd9-92a0-4107-f3de-08dace26c91e", "refill_count", "mdi:counter"),
+        (
+            "84b96502-7738-43fb-f3dd-08dace26c91e",
+            "dispense_count",
+            "mdi:numeric",
+        ),
+        (
+            "491d2cd9-92a0-4107-f3de-08dace26c91e",
+            "refill_count",
+            "mdi:numeric",
+        ),
     ):
         entity = _sensor(
             SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[equivalent_id],
@@ -104,9 +112,9 @@ def test_sensor_icons_are_defined_by_entity_translation_key():
         assert icons[expected_key]["default"] == expected_icon
 
     for definition, expected_key, expected_icon in (
-        (_CONNECTION_DEFINITION, "connection_status", "mdi:lan-connect"),
-        (_REFILL_STATE_DEFINITION, "refill_state", "mdi:package-variant-closed"),
-        (_FILL_STATUS_DEFINITION, "fill_status", "mdi:package-variant-closed"),
+        (_CONNECTION_DEFINITION, "connection_status", "mdi:lan"),
+        (_REFILL_STATE_DEFINITION, "refill_state", "mdi:beaker-outline"),
+        (_FILL_STATUS_DEFINITION, "fill_status", "mdi:beaker"),
         (_OPENING_DEFINITION, "cover_state", "mdi:package-variant"),
     ):
         entity = _sensor(definition, mode="enum")
