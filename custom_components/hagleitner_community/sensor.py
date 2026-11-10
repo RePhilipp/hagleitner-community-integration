@@ -247,6 +247,11 @@ class HagleitnerSensor(SensorEntity):
         return None
 
     @property
+    def available(self) -> bool:
+        """Only expose readings while the queue receiver is connected."""
+        return self._hub.receiver_available
+
+    @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Expose the timestamp supplied with the resource reading."""
         snapshot = self._hub.value_for_resource(self._device_id, self._resource_key)
@@ -304,6 +309,11 @@ class HagleitnerMetadataSensor(SensorEntity):
         """Return the latest customer or location metadata."""
         metadata = self._hub.metadata_for_device(self._device_id)
         return getattr(metadata, self._metadata_key)
+
+    @property
+    def available(self) -> bool:
+        """Only expose metadata while the queue receiver is connected."""
+        return self._hub.receiver_available
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to metadata and state changes."""

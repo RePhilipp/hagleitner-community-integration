@@ -147,6 +147,11 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         return None
 
     @property
+    def available(self) -> bool:
+        """Only expose readings while the queue receiver is connected."""
+        return self._hub.receiver_available
+
+    @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Expose the timestamp supplied with the resource reading."""
         snapshot = self._hub.value_for_resource(self._device_id, self._resource_key)

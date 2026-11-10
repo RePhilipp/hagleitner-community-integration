@@ -168,7 +168,20 @@ class HagleitnerHub:
         self._resource_listeners: dict[
             str, set[Callable[[ResourceValueSnapshot], None]]
         ] = shared.setdefault("resource_listeners", {})
+        self.receiver_available = False
         self.receiver_task: Task[None] | None = None
+
+    @callback
+    def async_set_receiver_available(self, available: bool) -> None:
+        """Update receiver status and refresh entities for this queue's devices."""
+        if self.receiver_available == available:
+            return
+        self.receiver_available = available
+        for device_id in self.adopted_device_ids:
+            if self.entry.entry_id not in self.device_sources.get(device_id, ()):
+                continue
+            for listener in tuple(self._state_listeners.get(device_id, ())):
+                listener()
 
     async def async_handle_message(self, message: dict[str, Any]) -> None:
         """Cache a message, prompt for unadopted devices, and update entities."""

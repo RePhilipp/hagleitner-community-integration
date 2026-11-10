@@ -16,6 +16,7 @@ from .resource_data import device_identity
 
 _LOGGER = logging.getLogger(__name__)
 MessageHandler = Callable[[dict[str, Any]], Awaitable[None]]
+ReceiverStatusHandler = Callable[[bool], None]
 _INITIAL_RETRY_DELAY = 1
 _MAX_RETRY_DELAY = 60
 
@@ -24,6 +25,7 @@ async def run_receiver(
     connection_string: str,
     queue_name: str,
     message_handler: MessageHandler,
+    status_handler: ReceiverStatusHandler | None = None,
 ) -> None:
     """Receive and settle messages, rebuilding the receiver after runtime failures."""
     retry_delay = _INITIAL_RETRY_DELAY
@@ -43,6 +45,10 @@ async def run_receiver(
                     max_wait_time=5,
                 )
                 async with receiver:
+                    # DEBUG ONLY: remove before merging; pause to observe unavailable.
+                    await asyncio.sleep(10)
+                    if status_handler is not None:
+                        status_handler(True)
                     _LOGGER.info(
                         "Started Azure Service Bus receiver; listening on queue %s",
                         queue_name,
@@ -91,6 +97,10 @@ async def run_receiver(
         except asyncio.CancelledError:
             raise
         except Exception as error:
+            if status_handler is not None:
+                status_handler(False)
+            # DEBUG ONLY: remove before merging; pause to observe unavailable.
+            await asyncio.sleep(10)
             _LOGGER.error(
                 "Service Bus receiver for queue %s failed (%s); "
                 "recreating it in %s seconds",

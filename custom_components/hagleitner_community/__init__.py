@@ -81,6 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data["connection_string"],
             entry.data["queue_name"],
             hub.async_handle_message,
+            hub.async_set_receiver_available,
         ),
         name=f"{DOMAIN} Service Bus receiver",
     )
