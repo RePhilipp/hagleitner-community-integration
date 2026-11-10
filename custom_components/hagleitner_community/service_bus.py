@@ -53,8 +53,8 @@ class QueueValidationError(Exception):
 
 
 async def async_validate_queue(
-    connection_string: str,
-    queue_name: str,
+    connection_string: object,
+    queue_name: object,
     *,
     timeout: float = _QUEUE_VALIDATION_TIMEOUT,
 ) -> None:

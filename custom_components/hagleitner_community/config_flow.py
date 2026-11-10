@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
+from probatio import Optional, Required, Schema
 
 from .const import DOMAIN
 from .device import is_valid_customer_id
@@ -26,7 +25,7 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Ask for the queue connection details."""
         self.context.setdefault(
             "title_placeholders", {"name": "Hagleitner Community"}
@@ -69,20 +68,22 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=Schema(
                 {
-                    vol.Required("connection_string"): selector.TextSelector(
+                    Required("connection_string"): selector.TextSelector(
                         selector.TextSelectorConfig(
                             type=selector.TextSelectorType.PASSWORD
                         )
                     ),
-                    vol.Required("queue_name"): str,
+                    Required("queue_name"): str,
                 }
             ),
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: dict[str, Any]
+    ) -> config_entries.ConfigFlowResult:
         """Start credential replacement for an existing hub entry."""
         del entry_data
         entry_id = self.context.get("entry_id")
@@ -96,7 +97,7 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Validate and save replacement queue credentials."""
         if self._reauth_entry is None:
             return self.async_abort(reason="reauth_entry_not_found")
@@ -118,9 +119,9 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=Schema(
                 {
-                    vol.Required("connection_string"): selector.TextSelector(
+                    Required("connection_string"): selector.TextSelector(
                         selector.TextSelectorConfig(
                             type=selector.TextSelectorType.PASSWORD
                         )
@@ -132,7 +133,7 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reconfigure(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Change the queue used by an existing hub entry."""
         entry = self._get_reconfigure_entry()
         if entry.data.get("entry_type") == "device":
@@ -175,7 +176,7 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         data_updates={"queue_name": queue_name},
                     )
 
-        schema = vol.Schema({vol.Required("queue_name"): str})
+        schema = Schema({Required("queue_name"): str})
         schema = self.add_suggested_values_to_schema(
             schema,
             {"queue_name": entry.data.get("queue_name", "")},
@@ -188,7 +189,7 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_integration_discovery(
         self, discovery_info: dict[str, Any]
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Ask the user whether to adopt a newly detected device."""
         await self.async_set_unique_id(discovery_info["device_id"])
         self._abort_if_unique_id_configured()
@@ -200,7 +201,7 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Create a device entry only after user confirmation."""
         if self._discovery_info is None:
             return self.async_abort(reason="missing_discovery_info")
@@ -242,10 +243,10 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema_fields = {}
         if suggested_area_id is not None:
             schema_fields[
-                vol.Optional("area_id", default=suggested_area_id)
+                Optional("area_id", default=suggested_area_id)
             ] = selector.AreaSelector()
         else:
-            schema_fields[vol.Optional("area_id")] = selector.AreaSelector()
+            schema_fields[Optional("area_id")] = selector.AreaSelector()
 
         placeholders = {
             "name": self._discovery_info["device_name"],
@@ -255,6 +256,6 @@ class HagleitnerCommunityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema(schema_fields),
+            data_schema=Schema(schema_fields),
             description_placeholders=placeholders,
         )

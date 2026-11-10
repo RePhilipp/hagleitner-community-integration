@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from enum import Enum
 from inspect import signature
+from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
@@ -145,7 +146,7 @@ def async_clear_queue_not_found_issue(
 
 def _config_entry_issue_kwargs(
     config_entry_id: str | None,
-) -> dict[str, str]:
+) -> dict[str, Any]:
     """Link an issue to its config entry on Home Assistant versions that support it."""
     if (
         config_entry_id is not None
