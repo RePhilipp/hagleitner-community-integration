@@ -519,7 +519,7 @@ def restore_resource_snapshot(data: Any) -> ResourceValueSnapshot | None:
 
 
 def device_display_name(message: dict[str, Any]) -> str:
-    """Return a device name from its translated type, excluding mount point."""
+    """Return the translated device type with its known mount point."""
     device_id, _ = device_identity(message)
     device_info = _field(message, "deviceInfo", "DeviceInfo", default={}) or {}
     translations = (
@@ -539,7 +539,11 @@ def device_display_name(message: dict[str, Any]) -> str:
                 device_type_name = value.strip()
                 break
 
-    return device_type_name or f"Hagleitner {device_id[:8]}"
+    display_name = device_type_name or f"Hagleitner {device_id[:8]}"
+    mount_point = parse_device_metadata(message).mount_point
+    if mount_point:
+        return f"{display_name} {mount_point}"
+    return display_name
 
 
 def enum_options(

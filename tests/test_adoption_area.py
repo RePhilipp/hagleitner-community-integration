@@ -150,7 +150,7 @@ async def test_adoption_form_defaults_and_saves_suggested_area(
     discovery_data = {
         "device_id": "new-device",
         "device_type_id": "device-type",
-        "device_name": "Fragrance dispenser",
+        "device_name": "Fragrance dispenser Wall",
         "hub_entry_id": "hub-entry",
         "customer_name": "Test customer",
         "location_name": "HQ / Production",
@@ -167,7 +167,7 @@ async def test_adoption_form_defaults_and_saves_suggested_area(
     assert form["type"] == "form"
     assert form["step_id"] == "confirm"
     assert form["description_placeholders"] == {
-        "name": "Fragrance dispenser",
+        "name": "Fragrance dispenser Wall",
         "customer_name": "Test customer",
         "location_name": "HQ / Production",
         "mount_point": "Wall",
@@ -185,7 +185,7 @@ async def test_adoption_form_defaults_and_saves_suggested_area(
     assert result["type"] == "create_entry"
     device_entry = result["result"]
     assert device_entry.unique_id == "new-device"
-    assert device_entry.title == "Fragrance dispenser"
+    assert device_entry.title == "Fragrance dispenser Wall"
     assert device_entry.data["area_id"] == area.id
     assert "suggested_area_id" not in device_entry.data
     assert "customer_name" not in device_entry.data

@@ -114,13 +114,15 @@ async def test_device_setup_uses_supported_registry_lookup_and_readable_model(
     [
         (" MountPoint ", "Foam dispenser MountPoint"),
         ("", "Foam dispenser"),
+        ("   ", "Foam dispenser"),
         (None, "Foam dispenser"),
+        (42, "Foam dispenser"),
     ],
 )
 def test_device_display_name_includes_nonempty_mount_point(
     mount_point, expected_name
 ):
-    """Device names combine the English device type and optional mount point."""
+    """Device names append a non-empty, trimmed mount point when available."""
     message = {
         "deviceInfo": {
             "deviceId": "device-1",
