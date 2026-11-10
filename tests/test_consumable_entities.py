@@ -59,11 +59,11 @@ def _resource_snapshot(
 def test_consumable_states_do_not_create_problem_entities(equivalent_id):
     """Consumable enums each derive one problem binary sensor for Maintenance."""
     modes = _binary_modes(_snapshot(equivalent_id))
-    assert modes == ("refill_empty",)
+    assert modes == ("resource_problem",)
 
 
 def test_fill_status_resource_is_a_mapped_enum_sensor():
-    """Expose fill level as an enum sensor with catalog-correct values."""
+    """Keep the catalog enum while defining its Maintenance warning values."""
     definition = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[_FILL_STATUS_EQUIVALENT_ID]
     assert definition.kind == "enum"
     assert definition.enum_values == {
@@ -71,6 +71,15 @@ def test_fill_status_resource_is_a_mapped_enum_sensor():
         1: "nearly_full",
         2: "empty",
     }
+    assert definition.problem_entity_on_values == ("nearly_full", "empty")
+    assert definition.problem_entity_name == "Refill warning"
+    assert definition.problem_entity_translation_key == "refill_empty"
+
+
+def test_refill_state_defines_low_and_empty_as_problem_values():
+    """Keep refill warning values declarative alongside its enum mapping."""
+    definition = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[_REFILL_STATE_EQUIVALENT_ID]
+    assert definition.problem_entity_on_values == ("low", "empty")
 
 
 @pytest.mark.parametrize(
@@ -106,13 +115,14 @@ def test_refill_problem_state_matches_catalog_warning_values(
         "device-1",
         snapshot.key,
         snapshot.definition,
-        "refill_empty",
+        "resource_problem",
         None,
     )
 
     assert entity.device_class == "problem"
     assert entity.is_on is expected
     assert entity.entity_registry_visible_default is True
+    assert entity.unique_id == f"device-1_{snapshot.key}_refill_empty"
 
 
 def test_only_unique_conditions_create_binary_entities():
@@ -146,8 +156,8 @@ def test_only_unique_conditions_create_binary_entities():
     assert (12294, 0) not in SUPPORTED_RESOURCES_BY_TYPE_INSTANCE
 
 
-async def test_setup_removes_existing_consumable_problem_entities(hass):
-    """Old duplicate binary entities are removed while distinct states remain."""
+async def test_setup_does_not_create_entities_without_resource_values(hass):
+    """Platform setup leaves entity creation to supported resource values."""
     hub_entry = MockConfigEntry(domain=DOMAIN, data={"entry_type": "hub"})
     hub_entry.add_to_hass(hass)
     device_id = "device-1"
@@ -162,26 +172,6 @@ async def test_setup_removes_existing_consumable_problem_entities(hass):
     device_entry.add_to_hass(hass)
 
     registry = er.async_get(hass)
-    unique_ids = (
-        f"{device_id}_12290:0_refill_problem",
-        f"{device_id}_12290:0_fill_problem",
-        f"{device_id}_12290:0_battery",
-        f"{device_id}_12290:0_connectivity",
-        f"{device_id}_12290:0_connection_problem",
-        f"{device_id}_12289:0_opening",
-        f"{device_id}_12307:0_problem",
-        f"{device_id}_12307:0_maintenance_required",
-        f"{device_id}_12294:0_refill_inserted",
-        f"{device_id}_battery-resource_mains_adapter",
-    )
-    for unique_id in unique_ids:
-        registry.async_get_or_create(
-            "binary_sensor",
-            DOMAIN,
-            unique_id,
-            config_entry=device_entry,
-        )
-
     class EmptyHub:
         """Provide no resources while supporting platform setup."""
 
@@ -202,11 +192,11 @@ async def test_setup_removes_existing_consumable_problem_entities(hass):
         for entity in er.async_entries_for_config_entry(registry, device_entry.entry_id)
         if entity.domain == "binary_sensor"
     }
-    assert remaining == {f"{device_id}_battery-resource_mains_adapter"}
+    assert remaining == set()
 
 
 async def test_setup_removes_obsolete_battery_status_sensor(hass):
-    """Remove the duplicate battery enum but keep other enum resources."""
+    """Remove legacy duplicate battery enum but keep other enum resources."""
     hub_entry = MockConfigEntry(domain=DOMAIN, data={"entry_type": "hub"})
     hub_entry.add_to_hass(hass)
     device_id = "device-1"

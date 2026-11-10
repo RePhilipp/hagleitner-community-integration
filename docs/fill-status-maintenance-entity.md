@@ -30,8 +30,16 @@ explicitly created by Home Assistant or an integration. This integration
 creates Repairs issues for specific device faults and component-replacement
 thresholds; a fill enum state does not meet those conditions.
 
-The integration exposes the fill-status and refill-state enums alongside a
-problem binary sensor. That sensor is `on` when either resource maps to
-`empty`, and `off` for the recognized non-empty states. It has
-`device_class: problem`, so it is eligible for the Maintenance view; this
-entity does not create a Repairs issue.
+The resource definitions expose the fill-status and refill-state enum sensors
+and declare their derived Maintenance problem entity (name, translation,
+device class, and warning values) in one place. The configured warning values
+are:
+
+- **Refill state:** `low` or `empty` turns the problem sensor on; `full` turns
+  it off.
+- **Fill status:** `nearly_full` or `empty` turns the problem sensor on; `full`
+  turns it off.
+
+The problem binary sensor has `device_class: problem`, making it eligible for
+the Maintenance view. It does not create a Repairs issue. The enum sensors
+remain available with their package icons.

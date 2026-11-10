@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -21,26 +20,14 @@ from .resource_data import (
     source_timestamp,
 )
 
-_FILL_STATUS_EQUIVALENT_ID = "9c336908-7a04-4adc-8bd7-08dc3d205c10"
-_REFILL_STATE_EQUIVALENT_ID = "4b963ce8-14f4-4f90-03a9-08dac1664f9a"
-_REFILL_PROBLEM_SUFFIX = "_refill_empty"
-_LEGACY_UNIQUE_ID_SUFFIXES = {"mains_adapter": "battery_charging"}
-_OBSOLETE_BINARY_SENSOR_SUFFIXES = (
-    "_battery",
-    "_connectivity",
-    "_connection_problem",
-    "_fill_problem",
-    "_maintenance_required",
-    "_opening",
-    "_problem",
-    "_refill_inserted",
-    "_refill_problem",
-)
+_PROBLEM_MODE = "resource_problem"
 
 
-def _unique_id_suffix(mode: str) -> str:
-    """Keep established registry IDs when a sensor's presentation changes."""
-    return _LEGACY_UNIQUE_ID_SUFFIXES.get(mode, mode)
+def _unique_id_suffix(mode: str, definition: ResourceDefinition) -> str:
+    """Return the configured unique-ID suffix for an entity mode."""
+    if mode == _PROBLEM_MODE:
+        return definition.problem_entity_translation_key or mode
+    return mode
 
 
 async def async_setup_entry(
@@ -50,7 +37,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensors for one adopted device."""
     device_id = entry.data["device_id"]
-    _remove_obsolete_binary_sensors(hass, entry, device_id)
 
     hub: HagleitnerHub | None = hass.data[DOMAIN].get(entry.data["hub_entry_id"])
     if hub is None:
@@ -66,7 +52,8 @@ async def async_setup_entry(
 
         entities = []
         for mode in _binary_modes(snapshot):
-            unique_id = f"{device_id}_{snapshot.key}_{_unique_id_suffix(mode)}"
+            mode_suffix = _unique_id_suffix(mode, definition)
+            unique_id = f"{device_id}_{snapshot.key}_{mode_suffix}"
             if unique_id in added_ids:
                 continue
             added_ids.add(unique_id)
@@ -88,28 +75,6 @@ async def async_setup_entry(
     entry.async_on_unload(hub.async_add_resource_listener(device_id, add_resource))
 
 
-@callback
-def _remove_obsolete_binary_sensors(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    device_id: str,
-) -> None:
-    """Remove old duplicate binary sensors from the entity registry."""
-    registry = er.async_get(hass)
-    device_prefix = f"{device_id}_"
-    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-        if (
-            entity.platform == DOMAIN
-            and entity.domain == "binary_sensor"
-            and entity.unique_id.startswith(device_prefix)
-            and (
-                entity.unique_id.endswith(_OBSOLETE_BINARY_SENSOR_SUFFIXES)
-                or entity.unique_id.endswith(_REFILL_PROBLEM_SUFFIX)
-            )
-        ):
-            registry.async_remove(entity.entity_id)
-
-
 def _binary_modes(snapshot: ResourceValueSnapshot) -> tuple[str, ...]:
     """Return binary sensors derived from supported resource values."""
     definition = snapshot.definition
@@ -118,14 +83,8 @@ def _binary_modes(snapshot: ResourceValueSnapshot) -> tuple[str, ...]:
     if definition.kind == "battery":
         if snapshot.mapped_value == "mains_adapter":
             return ("mains_adapter",)
-    if (
-        snapshot.equivalent_id in (
-            _FILL_STATUS_EQUIVALENT_ID,
-            _REFILL_STATE_EQUIVALENT_ID,
-        )
-        and definition.kind == "enum"
-    ):
-        return ("refill_empty",)
+    if definition.problem_entity_on_values:
+        return (_PROBLEM_MODE,)
     return ()
 
 
@@ -153,18 +112,17 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         self._attr_device_info = device_info(device_id, customer_id)
         if mode == "mains_adapter":
             self._attr_translation_key = mode
-        elif mode == "refill_empty":
-            # Use the same entity-description translation pattern as HA's
-            # diagnostic problem sensors, e.g. Shelly overtemperature.
-            self._attr_translation_key = mode
+        elif mode == _PROBLEM_MODE:
+            self._attr_name = definition.problem_entity_name or definition.name
+            if definition.problem_entity_translation_key:
+                self._attr_translation_key = definition.problem_entity_translation_key
         else:
             self._attr_name = definition.name
-        self._attr_unique_id = (
-            f"{device_id}_{resource_key}_{_unique_id_suffix(mode)}"
-        )
+        mode_suffix = _unique_id_suffix(mode, definition)
+        self._attr_unique_id = f"{device_id}_{resource_key}_{mode_suffix}"
         if mode == "mains_adapter":
             self._attr_device_class = BinarySensorDeviceClass.PLUG
-        elif mode == "refill_empty":
+        elif mode == _PROBLEM_MODE:
             self._attr_device_class = BinarySensorDeviceClass.PROBLEM
 
     @property
@@ -180,14 +138,10 @@ class HagleitnerBinarySensor(BinarySensorEntity):
             if snapshot.mapped_value in ("ok", "low", "empty"):
                 return False
             return None
-        if self._mode == "refill_empty":
-            if snapshot.equivalent_id == _REFILL_STATE_EQUIVALENT_ID:
-                warning_values = ("low", "empty")
-            else:
-                warning_values = ("nearly_full", "empty")
-            if snapshot.mapped_value in warning_values:
+        if self._mode == _PROBLEM_MODE:
+            if snapshot.mapped_value in self._definition.problem_entity_on_values:
                 return True
-            if snapshot.mapped_value == "full":
+            if snapshot.mapped_value in self._definition.enum_values.values():
                 return False
             return None
         return None

@@ -22,6 +22,9 @@ class ResourceDefinition:
     enum_values: dict[int, Any] = field(default_factory=dict)
     device_type_enum_values: dict[str, dict[int, Any]] = field(default_factory=dict)
     battery_percent_values: dict[int, int | None] = field(default_factory=dict)
+    problem_entity_on_values: tuple[str, ...] = ()
+    problem_entity_name: str | None = None
+    problem_entity_translation_key: str | None = None
 
 
 @dataclass(frozen=True)
@@ -84,6 +87,9 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
             1: "low",
             2: "empty",
         },
+        problem_entity_on_values=("low", "empty"),
+        problem_entity_name="Refill warning",
+        problem_entity_translation_key="refill_empty",
     ),
     "9a77375d-964c-451f-03ab-08dac1664f9a": ResourceDefinition(
         name="Error status",
@@ -117,6 +123,9 @@ SUPPORTED_RESOURCES_BY_EQUIVALENT_ID: dict[str, ResourceDefinition] = {
             1: "nearly_full",
             2: "empty",
         },
+        problem_entity_on_values=("nearly_full", "empty"),
+        problem_entity_name="Refill warning",
+        problem_entity_translation_key="refill_empty",
     ),
     "f8cdaa9a-4633-4fd4-1d0d-08de5e8412d5": ResourceDefinition(
         name="Passage counter",
