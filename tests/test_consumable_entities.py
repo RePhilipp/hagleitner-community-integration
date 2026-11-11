@@ -68,11 +68,11 @@ def test_fill_status_resource_is_a_mapped_enum_sensor():
     definition = SUPPORTED_RESOURCES_BY_EQUIVALENT_ID[_FILL_STATUS_EQUIVALENT_ID]
     assert definition.kind == "enum"
     assert definition.enum_values == {
-        0: "full",
+        0: "empty",
         1: "nearly_full",
-        2: "empty",
+        2: "full",
     }
-    assert definition.problem_entity_on_values == ("nearly_full", "empty")
+    assert definition.problem_entity_on_values == ("nearly_full", "full")
     assert definition.problem_entity_translation_key == "fill_warning"
     assert definition.problem_entity_unique_id_suffix == "refill_empty"
 
@@ -122,9 +122,9 @@ def test_device_error_is_a_problem_binary_sensor(mapped_value, expected):
         (_REFILL_STATE_EQUIVALENT_ID, "full", False),
         (_REFILL_STATE_EQUIVALENT_ID, "low", True),
         (_REFILL_STATE_EQUIVALENT_ID, "empty", True),
-        (_FILL_STATUS_EQUIVALENT_ID, "full", False),
+        (_FILL_STATUS_EQUIVALENT_ID, "full", True),
         (_FILL_STATUS_EQUIVALENT_ID, "nearly_full", True),
-        (_FILL_STATUS_EQUIVALENT_ID, "empty", True),
+        (_FILL_STATUS_EQUIVALENT_ID, "empty", False),
     ],
 )
 def test_refill_problem_state_matches_catalog_warning_values(
