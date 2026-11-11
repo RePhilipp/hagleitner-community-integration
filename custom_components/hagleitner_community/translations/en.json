@@ -158,6 +158,14 @@
       },
       "battery_level": {
         "name": "Battery level"
+      },
+      "data_link_expectation": {
+        "name": "Data-link expectation",
+        "state": {
+          "hard_offline": "Hard offline",
+          "soft_offline": "Soft offline",
+          "online": "Online"
+        }
       }
     },
     "binary_sensor": {

@@ -193,6 +193,18 @@ SUPPORTED_RESOURCES_BY_TYPE_INSTANCE: dict[
         entity_registry_enabled_default=False,
         unit="percentage",
     ),
+    (45060, 0): ResourceDefinition(
+        name="Data-link expectation",
+        kind="enum",
+        entity_translation_key="data_link_expectation",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,
+        enum_values={
+            0: "hard_offline",
+            1: "soft_offline",
+            2: "online",
+        },
+    ),
     (12289, 0): ResourceDefinition(
         name="Cover state",
         kind="opening",

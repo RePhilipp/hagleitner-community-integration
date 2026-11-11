@@ -158,6 +158,14 @@
       },
       "number_of_openings": {
         "name": "Number of openings"
+      },
+      "data_link_expectation": {
+        "name": "Očekivano stanje podatkovne veze",
+        "state": {
+          "hard_offline": "Trajno izvan mreže",
+          "soft_offline": "Privremeno izvan mreže",
+          "online": "Online"
+        }
       }
     },
     "binary_sensor": {

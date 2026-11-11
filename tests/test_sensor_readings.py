@@ -150,6 +150,37 @@ def test_enum_and_numeric_sensors_reject_missing_or_invalid_latest_values():
     assert unsupported_sensor.native_value is None
 
 
+def test_data_link_expectation_enum_exposes_all_classification_values():
+    """The catalog-less enum exposes numeric classes with display labels."""
+    definition = ResourceDefinition(
+        name="Data-link expectation",
+        kind="enum",
+        entity_translation_key="data_link_expectation",
+        enum_values={
+            0: "hard_offline",
+            1: "soft_offline",
+            2: "online",
+        },
+    )
+    hub = _Hub(_snapshot(definition, raw_value=2, mapped_value="online"))
+    sensor = HagleitnerSensor(
+        hub,
+        "device-1",
+        "45060:0",
+        definition,
+        frozenset(),
+        "enum",
+        None,
+    )
+
+    assert sensor._attr_options == [
+        "hard_offline",
+        "soft_offline",
+        "online",
+    ]
+    assert sensor.native_value == "online"
+
+
 @pytest.mark.parametrize(
     ("kind", "device_class", "unit", "mode", "expected_unit"),
     [

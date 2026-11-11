@@ -13,6 +13,7 @@ from custom_components.hagleitner_community.resource_data import (
     device_identity,
     parse_device_metadata,
     resource_value_key,
+    resource_value_snapshots,
     restore_resource_snapshot,
     serialize_resource_snapshot,
     should_accept_reading,
@@ -145,6 +146,46 @@ def test_snapshot_restore_validates_shape_and_normalizes_persisted_metadata():
     assert restored.device_type_names == frozenset({"gateway"})
     assert restored.definition is not None
     assert restored.definition.name == "Firmware version"
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    [
+        (0, "hard_offline"),
+        (1, "soft_offline"),
+        (2, "online"),
+    ],
+)
+def test_data_link_expectation_resource_maps_classification_values(
+    raw_value, expected
+):
+    """Type 45060 instance 0 maps its three known enum values for display."""
+    snapshots = resource_value_snapshots(
+        {
+            "deviceInfo": {"deviceId": "device-1"},
+            "readings": [
+                {
+                    "resourceValues": [
+                        {
+                            "resourceIdentifier": {
+                                "resourceTypeId": 45060,
+                                "resourceInstanceNo": 0,
+                                "resourceInstanceEquivalentId": (
+                                    "b81580d4-55b7-49f3-95b6-a1b9effe5118"
+                                ),
+                            },
+                            "integerValue": raw_value,
+                        }
+                    ]
+                }
+            ],
+        }
+    )
+
+    assert len(snapshots) == 1
+    assert snapshots[0].definition is not None
+    assert snapshots[0].definition.name == "Data-link expectation"
+    assert snapshots[0].mapped_value == expected
 
 
 def test_battery_and_timestamp_helpers_handle_unusable_values():

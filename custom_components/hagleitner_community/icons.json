@@ -48,6 +48,9 @@
       "online_ratio": {
         "default": "mdi:percent"
       },
+      "data_link_expectation": {
+        "default": "mdi:lan"
+      },
       "cover_state": {
         "default": "mdi:package-variant"
       },

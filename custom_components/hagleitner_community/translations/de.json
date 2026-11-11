@@ -158,6 +158,14 @@
       },
       "battery_level": {
         "name": "Batteriestand"
+      },
+      "data_link_expectation": {
+        "name": "Datenlink-Erwartung",
+        "state": {
+          "hard_offline": "Dauerhaft offline",
+          "soft_offline": "Vorübergehend offline",
+          "online": "Online"
+        }
       }
     },
     "binary_sensor": {

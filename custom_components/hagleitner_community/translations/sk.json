@@ -158,6 +158,14 @@
       },
       "number_of_openings": {
         "name": "Number of openings"
+      },
+      "data_link_expectation": {
+        "name": "Očakávaný stav dátového spojenia",
+        "state": {
+          "hard_offline": "Trvalo offline",
+          "soft_offline": "Dočasne offline",
+          "online": "Online"
+        }
       }
     },
     "binary_sensor": {

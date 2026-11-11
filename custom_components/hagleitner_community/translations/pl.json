@@ -158,6 +158,14 @@
       },
       "number_of_openings": {
         "name": "Number of openings"
+      },
+      "data_link_expectation": {
+        "name": "Oczekiwany stan łącza danych",
+        "state": {
+          "hard_offline": "Trwale offline",
+          "soft_offline": "Tymczasowo offline",
+          "online": "Online"
+        }
       }
     },
     "binary_sensor": {

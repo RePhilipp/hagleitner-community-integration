@@ -158,6 +158,14 @@
       },
       "number_of_openings": {
         "name": "Number of openings"
+      },
+      "data_link_expectation": {
+        "name": "Adatkapcsolat elvárt állapota",
+        "state": {
+          "hard_offline": "Tartósan offline",
+          "soft_offline": "Átmenetileg offline",
+          "online": "Online"
+        }
       }
     },
     "binary_sensor": {
