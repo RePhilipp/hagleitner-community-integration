@@ -262,6 +262,28 @@ def test_sensor_constructor_applies_duration_and_rssi_metadata(
     assert entity._attr_state_class is SensorStateClass.MEASUREMENT
 
 
+def test_diagnostic_interval_keeps_seconds_without_measurement_state_class():
+    """Diagnostic-only intervals retain their unit but do not imply a metric."""
+    definition = ResourceDefinition(
+        name="Heartbeat interval",
+        kind="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        unit="seconds",
+    )
+    entity = HagleitnerSensor(
+        _Hub(_snapshot(definition)),
+        "device-1",
+        "36866:0",
+        definition,
+        frozenset(),
+        "diagnostic",
+        None,
+    )
+
+    assert entity._attr_native_unit_of_measurement == UnitOfTime.SECONDS
+    assert getattr(entity, "_attr_state_class", None) is None
+
+
 def test_diagnostic_resource_is_always_a_diagnostic_entity():
     """Diagnostic resources remain categorized even without a catalog category."""
     definition = ResourceDefinition(name="Diagnostic", kind="diagnostic")

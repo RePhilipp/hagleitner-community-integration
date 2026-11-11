@@ -187,6 +187,45 @@
       },
       "signal_strength_dbm": {
         "name": "Signalstärke (dBm)"
+      },
+      "heartbeat_interval": {
+        "name": "Heartbeat-Intervall"
+      },
+      "next_device_connection_state": {
+        "name": "Zeit bis zum nächsten vollständigen Gerätestatus"
+      },
+      "bottle_water_volume": {
+        "name": "Wasserverbrauch Flaschenspender bis Wechsel"
+      },
+      "bucket_water_volume": {
+        "name": "Wasserverbrauch Eimerspender bis Wechsel"
+      },
+      "pump_volume_until_change": {
+        "name": "Pumpenvolumen bis Wechsel"
+      },
+      "voltage_idle_load": {
+        "name": "Spannung (Leerlauf/Last)"
+      },
+      "voltage_idle_load_max": {
+        "name": "Spannung (Leerlauf/Lastmaximum)"
+      },
+      "voltage_load_average": {
+        "name": "Spannung, Lastmittelwert"
+      },
+      "voltage_load_idle": {
+        "name": "Spannung, Lastleerlauf"
+      },
+      "dispense_current_pump_load_average": {
+        "name": "Abgabestrom (Pumpe/Lastmittelwert)"
+      },
+      "dispense_current_air_load_max": {
+        "name": "Abgabestrom (Luft/Lastmaximum)"
+      },
+      "cleaning_arm_motor_current": {
+        "name": "Strom Reinigungsarmmotor"
+      },
+      "pump_motor_current": {
+        "name": "Strom Pumpenmotor"
       }
     },
     "binary_sensor": {
@@ -215,6 +254,13 @@
         "state": {
           "on": "Automatische Aktualisierung aktiv",
           "off": "Automatische Aktualisierung aus"
+        }
+      },
+      "accesspoint_disabled": {
+        "name": "Access Point deaktiviert",
+        "state": {
+          "on": "Access Point deaktiviert",
+          "off": "Access Point aktiviert"
         }
       }
     }

@@ -187,6 +187,45 @@
       },
       "signal_strength_dbm": {
         "name": "Jačina signala (dBm)"
+      },
+      "heartbeat_interval": {
+        "name": "Interval otkucaja"
+      },
+      "next_device_connection_state": {
+        "name": "Vrijeme do sljedećeg potpunog stanja veze uređaja"
+      },
+      "bottle_water_volume": {
+        "name": "Potrošnja vode dozatora boca do zamjene"
+      },
+      "bucket_water_volume": {
+        "name": "Potrošnja vode dozatora kanti do zamjene"
+      },
+      "pump_volume_until_change": {
+        "name": "Volumen pumpe do zamjene"
+      },
+      "voltage_idle_load": {
+        "name": "Napon (mirovanje/opterećenje)"
+      },
+      "voltage_idle_load_max": {
+        "name": "Napon (mirovanje/maksimalno opterećenje)"
+      },
+      "voltage_load_average": {
+        "name": "Prosječni napon pod opterećenjem"
+      },
+      "voltage_load_idle": {
+        "name": "Napon u mirovanju pod opterećenjem"
+      },
+      "dispense_current_pump_load_average": {
+        "name": "Struja doziranja (pumpa/prosjek opterećenja)"
+      },
+      "dispense_current_air_load_max": {
+        "name": "Struja doziranja (zrak/maksimalno opterećenje)"
+      },
+      "cleaning_arm_motor_current": {
+        "name": "Struja motora ruke za čišćenje"
+      },
+      "pump_motor_current": {
+        "name": "Struja motora pumpe"
       }
     },
     "binary_sensor": {
@@ -215,6 +254,13 @@
         "state": {
           "on": "Automatsko ažuriranje će se izvršiti",
           "off": "Automatsko ažuriranje je isključeno"
+        }
+      },
+      "accesspoint_disabled": {
+        "name": "Pristupna točka je onemogućena",
+        "state": {
+          "on": "Pristupna točka je onemogućena",
+          "off": "Pristupna točka je omogućena"
         }
       }
     }

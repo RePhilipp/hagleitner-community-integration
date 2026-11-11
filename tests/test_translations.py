@@ -103,6 +103,7 @@ def test_english_translates_all_shipped_entity_names_and_states():
             "fill_warning",
             "device_error",
             "automatic_update",
+            "accesspoint_disabled",
         )
     )
     assert binary_sensor_translations["refill_warning"]["state"] == {
@@ -146,12 +147,14 @@ def test_all_locales_translate_binary_status_sensors():
             "fill_warning",
             "device_error",
             "automatic_update",
+            "accesspoint_disabled",
         } <= set(binary_sensors), locale_file.name
         for key in (
             "refill_warning",
             "fill_warning",
             "device_error",
             "automatic_update",
+            "accesspoint_disabled",
         ):
             assert binary_sensors[key].get("name"), (locale_file.name, key)
             if key != "device_error":

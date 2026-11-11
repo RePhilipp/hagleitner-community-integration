@@ -70,13 +70,14 @@ For resource values the integration recognizes, it can expose dispense, refill,
 passage, and people counts; delivery or dispensed-water volume; refill and fill
 status; battery level or mains-adapter status; connection status; and device
 errors. Depending on the data sent, measurements can also include per-dispense
-volume and duration, refill percentage, and Wi-Fi signal strength. Diagnostic
-entities can include firmware version, cover state, online ratio, Wi-Fi SSID,
-automatic-update status (read-only), infrared sensor state, Bluetooth signal
-strength, and customer or location details. Some diagnostic entities are disabled
-by default; if a value is expected, check the device's disabled entities in Home
-Assistant. The integration provides sensors and binary sensors for monitoring;
-it does not provide device controls.
+volume and duration, water-volume counters by dispensing source, refill
+percentage, and Wi-Fi signal strength. Diagnostic entities can include firmware
+version, cover state, online ratio, Wi-Fi SSID, automatic-update status
+(read-only), infrared sensor state, heartbeat and connection-monitoring
+intervals, raw voltage/current readings, and Bluetooth signal strength. Some
+diagnostic entities are disabled by default; if a value is expected, check the
+device's disabled entities in Home Assistant. The integration provides sensors
+and binary sensors for monitoring; it does not provide device controls.
 
 Entity availability depends on the data Hagleitner forwards. The integration
 recognizes specific resource identifiers, not a complete list of product models,

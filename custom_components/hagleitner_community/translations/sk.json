@@ -187,6 +187,45 @@
       },
       "signal_strength_dbm": {
         "name": "Sila signálu (dBm)"
+      },
+      "heartbeat_interval": {
+        "name": "Interval srdcového signálu"
+      },
+      "next_device_connection_state": {
+        "name": "Čas do ďalšieho úplného stavu pripojenia zariadenia"
+      },
+      "bottle_water_volume": {
+        "name": "Spotreba vody dávkovača fliaš do výmeny"
+      },
+      "bucket_water_volume": {
+        "name": "Spotreba vody dávkovača vedier do výmeny"
+      },
+      "pump_volume_until_change": {
+        "name": "Objem čerpadla do výmeny"
+      },
+      "voltage_idle_load": {
+        "name": "Napätie (pokoj/záťaž)"
+      },
+      "voltage_idle_load_max": {
+        "name": "Napätie (pokoj/maximálna záťaž)"
+      },
+      "voltage_load_average": {
+        "name": "Priemerné napätie pri záťaži"
+      },
+      "voltage_load_idle": {
+        "name": "Pokojové napätie pri záťaži"
+      },
+      "dispense_current_pump_load_average": {
+        "name": "Dávkovací prúd (čerpadlo/priemerná záťaž)"
+      },
+      "dispense_current_air_load_max": {
+        "name": "Dávkovací prúd (vzduch/maximálna záťaž)"
+      },
+      "cleaning_arm_motor_current": {
+        "name": "Prúd motora čistiaceho ramena"
+      },
+      "pump_motor_current": {
+        "name": "Prúd motora čerpadla"
       }
     },
     "binary_sensor": {
@@ -215,6 +254,13 @@
         "state": {
           "on": "Automatická aktualizácia sa vykoná",
           "off": "Automatická aktualizácia je vypnutá"
+        }
+      },
+      "accesspoint_disabled": {
+        "name": "Prístupový bod je vypnutý",
+        "state": {
+          "on": "Prístupový bod je vypnutý",
+          "off": "Prístupový bod je zapnutý"
         }
       }
     }

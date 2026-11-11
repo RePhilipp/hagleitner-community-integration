@@ -5,10 +5,12 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 import pytest
+from homeassistant.const import EntityCategory
 
 from custom_components.hagleitner_community.resource_data import (
     ResourceDefinition,
     ResourceValueSnapshot,
+    SUPPORTED_RESOURCES_BY_TYPE_INSTANCE,
     battery_percentage,
     device_identity,
     parse_device_metadata,
@@ -378,6 +380,56 @@ def test_additional_gateway_resources_keep_their_declared_semantics(
     assert snapshot.definition.unit == expected_unit
     assert snapshot.raw_value == raw_value
     assert snapshot.mapped_value == raw_value
+
+
+def test_extended_gateway_diagnostics_are_disabled_except_water_volumes():
+    """New diagnostics default off; added cumulative water channels stay enabled."""
+    diagnostic_keys = {
+        (36877, 0),
+        (36866, 0),
+        (36868, 0),
+        (28672, 0),
+        (28672, 1),
+        (28672, 2),
+        (28672, 3),
+        (28673, 0),
+        (28673, 1),
+        (28673, 2),
+        (28673, 3),
+    }
+    for key in diagnostic_keys:
+        definition = SUPPORTED_RESOURCES_BY_TYPE_INSTANCE[key]
+        assert definition.entity_category is EntityCategory.DIAGNOSTIC
+        assert definition.entity_registry_enabled_default is False
+
+    assert SUPPORTED_RESOURCES_BY_TYPE_INSTANCE[(36877, 0)].kind == "binary_sensor"
+    assert [
+        SUPPORTED_RESOURCES_BY_TYPE_INSTANCE[(28672, instance_number)].name
+        for instance_number in (0, 1, 2, 3)
+    ] == [
+        "Voltage (idle/load)",
+        "Voltage idle/load max",
+        "Voltage load average",
+        "Voltage load idle",
+    ]
+    assert [
+        SUPPORTED_RESOURCES_BY_TYPE_INSTANCE[(28673, instance_number)].name
+        for instance_number in (0, 1, 2, 3)
+    ] == [
+        "Dispense current pump/load average",
+        "Dispense current air/load max",
+        "Current cleaning arm motor",
+        "Current pump motor",
+    ]
+    for instance_number in (1, 2, 3):
+        water_definition = SUPPORTED_RESOURCES_BY_TYPE_INSTANCE[(
+            28682,
+            instance_number,
+        )]
+        assert water_definition.kind == "counter"
+        assert water_definition.unit == "liters"
+        assert water_definition.entity_category is None
+        assert water_definition.entity_registry_enabled_default is True
 
 
 def test_battery_and_timestamp_helpers_handle_unusable_values():

@@ -187,6 +187,45 @@
       },
       "signal_strength_dbm": {
         "name": "Moč signala (dBm)"
+      },
+      "heartbeat_interval": {
+        "name": "Interval srčnega signala"
+      },
+      "next_device_connection_state": {
+        "name": "Čas do naslednjega celotnega stanja povezave naprave"
+      },
+      "bottle_water_volume": {
+        "name": "Poraba vode dozirnika za steklenice do zamenjave"
+      },
+      "bucket_water_volume": {
+        "name": "Poraba vode dozirnika za vedra do zamenjave"
+      },
+      "pump_volume_until_change": {
+        "name": "Količina črpanja do zamenjave"
+      },
+      "voltage_idle_load": {
+        "name": "Napetost (mirovanje/obremenitev)"
+      },
+      "voltage_idle_load_max": {
+        "name": "Napetost (mirovanje/največja obremenitev)"
+      },
+      "voltage_load_average": {
+        "name": "Povprečna napetost pod obremenitvijo"
+      },
+      "voltage_load_idle": {
+        "name": "Napetost v mirovanju pri obremenitvi"
+      },
+      "dispense_current_pump_load_average": {
+        "name": "Tok doziranja (črpalka/povprečna obremenitev)"
+      },
+      "dispense_current_air_load_max": {
+        "name": "Tok doziranja (zrak/največja obremenitev)"
+      },
+      "cleaning_arm_motor_current": {
+        "name": "Tok motorja čistilne roke"
+      },
+      "pump_motor_current": {
+        "name": "Tok motorja črpalke"
       }
     },
     "binary_sensor": {
@@ -215,6 +254,13 @@
         "state": {
           "on": "Samodejna posodobitev se bo izvedla",
           "off": "Samodejna posodobitev je izklopljena"
+        }
+      },
+      "accesspoint_disabled": {
+        "name": "Dostopna točka je izklopljena",
+        "state": {
+          "on": "Dostopna točka je izklopljena",
+          "off": "Dostopna točka je vklopljena"
         }
       }
     }

@@ -115,11 +115,34 @@ async def test_automatic_update_is_a_read_only_diagnostic_binary_sensor():
     assert isinstance(entity, HagleitnerBinarySensor)
     assert entity._attr_translation_key == "automatic_update"
     assert entity._attr_entity_category is EntityCategory.DIAGNOSTIC
+    assert entity._attr_entity_registry_enabled_default is True
     assert entity.is_on is True
     hub.snapshot = _snapshot(definition, False)
     assert entity.is_on is False
     hub.snapshot = _snapshot(definition, "unknown")
     assert entity.is_on is None
+
+
+def test_diagnostic_binary_sensor_can_be_disabled_by_default():
+    """New diagnostic boolean resources honor their registry default setting."""
+    definition = ResourceDefinition(
+        name="Accesspoint disabled",
+        kind="binary_sensor",
+        entity_translation_key="accesspoint_disabled",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    )
+    entity = HagleitnerBinarySensor(
+        _Hub(_snapshot(definition, True)),
+        "device-1",
+        "36877:0",
+        definition,
+        "read_only_state",
+        None,
+    )
+
+    assert entity._attr_entity_registry_enabled_default is False
+    assert entity.is_on is True
 
 
 def test_binary_sensor_availability_requires_receiver_and_online_device():

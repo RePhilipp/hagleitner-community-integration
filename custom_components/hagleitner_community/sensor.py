@@ -181,11 +181,12 @@ class HagleitnerSensor(SensorEntity):
         if mode == "enum":
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = enum_options(definition, device_type_names)
-        elif mode in ("counter", "measurement"):
-            if definition.device_class == "volume":
-                self._attr_device_class = SensorDeviceClass.VOLUME
-            elif definition.device_class == "signal_strength":
-                self._attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
+        elif mode in ("counter", "measurement", "diagnostic"):
+            if mode != "diagnostic":
+                if definition.device_class == "volume":
+                    self._attr_device_class = SensorDeviceClass.VOLUME
+                elif definition.device_class == "signal_strength":
+                    self._attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
             if definition.unit == "milliliters":
                 self._attr_native_unit_of_measurement = UnitOfVolume.MILLILITERS
             elif definition.unit == "liters":
@@ -194,15 +195,18 @@ class HagleitnerSensor(SensorEntity):
                 self._attr_native_unit_of_measurement = PERCENTAGE
             elif definition.unit == "milliseconds":
                 self._attr_native_unit_of_measurement = UnitOfTime.MILLISECONDS
+            elif definition.unit == "seconds":
+                self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
             elif definition.unit == "dBm":
                 self._attr_native_unit_of_measurement = (
                     SIGNAL_STRENGTH_DECIBELS_MILLIWATT
                 )
-            self._attr_state_class = (
-                SensorStateClass.TOTAL_INCREASING
-                if mode == "counter"
-                else SensorStateClass.MEASUREMENT
-            )
+            if mode != "diagnostic":
+                self._attr_state_class = (
+                    SensorStateClass.TOTAL_INCREASING
+                    if mode == "counter"
+                    else SensorStateClass.MEASUREMENT
+                )
         elif mode == "battery_level":
             self._attr_device_class = SensorDeviceClass.BATTERY
             self._attr_native_unit_of_measurement = PERCENTAGE

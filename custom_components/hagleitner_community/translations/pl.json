@@ -187,6 +187,45 @@
       },
       "signal_strength_dbm": {
         "name": "Siła sygnału (dBm)"
+      },
+      "heartbeat_interval": {
+        "name": "Interwał sygnału heartbeat"
+      },
+      "next_device_connection_state": {
+        "name": "Czas do następnego pełnego stanu połączenia urządzenia"
+      },
+      "bottle_water_volume": {
+        "name": "Zużycie wody przez dozownik butelkowy do wymiany"
+      },
+      "bucket_water_volume": {
+        "name": "Zużycie wody przez dozownik wiaderkowy do wymiany"
+      },
+      "pump_volume_until_change": {
+        "name": "Objętość pompowania do wymiany"
+      },
+      "voltage_idle_load": {
+        "name": "Napięcie (spoczynek/obciążenie)"
+      },
+      "voltage_idle_load_max": {
+        "name": "Napięcie (spoczynek/maksymalne obciążenie)"
+      },
+      "voltage_load_average": {
+        "name": "Średnie napięcie pod obciążeniem"
+      },
+      "voltage_load_idle": {
+        "name": "Napięcie spoczynkowe pod obciążeniem"
+      },
+      "dispense_current_pump_load_average": {
+        "name": "Prąd dozowania (pompa/średnie obciążenie)"
+      },
+      "dispense_current_air_load_max": {
+        "name": "Prąd dozowania (powietrze/maksymalne obciążenie)"
+      },
+      "cleaning_arm_motor_current": {
+        "name": "Prąd silnika ramienia czyszczącego"
+      },
+      "pump_motor_current": {
+        "name": "Prąd silnika pompy"
       }
     },
     "binary_sensor": {
@@ -215,6 +254,13 @@
         "state": {
           "on": "Automatyczna aktualizacja zostanie wykonana",
           "off": "Automatyczna aktualizacja jest wyłączona"
+        }
+      },
+      "accesspoint_disabled": {
+        "name": "Punkt dostępowy wyłączony",
+        "state": {
+          "on": "Punkt dostępowy wyłączony",
+          "off": "Punkt dostępowy włączony"
         }
       }
     }

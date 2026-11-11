@@ -121,6 +121,9 @@ class HagleitnerBinarySensor(BinarySensorEntity):
         self._definition = definition
         self._mode = mode
         self._attr_device_info = device_info(device_id, customer_id)
+        self._attr_entity_registry_enabled_default = (
+            definition.entity_registry_enabled_default
+        )
         if definition.entity_category is not None:
             self._attr_entity_category = definition.entity_category
         if mode == _PROBLEM_MODE:
