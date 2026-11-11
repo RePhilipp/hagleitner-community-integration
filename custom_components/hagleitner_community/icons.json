@@ -18,6 +18,12 @@
         "state": {
           "off": "mdi:alert-circle-check"
         }
+      },
+      "automatic_update": {
+        "default": "mdi:autorenew"
+      },
+      "accesspoint_disabled": {
+        "default": "mdi:wifi-off"
       }
     },
     "sensor": {
@@ -47,6 +53,69 @@
       },
       "online_ratio": {
         "default": "mdi:percent"
+      },
+      "data_link_expectation": {
+        "default": "mdi:lan"
+      },
+      "wifi_signal_strength": {
+        "default": "mdi:wifi"
+      },
+      "wifi_ssid": {
+        "default": "mdi:wifi"
+      },
+      "dispense_time": {
+        "default": "mdi:timer"
+      },
+      "refill_percent": {
+        "default": "mdi:percent"
+      },
+      "infrared_sensor_state": {
+        "default": "mdi:motion-sensor"
+      },
+      "dispense_volume": {
+        "default": "mdi:cup-water"
+      },
+      "signal_strength_dbm": {
+        "default": "mdi:bluetooth"
+      },
+      "heartbeat_interval": {
+        "default": "mdi:heart-pulse"
+      },
+      "next_device_connection_state": {
+        "default": "mdi:timer-sand"
+      },
+      "bottle_water_volume": {
+        "default": "mdi:water"
+      },
+      "bucket_water_volume": {
+        "default": "mdi:water-outline"
+      },
+      "pump_volume_until_change": {
+        "default": "mdi:pump"
+      },
+      "voltage_idle_load": {
+        "default": "mdi:flash"
+      },
+      "voltage_idle_load_max": {
+        "default": "mdi:flash"
+      },
+      "voltage_load_average": {
+        "default": "mdi:flash"
+      },
+      "voltage_load_idle": {
+        "default": "mdi:flash"
+      },
+      "dispense_current_pump_load_average": {
+        "default": "mdi:current-ac"
+      },
+      "dispense_current_air_load_max": {
+        "default": "mdi:current-ac"
+      },
+      "cleaning_arm_motor_current": {
+        "default": "mdi:current-ac"
+      },
+      "pump_motor_current": {
+        "default": "mdi:current-ac"
       },
       "cover_state": {
         "default": "mdi:package-variant"

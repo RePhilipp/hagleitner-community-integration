@@ -69,8 +69,12 @@ shown in Home Assistant's Repairs page.
 For resource values the integration recognizes, it can expose dispense, refill,
 passage, and people counts; delivery or dispensed-water volume; refill and fill
 status; battery level or mains-adapter status; connection status; and device
-errors. Depending on the data sent, diagnostic entities can also include firmware
-version, cover state, online ratio, and customer or location details. Some
+errors. Depending on the data sent, measurements can also include per-dispense
+volume and duration, water-volume counters by dispensing source, refill
+percentage, and Wi-Fi signal strength. Diagnostic entities can include firmware
+version, cover state, online ratio, Wi-Fi SSID, automatic-update status
+(read-only), infrared sensor state, heartbeat and connection-monitoring
+intervals, raw voltage/current readings, and Bluetooth signal strength. Some
 diagnostic entities are disabled by default; if a value is expected, check the
 device's disabled entities in Home Assistant. The integration provides sensors
 and binary sensors for monitoring; it does not provide device controls.

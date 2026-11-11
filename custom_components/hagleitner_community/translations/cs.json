@@ -158,6 +158,74 @@
       },
       "number_of_openings": {
         "name": "Number of openings"
+      },
+      "data_link_expectation": {
+        "name": "Očekávaný stav datového spojení",
+        "state": {
+          "hard_offline": "Trvale offline",
+          "soft_offline": "Dočasně offline",
+          "online": "Online"
+        }
+      },
+      "wifi_signal_strength": {
+        "name": "Síla signálu Wi-Fi"
+      },
+      "wifi_ssid": {
+        "name": "SSID Wi-Fi"
+      },
+      "dispense_time": {
+        "name": "Doba dávkování"
+      },
+      "refill_percent": {
+        "name": "Stav doplnění v procentech"
+      },
+      "infrared_sensor_state": {
+        "name": "Stav infračerveného senzoru"
+      },
+      "dispense_volume": {
+        "name": "Objem dávky"
+      },
+      "signal_strength_dbm": {
+        "name": "Síla signálu (dBm)"
+      },
+      "heartbeat_interval": {
+        "name": "Interval srdečního signálu"
+      },
+      "next_device_connection_state": {
+        "name": "Čas do dalšího úplného stavu připojení zařízení"
+      },
+      "bottle_water_volume": {
+        "name": "Spotřeba vody dávkovače lahví do výměny"
+      },
+      "bucket_water_volume": {
+        "name": "Spotřeba vody dávkovače kbelíků do výměny"
+      },
+      "pump_volume_until_change": {
+        "name": "Objem čerpadla do výměny"
+      },
+      "voltage_idle_load": {
+        "name": "Napětí (klid/zátěž)"
+      },
+      "voltage_idle_load_max": {
+        "name": "Napětí (klid/zátěž maximum)"
+      },
+      "voltage_load_average": {
+        "name": "Průměrné napětí při zátěži"
+      },
+      "voltage_load_idle": {
+        "name": "Klidové napětí při zátěži"
+      },
+      "dispense_current_pump_load_average": {
+        "name": "Proud dávkování (čerpadlo/průměr zátěže)"
+      },
+      "dispense_current_air_load_max": {
+        "name": "Proud dávkování (vzduch/maximum zátěže)"
+      },
+      "cleaning_arm_motor_current": {
+        "name": "Proud motoru čisticího ramene"
+      },
+      "pump_motor_current": {
+        "name": "Proud motoru čerpadla"
       }
     },
     "binary_sensor": {
@@ -179,6 +247,20 @@
         "state": {
           "on": "Upozornění na stav náplně",
           "off": "Bez upozornění na stav náplně"
+        }
+      },
+      "automatic_update": {
+        "name": "Automatická aktualizace",
+        "state": {
+          "on": "Automatická aktualizace poběží",
+          "off": "Automatická aktualizace je vypnutá"
+        }
+      },
+      "accesspoint_disabled": {
+        "name": "Přístupový bod je vypnutý",
+        "state": {
+          "on": "Přístupový bod je vypnutý",
+          "off": "Přístupový bod je zapnutý"
         }
       }
     }

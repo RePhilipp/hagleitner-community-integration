@@ -158,6 +158,74 @@
       },
       "number_of_openings": {
         "name": "Number of openings"
+      },
+      "data_link_expectation": {
+        "name": "Adatkapcsolat elvárt állapota",
+        "state": {
+          "hard_offline": "Tartósan offline",
+          "soft_offline": "Átmenetileg offline",
+          "online": "Online"
+        }
+      },
+      "wifi_signal_strength": {
+        "name": "Wi-Fi-jelerősség"
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "dispense_time": {
+        "name": "Adagolási idő"
+      },
+      "refill_percent": {
+        "name": "Utántöltöttség százalékban"
+      },
+      "infrared_sensor_state": {
+        "name": "Infravörös érzékelő állapota"
+      },
+      "dispense_volume": {
+        "name": "Adagolási mennyiség"
+      },
+      "signal_strength_dbm": {
+        "name": "Jelerősség (dBm)"
+      },
+      "heartbeat_interval": {
+        "name": "Szívverési időköz"
+      },
+      "next_device_connection_state": {
+        "name": "Következő teljes eszközkapcsolati állapotig hátralévő idő"
+      },
+      "bottle_water_volume": {
+        "name": "Palackadagoló vízfogyasztása cseréig"
+      },
+      "bucket_water_volume": {
+        "name": "Vödöradagoló vízfogyasztása cseréig"
+      },
+      "pump_volume_until_change": {
+        "name": "Szivattyú térfogata cseréig"
+      },
+      "voltage_idle_load": {
+        "name": "Feszültség (üresjárat/terhelés)"
+      },
+      "voltage_idle_load_max": {
+        "name": "Feszültség (üresjárat/terhelés maximum)"
+      },
+      "voltage_load_average": {
+        "name": "Terhelés alatti átlagfeszültség"
+      },
+      "voltage_load_idle": {
+        "name": "Terhelés alatti üresjárati feszültség"
+      },
+      "dispense_current_pump_load_average": {
+        "name": "Adagolóáram (szivattyú/átlagos terhelés)"
+      },
+      "dispense_current_air_load_max": {
+        "name": "Adagolóáram (levegő/maximális terhelés)"
+      },
+      "cleaning_arm_motor_current": {
+        "name": "Tisztítókar motorárama"
+      },
+      "pump_motor_current": {
+        "name": "Szivattyú motorárama"
       }
     },
     "binary_sensor": {
@@ -179,6 +247,20 @@
         "state": {
           "on": "Töltési szint figyelmeztetés",
           "off": "Nincs töltési szint figyelmeztetés"
+        }
+      },
+      "automatic_update": {
+        "name": "Automatikus frissítés",
+        "state": {
+          "on": "Az automatikus frissítés végrehajtódik",
+          "off": "Az automatikus frissítés ki van kapcsolva"
+        }
+      },
+      "accesspoint_disabled": {
+        "name": "Hozzáférési pont kikapcsolva",
+        "state": {
+          "on": "Hozzáférési pont kikapcsolva",
+          "off": "Hozzáférési pont bekapcsolva"
         }
       }
     }
