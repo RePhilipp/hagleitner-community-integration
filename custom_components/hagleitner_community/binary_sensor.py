@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.components.binary_sensor.const import BinarySensorDeviceClass
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -22,6 +22,7 @@ from .resource_data import (
 
 PARALLEL_UPDATES = 0
 _PROBLEM_MODE = "resource_problem"
+_READ_ONLY_STATE_MODE = "read_only_state"
 
 
 def _unique_id_suffix(mode: str, definition: ResourceDefinition) -> str:
@@ -88,6 +89,8 @@ def _binary_modes(snapshot: ResourceValueSnapshot) -> tuple[str, ...]:
     definition = snapshot.definition
     if definition is None:
         return ()
+    if definition.kind == "binary_sensor":
+        return (_READ_ONLY_STATE_MODE,)
     if definition.kind == "battery":
         if snapshot.mapped_value == "mains_adapter":
             return ("mains_adapter",)
@@ -124,6 +127,9 @@ class HagleitnerBinarySensor(BinarySensorEntity):
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
         if mode == "mains_adapter":
             self._attr_translation_key = mode
+        elif mode == _READ_ONLY_STATE_MODE:
+            if definition.entity_translation_key:
+                self._attr_translation_key = definition.entity_translation_key
         elif mode == _PROBLEM_MODE:
             if definition.problem_entity_translation_key:
                 self._attr_translation_key = definition.problem_entity_translation_key
@@ -146,6 +152,10 @@ class HagleitnerBinarySensor(BinarySensorEntity):
                 return True
             if snapshot.mapped_value in ("ok", "low"):
                 return False
+            return None
+        if self._mode == _READ_ONLY_STATE_MODE:
+            if isinstance(snapshot.raw_value, bool):
+                return snapshot.raw_value
             return None
         if self._mode == _PROBLEM_MODE:
             if snapshot.mapped_value in self._definition.problem_entity_on_values:

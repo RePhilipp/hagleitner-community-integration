@@ -91,6 +91,7 @@ def test_english_translates_all_shipped_entity_names_and_states():
         "refill_warning",
         "fill_warning",
         "device_error",
+        "automatic_update",
     } <= set(
         binary_sensor_translations
     )
@@ -101,6 +102,7 @@ def test_english_translates_all_shipped_entity_names_and_states():
             "refill_warning",
             "fill_warning",
             "device_error",
+            "automatic_update",
         )
     )
     assert binary_sensor_translations["refill_warning"]["state"] == {
@@ -133,8 +135,8 @@ def test_german_translates_all_shipped_entity_names_and_states():
             ), key
 
 
-def test_all_locales_translate_both_problem_binary_sensors():
-    """Every shipped locale gives refill and fill warnings distinct labels."""
+def test_all_locales_translate_binary_status_sensors():
+    """Every locale labels warnings and the read-only update status."""
     for locale_file in _TRANSLATIONS_PATH.glob("*.json"):
         binary_sensors = json.loads(locale_file.read_text(encoding="utf-8"))[
             "entity"
@@ -143,8 +145,14 @@ def test_all_locales_translate_both_problem_binary_sensors():
             "refill_warning",
             "fill_warning",
             "device_error",
+            "automatic_update",
         } <= set(binary_sensors), locale_file.name
-        for key in ("refill_warning", "fill_warning", "device_error"):
+        for key in (
+            "refill_warning",
+            "fill_warning",
+            "device_error",
+            "automatic_update",
+        ):
             assert binary_sensors[key].get("name"), (locale_file.name, key)
             if key != "device_error":
                 assert set(binary_sensors[key].get("state", {})) == {"on", "off"}, (

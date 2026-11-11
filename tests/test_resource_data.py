@@ -188,6 +188,198 @@ def test_data_link_expectation_resource_maps_classification_values(
     assert snapshots[0].mapped_value == expected
 
 
+def test_wifi_signal_strength_is_a_percentage_measurement():
+    """Type 36867 instance 0 preserves numeric percent readings."""
+    snapshots = resource_value_snapshots(
+        {
+            "deviceInfo": {"deviceId": "device-1"},
+            "readings": [
+                {
+                    "resourceValues": [
+                        {
+                            "resourceIdentifier": {
+                                "resourceTypeId": 36867,
+                                "resourceInstanceNo": 0,
+                                "resourceInstanceEquivalentId": (
+                                    "a8c090de-3f87-4896-a1d6-276883aa7c00"
+                                ),
+                            },
+                            "integerValue": 72,
+                        }
+                    ]
+                }
+            ],
+        }
+    )
+
+    assert len(snapshots) == 1
+    snapshot = snapshots[0]
+    assert snapshot.definition is not None
+    assert snapshot.definition.name == "Wifi signal strength"
+    assert snapshot.definition.kind == "measurement"
+    assert snapshot.definition.unit == "percentage"
+    assert snapshot.raw_value == 72
+    assert snapshot.mapped_value == 72
+
+
+def test_wifi_ssid_is_exposed_as_a_diagnostic_string():
+    """Type 36873 instance 0 preserves the gateway's Wi-Fi network name."""
+    snapshots = resource_value_snapshots(
+        {
+            "deviceInfo": {"deviceId": "device-1"},
+            "readings": [
+                {
+                    "resourceValues": [
+                        {
+                            "resourceIdentifier": {
+                                "resourceTypeId": 36873,
+                                "resourceInstanceNo": 0,
+                                "resourceInstanceEquivalentId": (
+                                    "29a3300f-351a-4840-b046-6d3dbce962d1"
+                                ),
+                            },
+                            "stringValue": "Hagleitner-Gateway",
+                        }
+                    ]
+                }
+            ],
+        }
+    )
+
+    assert len(snapshots) == 1
+    snapshot = snapshots[0]
+    assert snapshot.definition is not None
+    assert snapshot.definition.name == "Wifi-SSID"
+    assert snapshot.definition.kind == "diagnostic"
+    assert snapshot.raw_value == "Hagleitner-Gateway"
+    assert snapshot.mapped_value == "Hagleitner-Gateway"
+
+
+@pytest.mark.parametrize(
+    (
+        "resource_type_id",
+        "instance_number",
+        "equivalent_id",
+        "value_field",
+        "raw_value",
+        "expected_name",
+        "expected_kind",
+        "expected_unit",
+    ),
+    [
+        (
+            36874,
+            0,
+            "c504dea8-0bff-4d25-8ab0-e9edba66f9e8",
+            "booleanValue",
+            True,
+            "Automatic update",
+            "binary_sensor",
+            None,
+        ),
+        (
+            28681,
+            0,
+            "777036e2-5660-4f5f-9a50-ba576c5c85d9",
+            "integerValue",
+            1250,
+            "Dispense time ms",
+            "measurement",
+            "milliseconds",
+        ),
+        (
+            12297,
+            0,
+            "d8e78655-cf21-4920-b93d-e9038b226597",
+            "integerValue",
+            65,
+            "Refill percent state",
+            "measurement",
+            "percentage",
+        ),
+        (
+            12298,
+            0,
+            "ac874bef-6d0a-4c0f-97b3-712bf818aabb",
+            "integerValue",
+            211,
+            "Infrared sensor state",
+            "diagnostic",
+            None,
+        ),
+        (
+            28679,
+            0,
+            "2be3d78a-6a51-467a-a556-92d75ed8e913",
+            "integerValue",
+            123,
+            "Dispense volume in ml",
+            "measurement",
+            "milliliters",
+        ),
+        (
+            28679,
+            8,
+            "2be3d78a-6a51-467a-a556-92d75ed8e913",
+            "integerValue",
+            456,
+            "Dispense volume in ml",
+            "measurement",
+            "milliliters",
+        ),
+        (
+            45059,
+            0,
+            "82fee494-47ca-413b-a883-bf3e0999b300",
+            "integerValue",
+            -67,
+            "Signal strength in dBm",
+            "measurement",
+            "dBm",
+        ),
+    ],
+)
+def test_additional_gateway_resources_keep_their_declared_semantics(
+    resource_type_id,
+    instance_number,
+    equivalent_id,
+    value_field,
+    raw_value,
+    expected_name,
+    expected_kind,
+    expected_unit,
+):
+    """New diagnostics and measurements map by type and instance accurately."""
+    snapshots = resource_value_snapshots(
+        {
+            "deviceInfo": {"deviceId": "device-1"},
+            "readings": [
+                {
+                    "resourceValues": [
+                        {
+                            "resourceIdentifier": {
+                                "resourceTypeId": resource_type_id,
+                                "resourceInstanceNo": instance_number,
+                                "resourceInstanceEquivalentId": equivalent_id,
+                            },
+                            value_field: raw_value,
+                        }
+                    ]
+                }
+            ],
+        }
+    )
+
+    assert len(snapshots) == 1
+    snapshot = snapshots[0]
+    assert snapshot.definition is not None
+    assert snapshot.definition.name == expected_name
+    assert snapshot.definition.kind == expected_kind
+    assert snapshot.definition.unit == expected_unit
+    assert snapshot.raw_value == raw_value
+    assert snapshot.mapped_value == raw_value
+
+
 def test_battery_and_timestamp_helpers_handle_unusable_values():
     """Invalid battery readings and timestamps are treated conservatively."""
     battery_definition = ResourceDefinition(

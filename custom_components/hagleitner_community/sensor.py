@@ -9,7 +9,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, PERCENTAGE, UnitOfVolume
+from homeassistant.const import (
+    EntityCategory,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfTime,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
@@ -178,12 +184,20 @@ class HagleitnerSensor(SensorEntity):
         elif mode in ("counter", "measurement"):
             if definition.device_class == "volume":
                 self._attr_device_class = SensorDeviceClass.VOLUME
+            elif definition.device_class == "signal_strength":
+                self._attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
             if definition.unit == "milliliters":
                 self._attr_native_unit_of_measurement = UnitOfVolume.MILLILITERS
             elif definition.unit == "liters":
                 self._attr_native_unit_of_measurement = UnitOfVolume.LITERS
             elif definition.unit == "percentage":
                 self._attr_native_unit_of_measurement = PERCENTAGE
+            elif definition.unit == "milliseconds":
+                self._attr_native_unit_of_measurement = UnitOfTime.MILLISECONDS
+            elif definition.unit == "dBm":
+                self._attr_native_unit_of_measurement = (
+                    SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+                )
             self._attr_state_class = (
                 SensorStateClass.TOTAL_INCREASING
                 if mode == "counter"

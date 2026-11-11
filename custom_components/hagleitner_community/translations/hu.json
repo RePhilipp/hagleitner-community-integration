@@ -166,6 +166,27 @@
           "soft_offline": "Átmenetileg offline",
           "online": "Online"
         }
+      },
+      "wifi_signal_strength": {
+        "name": "Wi-Fi-jelerősség"
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "dispense_time": {
+        "name": "Adagolási idő"
+      },
+      "refill_percent": {
+        "name": "Utántöltöttség százalékban"
+      },
+      "infrared_sensor_state": {
+        "name": "Infravörös érzékelő állapota"
+      },
+      "dispense_volume": {
+        "name": "Adagolási mennyiség"
+      },
+      "signal_strength_dbm": {
+        "name": "Jelerősség (dBm)"
       }
     },
     "binary_sensor": {
@@ -187,6 +208,13 @@
         "state": {
           "on": "Töltési szint figyelmeztetés",
           "off": "Nincs töltési szint figyelmeztetés"
+        }
+      },
+      "automatic_update": {
+        "name": "Automatikus frissítés",
+        "state": {
+          "on": "Az automatikus frissítés végrehajtódik",
+          "off": "Az automatikus frissítés ki van kapcsolva"
         }
       }
     }

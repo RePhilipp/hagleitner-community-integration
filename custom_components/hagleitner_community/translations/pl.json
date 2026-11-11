@@ -166,6 +166,27 @@
           "soft_offline": "Tymczasowo offline",
           "online": "Online"
         }
+      },
+      "wifi_signal_strength": {
+        "name": "Siła sygnału Wi-Fi"
+      },
+      "wifi_ssid": {
+        "name": "SSID Wi-Fi"
+      },
+      "dispense_time": {
+        "name": "Czas dozowania"
+      },
+      "refill_percent": {
+        "name": "Procent napełnienia"
+      },
+      "infrared_sensor_state": {
+        "name": "Stan czujnika podczerwieni"
+      },
+      "dispense_volume": {
+        "name": "Objętość dozowania"
+      },
+      "signal_strength_dbm": {
+        "name": "Siła sygnału (dBm)"
       }
     },
     "binary_sensor": {
@@ -187,6 +208,13 @@
         "state": {
           "on": "Ostrzeżenie o poziomie napełnienia",
           "off": "Brak ostrzeżenia o poziomie napełnienia"
+        }
+      },
+      "automatic_update": {
+        "name": "Automatyczna aktualizacja",
+        "state": {
+          "on": "Automatyczna aktualizacja zostanie wykonana",
+          "off": "Automatyczna aktualizacja jest wyłączona"
         }
       }
     }

@@ -166,6 +166,27 @@
           "soft_offline": "Dočasne offline",
           "online": "Online"
         }
+      },
+      "wifi_signal_strength": {
+        "name": "Sila signálu Wi-Fi"
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "dispense_time": {
+        "name": "Čas dávkovania"
+      },
+      "refill_percent": {
+        "name": "Stav doplnenia v percentách"
+      },
+      "infrared_sensor_state": {
+        "name": "Stav infračerveného snímača"
+      },
+      "dispense_volume": {
+        "name": "Objem dávky"
+      },
+      "signal_strength_dbm": {
+        "name": "Sila signálu (dBm)"
       }
     },
     "binary_sensor": {
@@ -187,6 +208,13 @@
         "state": {
           "on": "Upozornenie na stav náplne",
           "off": "Bez upozornenia na stav náplne"
+        }
+      },
+      "automatic_update": {
+        "name": "Automatická aktualizácia",
+        "state": {
+          "on": "Automatická aktualizácia sa vykoná",
+          "off": "Automatická aktualizácia je vypnutá"
         }
       }
     }

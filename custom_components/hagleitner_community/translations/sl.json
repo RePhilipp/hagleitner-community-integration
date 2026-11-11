@@ -166,6 +166,27 @@
           "soft_offline": "Začasno brez povezave",
           "online": "Online"
         }
+      },
+      "wifi_signal_strength": {
+        "name": "Moč signala Wi-Fi"
+      },
+      "wifi_ssid": {
+        "name": "SSID Wi-Fi"
+      },
+      "dispense_time": {
+        "name": "Čas doziranja"
+      },
+      "refill_percent": {
+        "name": "Odstotek polnosti"
+      },
+      "infrared_sensor_state": {
+        "name": "Stanje infrardečega senzorja"
+      },
+      "dispense_volume": {
+        "name": "Količina doziranja"
+      },
+      "signal_strength_dbm": {
+        "name": "Moč signala (dBm)"
       }
     },
     "binary_sensor": {
@@ -187,6 +208,13 @@
         "state": {
           "on": "Opozorilo o ravni polnjenja",
           "off": "Ni opozorila o ravni polnjenja"
+        }
+      },
+      "automatic_update": {
+        "name": "Samodejna posodobitev",
+        "state": {
+          "on": "Samodejna posodobitev se bo izvedla",
+          "off": "Samodejna posodobitev je izklopljena"
         }
       }
     }

@@ -166,6 +166,27 @@
           "soft_offline": "Soft offline",
           "online": "Online"
         }
+      },
+      "wifi_signal_strength": {
+        "name": "Wifi signal strength"
+      },
+      "wifi_ssid": {
+        "name": "Wifi SSID"
+      },
+      "dispense_time": {
+        "name": "Dispense time"
+      },
+      "refill_percent": {
+        "name": "Refill percent state"
+      },
+      "infrared_sensor_state": {
+        "name": "Infrared sensor state"
+      },
+      "dispense_volume": {
+        "name": "Dispense volume"
+      },
+      "signal_strength_dbm": {
+        "name": "Signal strength (dBm)"
       }
     },
     "binary_sensor": {
@@ -188,6 +209,13 @@
       },
       "device_error": {
         "name": "Device error"
+      },
+      "automatic_update": {
+        "name": "Automatic update",
+        "state": {
+          "on": "Auto-update will run",
+          "off": "Auto-update is off"
+        }
       }
     }
   },

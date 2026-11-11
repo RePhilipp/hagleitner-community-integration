@@ -6,7 +6,13 @@ from types import SimpleNamespace
 
 import pytest
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import EntityCategory, PERCENTAGE, UnitOfVolume
+from homeassistant.const import (
+    EntityCategory,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfTime,
+    UnitOfVolume,
+)
 from homeassistant.helpers import entity_registry as er
 
 from custom_components.hagleitner_community.resource_data import (
@@ -217,6 +223,43 @@ def test_sensor_constructor_applies_configured_measurement_units(
         if mode == "counter"
         else SensorStateClass.MEASUREMENT
     )
+
+
+@pytest.mark.parametrize(
+    ("device_class", "unit", "expected_class", "expected_unit"),
+    [
+        (None, "milliseconds", None, UnitOfTime.MILLISECONDS),
+        (
+            "signal_strength",
+            "dBm",
+            SensorDeviceClass.SIGNAL_STRENGTH,
+            SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        ),
+    ],
+)
+def test_sensor_constructor_applies_duration_and_rssi_metadata(
+    device_class, unit, expected_class, expected_unit
+):
+    """Durations use milliseconds and signed radio RSSI uses dBm metadata."""
+    definition = ResourceDefinition(
+        name="Measurement",
+        kind="measurement",
+        device_class=device_class,
+        unit=unit,
+    )
+    entity = HagleitnerSensor(
+        _Hub(_snapshot(definition)),
+        "device-1",
+        "resource-key",
+        definition,
+        frozenset(),
+        "measurement",
+        None,
+    )
+
+    assert getattr(entity, "_attr_device_class", None) is expected_class
+    assert entity._attr_native_unit_of_measurement == expected_unit
+    assert entity._attr_state_class is SensorStateClass.MEASUREMENT
 
 
 def test_diagnostic_resource_is_always_a_diagnostic_entity():

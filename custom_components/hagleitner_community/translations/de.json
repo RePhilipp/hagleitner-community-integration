@@ -166,6 +166,27 @@
           "soft_offline": "Vorübergehend offline",
           "online": "Online"
         }
+      },
+      "wifi_signal_strength": {
+        "name": "WLAN-Signalstärke"
+      },
+      "wifi_ssid": {
+        "name": "WLAN-SSID"
+      },
+      "dispense_time": {
+        "name": "Ausgabezeit"
+      },
+      "refill_percent": {
+        "name": "Füllstand in Prozent"
+      },
+      "infrared_sensor_state": {
+        "name": "Infrarotsensorstatus"
+      },
+      "dispense_volume": {
+        "name": "Ausgabemenge"
+      },
+      "signal_strength_dbm": {
+        "name": "Signalstärke (dBm)"
       }
     },
     "binary_sensor": {
@@ -188,6 +209,13 @@
       },
       "device_error": {
         "name": "Gerätefehler"
+      },
+      "automatic_update": {
+        "name": "Automatische Aktualisierung",
+        "state": {
+          "on": "Automatische Aktualisierung aktiv",
+          "off": "Automatische Aktualisierung aus"
+        }
       }
     }
   },
