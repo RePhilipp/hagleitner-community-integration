@@ -34,6 +34,7 @@ def main() -> None:
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
+    _LOGGER.setLevel(logging.DEBUG)
     try:
         asyncio.run(_run())
     except KeyboardInterrupt:

@@ -558,9 +558,11 @@ def device_type_name(message: dict[str, Any]) -> str | None:
 
 def log_resource_values(message: dict[str, Any], logger: logging.Logger) -> None:
     """Log raw and normalized values for every resource in a message."""
+    if not logger.isEnabledFor(logging.DEBUG):
+        return
     device_id, device_type_id = device_identity(message)
     for snapshot in resource_value_snapshots(message):
-        logger.info(
+        logger.debug(
             "Resource value device_id=%s logged_at=%s resource_type_id=%s "
             "instance=%s equivalent_id=%s device_type_id=%s "
             "supported=%s name=%s mapped_value=%s value=%s",
