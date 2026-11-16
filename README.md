@@ -219,4 +219,7 @@ configuration is preserved between runs.
 For troubleshooting from a local checkout, set `HAGLEITNER_SERVICE_BUS_CONNECTION_STRING`
 and `HAGLEITNER_QUEUE_NAME` in your environment, then run
 `python -m custom_components.hagleitner_community.debug_receiver`. Do not share
-the connection string or commit it to files.
+the connection string or commit it to files. Raw resource values, including
+identifiers and Wi-Fi SSIDs, are logged only at DEBUG in Home Assistant; the
+standalone debug receiver enables DEBUG and may print these values. Do not share
+its output unredacted.
